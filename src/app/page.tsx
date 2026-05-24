@@ -1,5 +1,5 @@
 import styles from "./page.module.css";
-
+import Link from 'next/link';
 export default function Home() {
   return (
     <main className={styles.main}>
@@ -15,7 +15,7 @@ export default function Home() {
             Extract insights from thousands of papers across Crossref and Scopus, 
             analyze them with Gemini AI, and automatically generate your state-of-the-art matrix.
           </p>
-          <button className={styles.primaryButton}>Get Started</button>
+          <Link href="/login" className={styles.primaryButton}>Get Started</Link>
         </div>
       </section>
     </main>
