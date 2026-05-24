@@ -1,0 +1,138 @@
+'use client'
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { createProjectAction, deleteProjectAction } from './actions';
+import styles from './Sidebar.module.css';
+
+export default function Sidebar({ projects, currentProjectId, activeTab }: { projects: any[], currentProjectId: string, activeTab: string }) {
+  const router = useRouter();
+  const [newTitle, setNewTitle] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Load search history from local storage
+    const saved = localStorage.getItem('search_history');
+    if (saved) {
+      try {
+        setHistory(JSON.parse(saved));
+      } catch (e) {}
+    }
+  }, []);
+
+  const handleCreateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+    
+    setIsCreating(true);
+    const res = await createProjectAction(newTitle);
+    setIsCreating(false);
+    
+    if (res.data) {
+      router.push(`/dashboard?tab=${activeTab}&project=${res.data.id}`);
+    } else {
+      alert('Gagal membuat proyek: ' + res.error);
+    }
+  };
+
+  const handleDeleteProject = async (id: string, title: string) => {
+    if (projects.length <= 1) {
+      alert('Anda tidak bisa menghapus proyek terakhir Anda.');
+      return;
+    }
+    
+    if (confirm(`PERINGATAN: Anda yakin ingin menghapus proyek "${title}" beserta semua referensinya?`)) {
+      const res = await deleteProjectAction(id);
+      if (res.success) {
+        router.push(`/dashboard?tab=${activeTab}`);
+      } else {
+        alert('Gagal menghapus proyek: ' + res.error);
+      }
+    }
+  };
+
+  const clearHistory = () => {
+    if (confirm('Hapus semua riwayat pencarian?')) {
+      localStorage.removeItem('search_history');
+      setHistory([]);
+    }
+  };
+
+  return (
+    <aside className={styles.sidebar}>
+      
+      <div className={styles.brand}>
+        <h1>Pusat Riset Akademik</h1>
+        <p>AI Literature Assistant</p>
+      </div>
+
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2>Daftar Proyek</h2>
+        </div>
+
+        <div className={styles.projectList}>
+          {projects.map(p => (
+            <div key={p.id} className={`${styles.projectItem} ${p.id === currentProjectId ? styles.activeProject : ''}`}>
+              <div 
+                className={styles.projectInfo}
+                onClick={() => p.id !== currentProjectId && router.push(`/dashboard?tab=${activeTab}&project=${p.id}`)}
+                style={{ cursor: p.id !== currentProjectId ? 'pointer' : 'default' }}
+              >
+                <span className={styles.projectIcon}>📁</span>
+                <span className={styles.projectTitle}>{p.title}</span>
+              </div>
+              <button 
+                onClick={() => handleDeleteProject(p.id, p.title)} 
+                className={styles.deleteBtn} 
+                disabled={projects.length <= 1}
+                title="Hapus Proyek"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <form onSubmit={handleCreateProject} className={styles.createForm}>
+          <input 
+            type="text" 
+            placeholder="Proyek baru..." 
+            value={newTitle} 
+            onChange={(e) => setNewTitle(e.target.value)}
+            disabled={isCreating}
+            required
+            className={styles.input}
+          />
+          <button type="submit" disabled={isCreating} className={styles.createBtn}>
+            +
+          </button>
+        </form>
+      </div>
+
+      <div className={styles.historySection}>
+        <div className={styles.sectionHeaderHistory}>
+          <h2>Riwayat Pencarian</h2>
+          {history.length > 0 && (
+            <button onClick={clearHistory} className={styles.clearHistoryBtn} title="Bersihkan Riwayat">Hapus</button>
+          )}
+        </div>
+
+        {history.length === 0 ? (
+          <div className={styles.emptyState}>Belum ada riwayat.</div>
+        ) : (
+          <div className={styles.historyList}>
+            {history.map((h, i) => (
+              <div key={i} className={styles.historyItem}>
+                <div className={styles.historyQuery}>{h.query}</div>
+                <div className={styles.historyTopic}>{h.topic}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+    </aside>
+  );
+}
