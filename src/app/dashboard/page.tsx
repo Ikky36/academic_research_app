@@ -41,14 +41,30 @@ export default async function DashboardPage({
   
   const activeProject = projects?.find(p => p.id === activeProjectId) || projects?.[0];
 
+  // Fetch user role
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  const role = profile?.role || 'free';
+  
+  // Fetch tier limits
+  const { data: tierLimits } = await supabase.from('tier_limits').select('*').eq('role', role).single();
+  const limits = tierLimits || {
+    max_projects: 3,
+    max_search_results: 20,
+    max_sota_rows: 5,
+    can_bulk_download_gdrive: false
+  };
+
   return (
     <div className={styles.appContainer}>
-      <Sidebar projects={projects || []} currentProjectId={activeProject?.id || ''} activeTab={activeTab} />
+      <Sidebar projects={projects || []} currentProjectId={activeProject?.id || ''} activeTab={activeTab} limits={limits} role={role} />
       
       <div className={styles.mainContent}>
         <header className={styles.header}>
           <div className={styles.headerSpacer}></div>
           <div className={styles.headerRightControls}>
+          {role === 'admin' && (
+            <Link href="/admin" className={styles.adminButton}>Admin Dashboard</Link>
+          )}
           <div className={styles.userPill}>
             <span>👤</span> {user.email}
           </div>
@@ -78,10 +94,10 @@ export default async function DashboardPage({
           {activeProject && (
             <>
               <div style={{ display: activeTab === 'search' ? 'block' : 'none' }}>
-                <SearchInterface key={`search-${activeProject.id}`} projectId={activeProject.id} />
+                <SearchInterface key={`search-${activeProject.id}`} projectId={activeProject.id} limits={limits} role={role} />
               </div>
               <div style={{ display: activeTab === 'sota' ? 'block' : 'none' }}>
-                <SotaInterface key={`sota-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'sota'} />
+                <SotaInterface key={`sota-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'sota'} limits={limits} role={role} />
               </div>
             </>
           )}

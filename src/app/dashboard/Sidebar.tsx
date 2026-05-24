@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createProjectAction, deleteProjectAction } from './actions';
 import styles from './Sidebar.module.css';
 
-export default function Sidebar({ projects, currentProjectId, activeTab }: { projects: any[], currentProjectId: string, activeTab: string }) {
+export default function Sidebar({ projects, currentProjectId, activeTab, limits, role }: { projects: any[], currentProjectId: string, activeTab: string, limits?: any, role?: string }) {
   const router = useRouter();
   const [newTitle, setNewTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -25,11 +25,17 @@ export default function Sidebar({ projects, currentProjectId, activeTab }: { pro
     e.preventDefault();
     if (!newTitle.trim()) return;
     
+    if (limits && projects.length >= limits.max_projects) {
+      alert(`Anda telah mencapai batas maksimal ${limits.max_projects} proyek untuk tipe akun ${role?.toUpperCase()}.\n\nHubungi Admin untuk meningkatkan akun ke PRO!`);
+      return;
+    }
+    
     setIsCreating(true);
     const res = await createProjectAction(newTitle);
     setIsCreating(false);
     
     if (res.data) {
+      setNewTitle('');
       router.push(`/dashboard?tab=${activeTab}&project=${res.data.id}`);
     } else {
       alert('Gagal membuat proyek: ' + res.error);

@@ -1,0 +1,268 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction } from './actions';
+import styles from './page.module.css';
+
+export default function AdminDashboard() {
+  const [activeTab, setActiveTab] = useState<'users' | 'limits'>('users');
+  
+  const [users, setUsers] = useState<any[]>([]);
+  const [limits, setLimits] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  
+  // Create user form state
+  const [newEmail, setNewEmail] = useState('');
+  const [newRole, setNewRole] = useState('free');
+  const [isCreating, setIsCreating] = useState(false);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    const [usersRes, limitsRes] = await Promise.all([
+      getUsersAction(),
+      getTierLimitsAction()
+    ]);
+    
+    if (usersRes.data) setUsers(usersRes.data);
+    if (limitsRes.data) setLimits(limitsRes.data);
+    
+    if (usersRes.error) setError(usersRes.error);
+    if (limitsRes.error) setError(limitsRes.error);
+    
+    setLoading(false);
+  };
+
+  const handleRoleChange = async (userId: string, currentRole: string, newRole: string) => {
+    if (currentRole === newRole) return;
+    if (!confirm(`Ubah tipe akun menjadi ${newRole.toUpperCase()}?`)) return;
+    
+    setSuccess('');
+    setError('');
+    
+    const res = await updateUserRoleAction(userId, newRole);
+    if (res.success) {
+      setSuccess('Tipe akun berhasil diperbarui.');
+      setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+    } else {
+      setError(res.error || 'Gagal mengubah tipe akun.');
+    }
+  };
+
+  const handleLimitUpdate = async (e: React.FormEvent, limitObj: any) => {
+    e.preventDefault();
+    setSuccess('');
+    setError('');
+    
+    const res = await updateTierLimitAction(limitObj.role, limitObj);
+    if (res.success) {
+      setSuccess(`Batasan untuk tipe ${limitObj.role.toUpperCase()} berhasil diperbarui.`);
+    } else {
+      setError(res.error || 'Gagal memperbarui batasan.');
+    }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEmail) return;
+    
+    setIsCreating(true);
+    setError('');
+    setSuccess('');
+    
+    const res = await createAccountAction(newEmail, newRole);
+    if (res.success) {
+      setSuccess(res.message || 'Akun berhasil dibuat.');
+      setNewEmail('');
+      loadData(); // Reload users
+    } else {
+      setError(res.error || 'Gagal membuat akun.');
+    }
+    setIsCreating(false);
+  };
+
+  return (
+    <div className={styles.adminContainer}>
+      <header className={styles.header}>
+        <h1>Admin Control Panel</h1>
+        <div className={styles.headerRight}>
+          <Link href="/dashboard" className={styles.backButton}>&larr; Kembali ke Dashboard</Link>
+        </div>
+      </header>
+
+      <main className={styles.mainContent}>
+        {error && <div className={styles.alertError}>❌ {error}</div>}
+        {success && <div className={styles.alertSuccess}>✅ {success}</div>}
+
+        <div className={styles.tabs}>
+          <button 
+            className={activeTab === 'users' ? styles.activeTab : styles.tab} 
+            onClick={() => setActiveTab('users')}
+          >
+            👥 Manajemen Pengguna
+          </button>
+          <button 
+            className={activeTab === 'limits' ? styles.activeTab : styles.tab} 
+            onClick={() => setActiveTab('limits')}
+          >
+            ⚙️ Pengaturan Batasan (Limits)
+          </button>
+        </div>
+
+        <div className={styles.card}>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '2rem' }}>Memuat data...</div>
+          ) : activeTab === 'users' ? (
+            <>
+              <div className={styles.createUserForm}>
+                <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>Buat Akun Baru</h3>
+                <form onSubmit={handleCreateUser} className={styles.createUserGrid}>
+                  <div className={styles.formGroup} style={{ flex: 2, marginBottom: 0 }}>
+                    <input 
+                      type="email" 
+                      placeholder="Email pengguna..." 
+                      className={styles.input} 
+                      value={newEmail}
+                      onChange={e => setNewEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className={styles.formGroup} style={{ flex: 1, marginBottom: 0 }}>
+                    <select 
+                      className={styles.input}
+                      value={newRole}
+                      onChange={e => setNewRole(e.target.value)}
+                    >
+                      <option value="free">FREE</option>
+                      <option value="pro">PRO</option>
+                      <option value="admin">ADMIN</option>
+                    </select>
+                  </div>
+                  <button 
+                    type="submit" 
+                    className={styles.saveButton} 
+                    style={{ flex: 1, marginTop: 0 }}
+                    disabled={isCreating}
+                  >
+                    {isCreating ? 'Membuat...' : '+ Buat Akun'}
+                  </button>
+                </form>
+                <small style={{ color: '#94a3b8', display: 'block', marginTop: '0.5rem' }}>
+                  Membutuhkan <code>SUPABASE_SERVICE_ROLE_KEY</code> di Vercel Environment Variables.
+                </small>
+              </div>
+
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Email Pengguna</th>
+                    <th>Tipe Akun</th>
+                    <th>Tgl Mendaftar</th>
+                    <th>Aksi (Ubah Tipe)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map(u => (
+                    <tr key={u.id}>
+                      <td>{u.email}</td>
+                      <td>
+                        <span className={`${styles.roleBadge} ${u.role === 'admin' ? styles.roleAdmin : u.role === 'pro' ? styles.rolePro : styles.roleFree}`}>
+                          {u.role.toUpperCase()}
+                        </span>
+                      </td>
+                      <td>{new Date(u.created_at).toLocaleDateString('id-ID')}</td>
+                      <td>
+                        <select 
+                          className={styles.roleSelect}
+                          value={u.role}
+                          onChange={(e) => handleRoleChange(u.id, u.role, e.target.value)}
+                        >
+                          <option value="free">Jadikan FREE</option>
+                          <option value="pro">Jadikan PRO</option>
+                          <option value="admin">Jadikan ADMIN</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                  {users.length === 0 && (
+                    <tr>
+                      <td colSpan={4} style={{ textAlign: 'center' }}>Tidak ada pengguna ditemukan.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </>
+          ) : (
+            <div className={styles.limitsGrid}>
+              {limits.filter(l => l.role !== 'admin').map((limitObj) => (
+                <div key={limitObj.role} className={styles.limitCard}>
+                  <h3>
+                    <span className={`${styles.roleBadge} ${limitObj.role === 'pro' ? styles.rolePro : styles.roleFree}`}>
+                      {limitObj.role.toUpperCase()}
+                    </span> 
+                    Pengaturan
+                  </h3>
+                  
+                  <form onSubmit={(e) => handleLimitUpdate(e, limitObj)}>
+                    <div className={styles.formGroup}>
+                      <label>Maksimal Proyek yang Dibuat</label>
+                      <input 
+                        type="number" 
+                        min="1"
+                        className={styles.input} 
+                        value={limitObj.max_projects} 
+                        onChange={e => setLimits(limits.map(l => l.role === limitObj.role ? {...l, max_projects: e.target.value} : l))}
+                      />
+                    </div>
+                    
+                    <div className={styles.formGroup}>
+                      <label>Maksimal Hasil Pencarian (per hlmn)</label>
+                      <input 
+                        type="number" 
+                        min="10"
+                        className={styles.input} 
+                        value={limitObj.max_search_results} 
+                        onChange={e => setLimits(limits.map(l => l.role === limitObj.role ? {...l, max_search_results: e.target.value} : l))}
+                      />
+                    </div>
+                    
+                    <div className={styles.formGroup}>
+                      <label>Maksimal Baris Tabel SOTA</label>
+                      <input 
+                        type="number" 
+                        min="1"
+                        className={styles.input} 
+                        value={limitObj.max_sota_rows} 
+                        onChange={e => setLimits(limits.map(l => l.role === limitObj.role ? {...l, max_sota_rows: e.target.value} : l))}
+                      />
+                    </div>
+                    
+                    <div className={styles.formGroup}>
+                      <label className={styles.checkboxLabel}>
+                        <input 
+                          type="checkbox" 
+                          className={styles.checkbox}
+                          checked={limitObj.can_bulk_download_gdrive}
+                          onChange={e => setLimits(limits.map(l => l.role === limitObj.role ? {...l, can_bulk_download_gdrive: e.target.checked} : l))}
+                        />
+                        Bisa Upload Massal ke Google Drive?
+                      </label>
+                    </div>
+                    
+                    <button type="submit" className={styles.saveButton}>Simpan Perubahan</button>
+                  </form>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}

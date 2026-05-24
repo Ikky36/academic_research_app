@@ -82,7 +82,7 @@ const ExpandableAbstract = ({ text, terms }: { text: string, terms: string[] }) 
   );
 };
 
-export default function SearchInterface({ projectId }: { projectId: string }) {
+export default function SearchInterface({ projectId, limits, role }: { projectId: string, limits?: any, role?: string }) {
   const [topic, setTopic] = useState('');
   const [problem, setProblem] = useState('');
   const [booleanQuery, setBooleanQuery] = useState('');
@@ -405,8 +405,10 @@ export default function SearchInterface({ projectId }: { projectId: string }) {
                 <label>Hasil per halaman:</label>
                 <select value={limit} onChange={(e) => handleLimitChange(Number(e.target.value))}>
                   <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={25}>25 (Maksimal Scopus)</option>
+                  {(!limits || limits.max_search_results >= 20) && <option value={20}>20</option>}
+                  {(!limits || limits.max_search_results >= 25) && <option value={25}>25 (Maksimal Scopus)</option>}
+                  {(!limits || limits.max_search_results >= 50) && <option value={50}>50</option>}
+                  {(!limits || limits.max_search_results >= 100) && <option value={100}>100</option>}
                 </select>
               </div>
             </div>
@@ -427,10 +429,11 @@ export default function SearchInterface({ projectId }: { projectId: string }) {
               ) : (
                 results.some(r => r.doi || r.pdfLink) && (
                   <button 
-                    onClick={handleBulkUpload} 
+                    onClick={limits?.can_bulk_download_gdrive ? handleBulkUpload : () => alert('Fitur ini hanya tersedia untuk pengguna akun PRO.')} 
                     className={styles.bulkUploadButton}
+                    style={{ opacity: limits?.can_bulk_download_gdrive ? 1 : 0.6 }}
                   >
-                    📥 Simpan Semua PDF di Halaman Ini
+                    📥 Simpan Semua PDF {limits && !limits.can_bulk_download_gdrive && ' (PRO)'}
                   </button>
                 )
               )}

@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { getSavedReferencesAction, generateSotaChunkAction, clearReferencesAction } from './actions';
 import styles from './SotaInterface.module.css';
 
-export default function SotaInterface({ projectId, isActive }: { projectId: string, isActive?: boolean }) {
+export default function SotaInterface({ projectId, isActive, limits, role }: { projectId: string, isActive?: boolean, limits?: any, role?: string }) {
   const [references, setReferences] = useState<any[]>([]);
   const [loadingRefs, setLoadingRefs] = useState(true);
   
@@ -42,11 +42,23 @@ export default function SotaInterface({ projectId, isActive }: { projectId: stri
   };
 
   const handleGenerateSota = async () => {
-    const toProcess = withAbstract.filter(ref => !processedIds.includes(ref.id));
+    let toProcess = withAbstract.filter(ref => !processedIds.includes(ref.id));
 
     if (toProcess.length === 0) {
       alert('Semua jurnal sudah dianalisis di dalam Tabel SOTA.');
       return;
+    }
+
+    if (limits) {
+      const remainingQuota = limits.max_sota_rows - processedIds.length;
+      if (remainingQuota <= 0) {
+        alert(`Anda telah mencapai batas maksimal ${limits.max_sota_rows} baris SOTA untuk tipe akun ${role?.toUpperCase()}.\n\nHubungi Admin untuk meningkatkan akun ke PRO!`);
+        return;
+      }
+      if (toProcess.length > remainingQuota) {
+        alert(`Perhatian: Sisa kuota SOTA Anda adalah ${remainingQuota} baris. Kami hanya akan menganalisis ${remainingQuota} jurnal dari ${toProcess.length} jurnal baru.`);
+        toProcess = toProcess.slice(0, remainingQuota);
+      }
     }
 
     setIsGenerating(true);
