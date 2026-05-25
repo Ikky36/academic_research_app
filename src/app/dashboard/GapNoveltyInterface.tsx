@@ -152,7 +152,35 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
       {gapMarkdown && (
         <div className={styles.sotaResult}>
           <div className={styles.markdownWrapper}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h2: ({node, ...props}) => (
+                  <h2 {...props} className={styles.modernH2}>
+                    <span style={{ fontSize: '1.2em' }}>💡</span> 
+                    <span>{props.children}</span>
+                  </h2>
+                ),
+                h3: ({node, ...props}) => (
+                  <h3 {...props} className={styles.modernH3}>
+                    <span style={{ fontSize: '1.1em' }}>🎯</span>
+                    <span>{props.children}</span>
+                  </h3>
+                ),
+                strong: ({node, ...props}) => {
+                  const text = String(props.children);
+                  if (text.match(/S1|Sarjana/i)) return <strong className={`${styles.badge} ${styles.badgeS1}`}>S1 (Sarjana)</strong>;
+                  if (text.match(/S2|Magister/i)) return <strong className={`${styles.badge} ${styles.badgeS2}`}>S2 (Magister)</strong>;
+                  if (text.match(/S3|Doktoral/i)) return <strong className={`${styles.badge} ${styles.badgeS3}`}>S3 (Doktoral)</strong>;
+                  return <strong className={styles.modernStrong}>{props.children}</strong>;
+                },
+                blockquote: ({node, ...props}) => (
+                  <blockquote {...props} className={styles.gapBlockquote}>
+                    {props.children}
+                  </blockquote>
+                )
+              }}
+            >
               {gapMarkdown}
             </ReactMarkdown>
           </div>
