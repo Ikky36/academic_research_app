@@ -93,12 +93,13 @@ Berikut adalah Tabel State-of-the-Art (SOTA) dari literatur-literatur terkait:
 ${sotaMarkdown}
 
 Tugas Anda:
-1. Analisis seluruh literatur di atas.
-2. Temukan dan jelaskan Research Gap (celah penelitian / keterbatasan) dari literatur-literatur tersebut secara rinci (apa yang belum banyak dibahas atau dipecahkan oleh penelitian sebelumnya).
-3. Evaluasi Topik saya: Apakah Topik yang saya ajukan memiliki kebaruan (Novelty) yang kuat untuk menutupi celah tersebut? Jelaskan letak Novelty-nya.
-4. Berikan saran terstruktur untuk memperkuat Novelty penelitian saya.
+1. Analisis seluruh literatur SOTA di atas.
+2. Identifikasi dan kelompokkan Research Gap (celah penelitian) yang Anda temukan ke dalam kategori "7 Research Gaps" (Pilih yang relevan saja dari 7 kategori berikut: Evidence Gap, Knowledge Gap, Practical Knowledge Gap, Methodological Gap, Empirical Gap, Theoretical Gap, Population Gap). Jelaskan masing-masing gap yang ditemukan secara spesifik berdasarkan literatur.
+3. Untuk setiap Research Gap yang Anda temukan, bagikan/evaluasi tingkat kesesuaian dan beban kerjanya jika dikerjakan oleh mahasiswa tingkat Sarjana (S1), Pascasarjana/Magister (S2), dan Doktoral (S3). Berikan rekomendasi ruang lingkup/fokus penelitian yang pas untuk masing-masing jenjang tersebut.
+4. Evaluasi Topik saya: Apakah Topik yang saya ajukan memiliki kebaruan (Novelty) yang kuat untuk menutupi celah tersebut? Jelaskan letak Novelty-nya dan topik saya lebih condong mengisi kategori Research Gap yang mana.
+5. Berikan saran terstruktur untuk memperkuat Novelty penelitian saya sesuai jenjang yang dituju.
 
-Sajikan jawaban Anda dalam format Markdown yang rapi, profesional, dan mudah dibaca (Gunakan heading, bullet points, atau bold bila perlu).
+Sajikan jawaban Anda dalam format Markdown yang rapi, profesional, dan mudah dibaca (Gunakan heading untuk mengelompokkan kategori GAP, bullet points, atau bold bila perlu).
   `;
 
   try {
