@@ -74,3 +74,40 @@ Berikan *HANYA* format tabel Markdown sebagai output Anda. Pastikan setiap baris
   }
 }
 
+export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic: string, userApiKey?: string): Promise<string> {
+  const apiKey = userApiKey || process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Gemini API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
+  }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+  const prompt = `
+Anda adalah pakar penelitian akademik yang ahli dalam menemukan Research Gap dan Novelty.
+
+Saya sedang merencanakan penelitian dengan Topik/Judul berikut:
+"${researchTopic}"
+
+Berikut adalah Tabel State-of-the-Art (SOTA) dari literatur-literatur terkait:
+${sotaMarkdown}
+
+Tugas Anda:
+1. Analisis seluruh literatur di atas.
+2. Temukan dan jelaskan Research Gap (celah penelitian / keterbatasan) dari literatur-literatur tersebut secara rinci (apa yang belum banyak dibahas atau dipecahkan oleh penelitian sebelumnya).
+3. Evaluasi Topik saya: Apakah Topik yang saya ajukan memiliki kebaruan (Novelty) yang kuat untuk menutupi celah tersebut? Jelaskan letak Novelty-nya.
+4. Berikan saran terstruktur untuk memperkuat Novelty penelitian saya.
+
+Sajikan jawaban Anda dalam format Markdown yang rapi, profesional, dan mudah dibaca (Gunakan heading, bullet points, atau bold bila perlu).
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    let text = result.response.text();
+    text = text.replace(/```markdown/gi, '').replace(/```/g, '').trim();
+    return text;
+  } catch (err: any) {
+    console.error('Gemini API Error (Gap & Novelty):', err);
+    throw new Error('Gagal menghasilkan analisis GAP & Novelty dari AI: ' + (err.message || ''));
+  }
+}

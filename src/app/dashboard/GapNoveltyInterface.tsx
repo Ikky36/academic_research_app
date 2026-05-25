@@ -1,0 +1,163 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import styles from './GapNoveltyInterface.module.css';
+
+interface GapNoveltyInterfaceProps {
+  projectId: string;
+  isActive: boolean;
+  limits: any;
+  role: string;
+}
+
+export default function GapNoveltyInterface({ projectId, isActive, limits, role }: GapNoveltyInterfaceProps) {
+  const [sotaMarkdown, setSotaMarkdown] = useState('');
+  const [researchTopic, setResearchTopic] = useState('');
+  const [gapMarkdown, setGapMarkdown] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (isActive && projectId) {
+      // Load existing data
+      const savedSota = localStorage.getItem(`sota_markdown_${projectId}`);
+      if (savedSota) {
+        setSotaMarkdown(savedSota);
+      }
+      
+      const savedTopic = localStorage.getItem(`research_topic_${projectId}`);
+      if (savedTopic) {
+        setResearchTopic(savedTopic);
+      }
+
+      const savedGap = localStorage.getItem(`gap_novelty_${projectId}`);
+      if (savedGap) {
+        setGapMarkdown(savedGap);
+      }
+    }
+  }, [isActive, projectId]);
+
+  const handleTopicChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setResearchTopic(value);
+    localStorage.setItem(`research_topic_${projectId}`, value);
+  };
+
+  const handleGenerate = async () => {
+    if (!sotaMarkdown) {
+      setError('Tabel SOTA belum dibuat. Silakan buat Tabel SOTA terlebih dahulu di tab sebelah.');
+      return;
+    }
+    
+    if (!researchTopic.trim()) {
+      setError('Topik atau judul penelitian tidak boleh kosong.');
+      return;
+    }
+
+    setIsGenerating(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/gap-novelty', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sotaMarkdown,
+          researchTopic,
+          projectId
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Gagal menghasilkan analisis GAP & Novelty');
+      }
+
+      const data = await response.json();
+      setGapMarkdown(data.gapMarkdown);
+      localStorage.setItem(`gap_novelty_${projectId}`, data.gapMarkdown);
+    } catch (err: any) {
+      setError(err.message || 'Terjadi kesalahan sistem.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!gapMarkdown) return;
+    
+    // Create markdown file
+    let content = `# Analisis Research GAP & Novelty\n\n`;
+    content += `**Topik Penelitian:** ${researchTopic}\n\n`;
+    content += gapMarkdown;
+    
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Research_GAP_Novelty_${projectId}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h2>💡 Analisis Research GAP & Novelty</h2>
+        <p>Temukan celah penelitian dari literatur yang ada dan validasi kebaruan topik Anda.</p>
+        
+        <textarea 
+          className={styles.topicInput}
+          placeholder="Masukkan Topik atau Judul Penelitian yang ingin Anda ajukan... (Misal: Pengaruh Metode XYZ terhadap Pembelajaran Daring di Era Digital)"
+          value={researchTopic}
+          onChange={handleTopicChange}
+          rows={3}
+        />
+
+        <div className={styles.buttonGroup}>
+          <button 
+            className={styles.generateButton}
+            onClick={handleGenerate}
+            disabled={isGenerating || !researchTopic.trim()}
+          >
+            {isGenerating ? 'Menganalisis dengan AI... ⏳' : '✨ Analisis GAP & Novelty'}
+          </button>
+          
+          {gapMarkdown && (
+            <button 
+              className={styles.generateButton} 
+              style={{ background: '#10b981' }}
+              onClick={handleDownload}
+            >
+              📥 Unduh Hasil (MD)
+            </button>
+          )}
+        </div>
+        
+        {error && <div className={styles.errorMessage} style={{marginTop: '1rem'}}>{error}</div>}
+      </div>
+
+      {isGenerating && (
+        <div className={styles.progressBanner}>
+          ⏳ AI sedang membaca Tabel SOTA dan Topik Anda. Mencari celah penelitian...
+        </div>
+      )}
+
+      {gapMarkdown && (
+        <div className={styles.sotaResult}>
+          <div className={styles.markdownWrapper}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {gapMarkdown}
+            </ReactMarkdown>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

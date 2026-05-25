@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import SearchInterface from './SearchInterface'
 import SotaInterface from './SotaInterface'
+import GapNoveltyInterface from './GapNoveltyInterface'
 import Sidebar from './Sidebar'
 import styles from './page.module.css'
 
@@ -91,6 +92,12 @@ export default async function DashboardPage({
           >
             📊 Tabel SOTA & Analisis
           </Link>
+          <Link 
+            href={`/dashboard?tab=gap-novelty&project=${activeProject?.id}`} 
+            className={activeTab === 'gap-novelty' ? styles.activeTab : styles.tab}
+          >
+            💡 Research GAP & Novelty
+          </Link>
         </div>
 
         <main className={styles.main}>
@@ -101,6 +108,9 @@ export default async function DashboardPage({
               </div>
               <div style={{ display: activeTab === 'sota' ? 'block' : 'none' }}>
                 <SotaInterface key={`sota-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'sota'} limits={limits} role={role} />
+              </div>
+              <div style={{ display: activeTab === 'gap-novelty' ? 'block' : 'none' }}>
+                <GapNoveltyInterface key={`gap-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'gap-novelty'} limits={limits} role={role} />
               </div>
             </>
           )}
