@@ -65,10 +65,66 @@
   overflow-x: auto;
 }
 
+.markdownWrapper {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.7;
+  font-size: 1.05rem;
+}
+
+.markdownWrapper h1 {
+  font-size: 2.2rem;
+  color: #fff;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(99, 102, 241, 0.3);
+}
+
+.markdownWrapper h2 {
+  font-size: 1.6rem;
+  color: #a855f7;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.markdownWrapper h3 {
+  font-size: 1.3rem;
+  color: #818cf8;
+  margin-top: 2rem;
+  margin-bottom: 0.8rem;
+  font-weight: 600;
+}
+
+.markdownWrapper p {
+  margin-bottom: 1.2rem;
+}
+
+.markdownWrapper ul, .markdownWrapper ol {
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.markdownWrapper li {
+  margin-bottom: 0.8rem;
+}
+
+.markdownWrapper li strong {
+  color: #fff;
+}
+
+.markdownWrapper strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Fallback table styles just in case */
 .markdownWrapper table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
+  margin-bottom: 2rem;
 }
 
 .markdownWrapper th,
@@ -80,13 +136,13 @@
 }
 
 .markdownWrapper th {
-  background: rgba(99, 102, 241, 0.05);
-  color: var(--primary);
+  background: rgba(99, 102, 241, 0.1);
+  color: #fff;
   font-weight: 600;
 }
 
 .markdownWrapper tr:nth-child(even) {
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .referenceList {
