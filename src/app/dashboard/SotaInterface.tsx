@@ -214,6 +214,26 @@ export default function SotaInterface({ projectId, isActive, limits, role }: { p
     }
   };
 
+  const handleDeleteSotaRow = (node: any) => {
+    if (!node || !node.position) {
+      alert("Tidak dapat menghapus baris ini.");
+      return;
+    }
+    
+    // node.position.start.line is 1-indexed
+    const lineIndex = node.position.start.line - 1;
+    const lines = sotaMarkdown.split('\n');
+    
+    if (lineIndex >= 0 && lineIndex < lines.length) {
+      if (confirm('Hapus baris ini dari tabel SOTA?')) {
+        lines.splice(lineIndex, 1);
+        const newMarkdown = lines.join('\n');
+        setSotaMarkdown(newMarkdown);
+        localStorage.setItem(`sota_markdown_${projectId}`, newMarkdown);
+      }
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -279,7 +299,32 @@ export default function SotaInterface({ projectId, isActive, limits, role }: { p
       {sotaMarkdown && (
         <div className={styles.sotaResult}>
           <div className={styles.markdownWrapper}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]}
+              components={{
+                tr: ({node, children, ...props}) => {
+                  const isHeader = (node as any)?.parent?.tagName === 'thead';
+                  return (
+                    <tr {...props}>
+                      {children}
+                      {isHeader ? (
+                        <th>Aksi</th>
+                      ) : (
+                        <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                          <button 
+                            onClick={() => handleDeleteSotaRow(node)} 
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}
+                            title="Hapus baris ini dari tabel"
+                          >
+                            ❌
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                }
+              }}
+            >
               {sotaMarkdown}
             </ReactMarkdown>
           </div>
