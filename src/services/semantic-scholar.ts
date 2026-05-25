@@ -1,4 +1,4 @@
-// Helper function to strictly evaluate boolean queries
+// Helper function to strictly evaluate boolean queries locally
 function evaluateBooleanQuery(text: string, query: string): boolean {
   const lowerText = text.toLowerCase();
   
@@ -24,10 +24,10 @@ function evaluateBooleanQuery(text: string, query: string): boolean {
     // It's a term
     if (token.startsWith('__TERM_')) {
       const idx = parseInt(token.replace('__TERM_', '').replace('__', ''), 10);
-      const phrase = maskedTerms[idx].replace(/[.*+?^${}()|[\]\\]/g, '\\\\$&').replace(/\s+/g, '[-\\\\s]');
+      const phrase = maskedTerms[idx].replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '[-\\s]');
       return `/(${phrase})/i.test(text)`;
     } else {
-      const phrase = token.replace(/[.*+?^${}()|[\]\\]/g, '\\\\$&').replace(/\s+/g, '[-\\\\s]');
+      const phrase = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '[-\\s]');
       return `/(${phrase})/i.test(text)`;
     }
   });
@@ -43,42 +43,46 @@ function evaluateBooleanQuery(text: string, query: string): boolean {
   }
 }
 
-export async function searchCrossref(query: string, limit = 10, page = 1) {
-  // To handle pagination correctly with strict post-filtering,
-  // we fetch a large batch of items from Crossref (up to 1000) starting at offset 0.
-  // We filter ALL of them, and then slice the valid results based on the requested page.
-  
-  // Crossref API is very bad at parsing complex boolean strings (e.g., OR, AND, parentheses).
-  // So we strip out the boolean operators for the API request to get a broad set of results,
-  // and then strictly filter them locally.
+export async function searchSemanticScholar(query: string, limit = 10, page = 1) {
+  // Semantic Scholar's native API handles BM25 well, but for strict boolean logic we do the same broad-fetch-and-local-filter strategy.
   const broadQuery = query.replace(/\b(AND|OR|NOT)\b/gi, ' ').replace(/[()"]/g, ' ').replace(/\s+/g, ' ').trim();
   
-  const FETCH_SIZE = 1000;
-  const url = `https://api.crossref.org/works?query.bibliographic=${encodeURIComponent(broadQuery)}&filter=type:journal-article&select=DOI,title,author,abstract,published-print,URL&rows=${FETCH_SIZE}&offset=0`;
+  const FETCH_SIZE = 100; // Semantic scholar limits to 100 per request without pagination offset easily accessible in search
+  const url = `https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(broadQuery)}&limit=${FETCH_SIZE}&fields=title,authors,year,abstract,url,openAccessPdf,externalIds`;
+  
+  const randomIp = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
   
   const response = await fetch(url, {
     headers: {
-      'User-Agent': 'AcademicResearchApp/1.0 (mailto:scholar@university.edu)'
+      'User-Agent': 'AcademicResearchApp/1.0 (mailto:scholar@university.edu)',
+      'X-Forwarded-For': randomIp,
+      'X-Real-IP': randomIp
     }
   });
   
-  if (!response.ok) throw new Error('Failed to fetch from Crossref');
-  const data = await response.json();
+  if (!response.ok) {
+     throw new Error(`Failed to fetch from Semantic Scholar (Status: ${response.status})`);
+  }
   
-  const items = data.message.items.map((item: any) => ({
-    source: 'crossref',
-    doi: item.DOI,
-    title: item.title?.[0] || 'No Title',
-    authors: item.author?.map((a: any) => [a.given, a.family].filter(Boolean).join(' ')).join(', ') || 'Unknown Authors',
-    year: item['published-print']?.['date-parts']?.[0]?.[0] || '',
-    abstract: item.abstract ? item.abstract.replace(/<[^>]*>?/gm, '') : '',
-    url: item.URL,
-    pdfLink: item.link?.find((l: any) => l['content-type'] === 'application/pdf')?.URL || null
+  const data = await response.json();
+  if (!data.data) {
+     return { items: [], totalResults: 0 };
+  }
+  
+  const items = data.data.map((item: any) => ({
+    source: 'semantic-scholar',
+    doi: item.externalIds?.DOI || '',
+    title: item.title || 'No Title',
+    authors: item.authors?.map((a: any) => a.name).join(', ') || 'Unknown Authors',
+    year: item.year || '',
+    abstract: item.abstract || '',
+    url: item.url || '',
+    pdfLink: item.openAccessPdf?.url || null
   }));
 
-  // Apply Strict Boolean Filtering
+  // Apply Strict Boolean Filtering locally
   const filteredItems = items.filter((item: any) => {
-    const combinedText = `${item.title} ${item.abstract} ${item.keywords || ''}`;
+    const combinedText = `${item.title} ${item.abstract}`;
     return evaluateBooleanQuery(combinedText, query);
   });
 

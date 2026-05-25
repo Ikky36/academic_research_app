@@ -88,7 +88,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
   const [booleanQuery, setBooleanQuery] = useState('');
   const [generatingAI, setGeneratingAI] = useState(false);
   
-  const [source, setSource] = useState<'crossref' | 'scopus'>('crossref');
+  const [source, setSource] = useState<'crossref' | 'scopus' | 'openalex'>('openalex');
   const [results, setResults] = useState<any[]>([]);
   const [totalResults, setTotalResults] = useState(0);
   
@@ -134,29 +134,39 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
   const [isBulkSaving, setIsBulkSaving] = useState(false);
 
   const handleGenerateAI = async () => {
-    if (!topic && !problem) return;
+    if (!topic && !problem) {
+      alert('Harap isi minimal Topik Riset atau Masalah Riset terlebih dahulu.');
+      return;
+    }
+
     setGeneratingAI(true);
-    setError('');
-    const res = await generateAIQueryAction(topic, problem);
-    if (res.error) {
-      setError(res.error);
-    } else if (res.query) {
-      setBooleanQuery(res.query);
-      
-      // Save to local storage history
-      try {
-        const history = JSON.parse(localStorage.getItem('search_history') || '[]');
-        history.unshift({
-          topic,
-          problem,
-          query: res.query,
-          timestamp: new Date().toISOString()
-        });
-        // Keep only last 50
-        localStorage.setItem('search_history', JSON.stringify(history.slice(0, 50)));
-      } catch (err) {
-        console.error('Gagal menyimpan riwayat', err);
+    try {
+      const userKey = localStorage.getItem('groqApiKey') || undefined;
+      const res = await generateAIQueryAction(topic, problem, userKey);
+      if (res.error) {
+        setError(res.error);
+      } else if (res.query) {
+        setBooleanQuery(res.query);
+        
+        // Save to local storage history
+        try {
+          const history = JSON.parse(localStorage.getItem('search_history') || '[]');
+          history.unshift({
+            topic,
+            problem,
+            query: res.query,
+            timestamp: new Date().toISOString()
+          });
+          // Keep only last 50
+          localStorage.setItem('search_history', JSON.stringify(history.slice(0, 50)));
+        } catch (err) {
+          console.error('Gagal menyimpan riwayat', err);
+        }
       }
+    } catch (e: any) {
+      setError(e.message || 'Terjadi kesalahan saat menghubungi AI.');
+    } finally {
+      setGeneratingAI(false);
     }
     setGeneratingAI(false);
   };
@@ -369,7 +379,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
             <select 
               value={source} 
               onChange={(e) => {
-                const newSource = e.target.value as 'crossref' | 'scopus';
+                const newSource = e.target.value as 'crossref' | 'scopus' | 'openalex';
                 setSource(newSource);
                 if (newSource === 'scopus' && limit > 25) {
                   setLimit(25);
@@ -377,8 +387,9 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
               }} 
               className={styles.sourceSelect}
             >
-              <option value="crossref">Crossref</option>
-              <option value="scopus">Scopus</option>
+              <option value="openalex">OpenAlex (Alternatif Semantic Scholar)</option>
+              <option value="crossref">Crossref (Terbuka & Gratis)</option>
+              <option value="scopus">Scopus (Kualitas Tinggi)</option>
             </select>
             <button type="submit" disabled={loading || !booleanQuery} className={styles.searchButton}>
               {loading ? 'Mencari...' : 'Cari'}

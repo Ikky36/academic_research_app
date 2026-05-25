@@ -120,3 +120,30 @@ export async function createAccountAction(email: string, role: string) {
     return { error: err.message };
   }
 }
+
+export async function deleteUserAction(userId: string) {
+  try {
+    await requireAdmin();
+    
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) {
+      return { error: 'SUPABASE_SERVICE_ROLE_KEY tidak ditemukan. Tidak dapat menghapus pengguna.' };
+    }
+
+    const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
+    const adminSupabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceRoleKey,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    // Hapus dari Auth Supabase (ini juga akan men-trigger CASCADE ke public.profiles jika ada, atau kita hapus profil dulu)
+    const { error } = await adminSupabase.auth.admin.deleteUser(userId);
+    if (error) return { error: error.message };
+
+    revalidatePath('/admin');
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}

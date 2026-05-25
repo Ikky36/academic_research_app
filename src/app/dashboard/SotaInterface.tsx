@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { getSavedReferencesAction, generateSotaChunkAction, clearReferencesAction } from './actions';
+import { getSavedReferencesAction, generateSotaChunkAction, clearReferencesAction, deleteReferenceAction } from './actions';
 import styles from './SotaInterface.module.css';
 
 export default function SotaInterface({ projectId, isActive, limits, role }: { projectId: string, isActive?: boolean, limits?: any, role?: string }) {
@@ -68,6 +68,7 @@ export default function SotaInterface({ projectId, isActive, limits, role }: { p
     const CHUNK_SIZE = 5;
     let accumulatedMarkdown = sotaMarkdown;
     let currentProcessedIds = [...processedIds];
+    const userKey = localStorage.getItem('geminiApiKey') || undefined;
 
     for (let i = 0; i < toProcess.length; i += CHUNK_SIZE) {
       const chunk = toProcess.slice(i, i + CHUNK_SIZE);
@@ -76,7 +77,7 @@ export default function SotaInterface({ projectId, isActive, limits, role }: { p
       
       setProgressText(`Memproses artikel baru ${i+1} sampai ${i+chunk.length} (dari total ${toProcess.length} baru)...`);
       
-      const res = await generateSotaChunkAction(chunk, startIdx);
+      const res = await generateSotaChunkAction(chunk, startIdx, userKey);
       
       if (res.error) {
         setError(`Terhenti di artikel ${startIdx}-${endIdx}: ` + res.error);
@@ -200,6 +201,19 @@ export default function SotaInterface({ projectId, isActive, limits, role }: { p
     }
   };
 
+  const handleDeleteReference = async (id: string, title: string) => {
+    if (confirm(`Apakah Anda yakin ingin menghapus jurnal "${title}"?`)) {
+      setLoadingRefs(true);
+      await deleteReferenceAction(id);
+      
+      const newProcessedIds = processedIds.filter(pid => pid !== id);
+      setProcessedIds(newProcessedIds);
+      localStorage.setItem(`sota_processed_${projectId}`, JSON.stringify(newProcessedIds));
+
+      await loadReferences();
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -281,8 +295,18 @@ export default function SotaInterface({ projectId, isActive, limits, role }: { p
             {withAbstract.map((ref) => {
               const isProcessed = processedIds.includes(ref.id);
               return (
-                <li key={ref.id}>
-                  {isProcessed ? '✅' : '⏳'} <strong>{ref.title}</strong> - {ref.authors?.replace(/undefined/gi, '').replace(/\s+/g, ' ').trim()}
+                <li key={ref.id} className={styles.referenceItem}>
+                  <span>
+                    {isProcessed ? '✅' : '⏳'} <strong>{ref.title}</strong> - {ref.authors?.replace(/undefined/gi, '').replace(/\s+/g, ' ').trim()}
+                  </span>
+                  <button 
+                    className={styles.deleteItemButton}
+                    onClick={() => handleDeleteReference(ref.id, ref.title)}
+                    title="Hapus Jurnal"
+                    disabled={isGenerating}
+                  >
+                    ❌
+                  </button>
                 </li>
               );
             })}
@@ -293,8 +317,18 @@ export default function SotaInterface({ projectId, isActive, limits, role }: { p
               <h3 className={styles.skippedTitle}>Daftar Jurnal yang Diabaikan (Tidak ada abstrak):</h3>
               <ul>
                 {withoutAbstract.map((ref) => (
-                  <li key={ref.id}>
-                    <strong>{ref.title}</strong> - {ref.authors?.replace(/undefined/gi, '').replace(/\s+/g, ' ').trim()}
+                  <li key={ref.id} className={styles.referenceItem}>
+                    <span>
+                      <strong>{ref.title}</strong> - {ref.authors?.replace(/undefined/gi, '').replace(/\s+/g, ' ').trim()}
+                    </span>
+                    <button 
+                      className={styles.deleteItemButton}
+                      onClick={() => handleDeleteReference(ref.id, ref.title)}
+                      title="Hapus Jurnal"
+                      disabled={isGenerating}
+                    >
+                      ❌
+                    </button>
                   </li>
                 ))}
               </ul>

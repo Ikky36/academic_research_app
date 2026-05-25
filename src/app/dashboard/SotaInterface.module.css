@@ -183,3 +183,24 @@
   50% { opacity: 1; }
   100% { opacity: 0.8; }
 }
+.referenceItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 1rem;
+}
+
+.deleteItemButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  font-size: 1.1rem;
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.deleteItemButton:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}

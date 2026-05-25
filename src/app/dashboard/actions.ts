@@ -7,20 +7,27 @@ import { generateBooleanQuery } from '@/services/gemini'
 import { uploadToDrive } from '@/services/drive'
 import { getPdfUrlFromUnpaywall } from '@/services/unpaywall'
 import { generateSotaChunk } from '@/services/sota'
+import { searchOpenAlex } from '@/services/openalex'
 
-export async function generateAIQueryAction(topic: string, problem: string) {
+export async function generateAIQueryAction(topic: string, problem: string, userApiKey?: string) {
   try {
-    const query = await generateBooleanQuery(topic, problem);
+    const query = await generateBooleanQuery(topic, problem, userApiKey);
     return { query };
   } catch (e: any) {
     return { error: e.message };
   }
 }
 
-export async function searchPapers(query: string, source: 'crossref' | 'scopus', limit: number = 10, page: number = 1) {
+export async function searchPapers(query: string, source: 'crossref' | 'scopus' | 'openalex', limit: number = 10, page: number = 1) {
   if (source === 'crossref') {
     try {
       return await searchCrossref(query, limit, page);
+    } catch (e: any) {
+      return { error: e.message };
+    }
+  } else if (source === 'openalex') {
+    try {
+      return await searchOpenAlex(query, limit, page);
     } catch (e: any) {
       return { error: e.message };
     }
@@ -94,9 +101,9 @@ export async function getSavedReferencesAction(projectId: string) {
 }
 
 
-export async function generateSotaChunkAction(referencesChunk: any[], startIndex: number) {
+export async function generateSotaChunkAction(referencesChunk: any[], startIndex: number, userApiKey?: string) {
   try {
-    const sotaMarkdown = await generateSotaChunk(referencesChunk, startIndex);
+    const sotaMarkdown = await generateSotaChunk(referencesChunk, startIndex, userApiKey);
     return { data: sotaMarkdown };
   } catch (e: any) {
     return { error: e.message };
@@ -144,6 +151,20 @@ export async function deleteProjectAction(projectId: string) {
       .from('projects')
       .delete()
       .eq('id', projectId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+export async function deleteReferenceAction(referenceId: string) {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('extracted_data')
+      .delete()
+      .eq('id', referenceId);
 
     if (error) throw error;
     return { success: true };

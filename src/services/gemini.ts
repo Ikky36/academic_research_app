@@ -1,9 +1,9 @@
 import Groq from 'groq-sdk';
 
-export async function generateBooleanQuery(topic: string, problem: string) {
-  const apiKey = process.env.GROQ_API_KEY;
+export async function generateBooleanQuery(topic: string, problem: string, userApiKey?: string) {
+  const apiKey = userApiKey || process.env.GROQ_API_KEY;
   if (!apiKey) {
-    throw new Error('Groq API Key is missing. Please configure it in .env.local');
+    throw new Error('Groq API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
   }
 
   const groq = new Groq({ apiKey });
@@ -11,11 +11,11 @@ export async function generateBooleanQuery(topic: string, problem: string) {
   const prompt = `
 You are an expert academic librarian. Your task is to create a highly optimized Boolean search query for databases like Scopus or Crossref.
 
-Research Topic: ${topic}
-Research Problem: ${problem}
+${topic ? `Research Topic: ${topic}` : ''}
+${problem ? `Research Problem: ${problem}` : ''}
 
 Instructions:
-1. Extract the 2 or 3 most critical concepts from the topic and problem.
+1. Extract the 2 or 3 most critical concepts from the provided topic and/or problem.
 2. WAJIB gunakan sinonim, singkatan, atau terjemahan (Inggris/Indonesia) yang MASUK AKAL dan NATURAL. Hindari pengulangan kata yang aneh (misal: "pembelajaran berbasis masalah berbasis").
 3. WAJIB gunakan tanda kutip ganda ("...") untuk frasa yang terdiri dari lebih dari satu kata agar pencarian lebih akurat.
 4. ATURAN KRUSIAL: Sinonim dan terjemahan dari konsep yang sama HARUS berada di dalam SATU tanda kurung menggunakan OR.

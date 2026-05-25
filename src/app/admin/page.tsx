@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction } from './actions';
+import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction } from './actions';
 import styles from './page.module.css';
 
 export default function AdminDashboard() {
@@ -85,6 +85,21 @@ export default function AdminDashboard() {
       setError(res.error || 'Gagal membuat akun.');
     }
     setIsCreating(false);
+  };
+
+  const handleDeleteUser = async (userId: string, email: string) => {
+    if (!confirm(`PERINGATAN: Apakah Anda yakin ingin menghapus akun ${email} secara permanen? Semua data terkait (proyek, pencarian, SOTA) akan hilang.`)) return;
+    
+    setSuccess('');
+    setError('');
+    
+    const res = await deleteUserAction(userId);
+    if (res.success) {
+      setSuccess(`Akun ${email} berhasil dihapus.`);
+      setUsers(users.filter(u => u.id !== userId));
+    } else {
+      setError(res.error || `Gagal menghapus akun ${email}.`);
+    }
   };
 
   return (
@@ -187,6 +202,23 @@ export default function AdminDashboard() {
                           <option value="pro">Jadikan PRO</option>
                           <option value="admin">Jadikan ADMIN</option>
                         </select>
+                        <button 
+                          onClick={() => handleDeleteUser(u.id, u.email)}
+                          style={{
+                            marginLeft: '8px',
+                            background: 'none',
+                            border: '1px solid #ef4444',
+                            color: '#ef4444',
+                            borderRadius: '6px',
+                            padding: '6px 10px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: 'bold'
+                          }}
+                          title={`Hapus Akun ${u.email}`}
+                        >
+                          🗑️
+                        </button>
                       </td>
                     </tr>
                   ))}

@@ -6,6 +6,8 @@ import SotaInterface from './SotaInterface'
 import Sidebar from './Sidebar'
 import styles from './page.module.css'
 
+import SettingsButton from '@/components/SettingsButton'
+
 export default async function DashboardPage({
   searchParams
 }: {
@@ -62,6 +64,7 @@ export default async function DashboardPage({
         <header className={styles.header}>
           <div className={styles.headerSpacer}></div>
           <div className={styles.headerRightControls}>
+          <SettingsButton />
           {role === 'admin' && (
             <Link href="/admin" className={styles.adminButton}>Admin Dashboard</Link>
           )}
