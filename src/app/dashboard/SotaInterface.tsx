@@ -303,7 +303,7 @@ export default function SotaInterface({ projectId, isActive, limits, role }: { p
               remarkPlugins={[remarkGfm]}
               components={{
                 tr: ({node, children, ...props}) => {
-                  const isHeader = (node as any)?.parent?.tagName === 'thead';
+                  const isHeader = (node as any)?.children?.some((child: any) => child.tagName === 'th');
                   return (
                     <tr {...props}>
                       {children}
