@@ -111,6 +111,12 @@ Sajikan jawaban Anda dalam format Markdown yang rapi. Pastikan tabel dirender de
     const result = await model.generateContent(prompt);
     let text = result.response.text();
     text = text.replace(/```markdown/gi, '').replace(/```/g, '').trim();
+    
+    // Fix broken table formatting where AI forgets newlines (e.g. `| Col | |:---|`)
+    text = text.replace(/\|\s*\|\s*(?=:?-+:?)/g, '|\n|');
+    // Fix broken table formatting between data rows if they are flattened
+    text = text.replace(/\|\s*\|\s*(?=[A-Za-z0-9*])/g, '|\n|'); 
+
     return text;
   } catch (err: any) {
     console.error('Gemini API Error (Gap & Novelty):', err);
