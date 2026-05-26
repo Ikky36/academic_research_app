@@ -112,10 +112,13 @@ Sajikan jawaban Anda dalam format Markdown yang rapi. Pastikan tabel dirender de
     let text = result.response.text();
     text = text.replace(/```markdown/gi, '').replace(/```/g, '').trim();
     
-    // Fix broken table formatting where AI forgets newlines (e.g. `| Col | |:---|`)
+    // Ensure there is a blank line before the table so Markdown parses it correctly
+    text = text.replace(/([^\n])\n(\|\s*.*\|\n\|[-:\s|]+\|)/g, '$1\n\n$2');
+    
+    // Fix broken table formatting where AI forgets newlines between rows (e.g. `| Col | |:---|`)
     text = text.replace(/\|\s*\|\s*(?=:?-+:?)/g, '|\n|');
-    // Fix broken table formatting between data rows if they are flattened
     text = text.replace(/\|\s*\|\s*(?=[A-Za-z0-9*])/g, '|\n|'); 
+
 
     return text;
   } catch (err: any) {
