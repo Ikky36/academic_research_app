@@ -100,6 +100,8 @@ Tugas Anda:
    - **TINGKAT**: Isi dengan tingkat pendidikan yang paling sesuai (Pilih salah satu: Sarjana, Magister, atau Doktoral).
    - **NOVELTY**: Berikan usulan ide kebaruan (Novelty) yang konkret untuk mengisi celah tersebut sesuai dengan tingkat pendidikannya.
 
+   *(Penting: Pastikan penulisan tabel Markdown menggunakan baris baru / ENTER yang benar antara baris header, baris pemisah `|---|`, dan baris isi tabel agar tabel bisa dirender dengan baik)*
+
 4. Di bawah tabel tersebut, berikan evaluasi khusus mengenai **Topik/Judul yang diajukan di atas**: Apakah topik saya sudah memiliki Novelty yang kuat? Jika belum, berikan saran perbaikan spesifik agar Topik tersebut memiliki Novelty yang kuat.
 
 Sajikan jawaban Anda dalam format Markdown yang rapi. Pastikan tabel dirender dengan sempurna.
