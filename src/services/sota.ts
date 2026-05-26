@@ -94,13 +94,15 @@ ${sotaMarkdown}
 
 Tugas Anda:
 1. Analisis seluruh literatur SOTA di atas.
-2. Identifikasi dan kelompokkan Research Gap (celah penelitian) yang Anda temukan ke dalam kategori "7 Research Gaps" (Pilih yang relevan saja dari 7 kategori berikut: Evidence Gap, Knowledge Gap, Practical Knowledge Gap, Methodological Gap, Empirical Gap, Theoretical Gap, Population Gap).
-3. Untuk setiap Research Gap yang Anda temukan, evaluasi tingkat kesesuaian dan beban kerjanya jika dikerjakan oleh mahasiswa tingkat Sarjana (S1), Pascasarjana/Magister (S2), dan Doktoral (S3). 
-4. **WAJIB SAJIKAN POIN 2 & 3 DALAM BENTUK TABEL MARKDOWN.** Tabel tersebut harus memiliki kolom: "Kategori GAP", "Deskripsi Celah Penelitian dari Literatur", "Kesesuaian & Rekomendasi S1", "Kesesuaian & Rekomendasi S2", dan "Kesesuaian & Rekomendasi S3".
-5. Di bawah tabel, berikan sub-judul khusus untuk mengevaluasi Topik saya: Apakah Topik yang saya ajukan memiliki kebaruan (Novelty) yang kuat untuk menutupi celah tersebut? Jelaskan letak Novelty-nya dan topik saya lebih condong mengisi kategori Research Gap yang mana.
-6. Berikan saran terstruktur untuk memperkuat Novelty penelitian saya.
+2. Identifikasi Research Gap (celah penelitian) dari literatur-literatur tersebut.
+3. **SAJIKAN HASILNYA DALAM BENTUK SATU TABEL MARKDOWN.** Tabel tersebut WAJIB hanya memiliki 3 kolom berikut:
+   - **JENIS RESEARCH GAP**: Isi dengan nama kategori dari 7 Research Gaps yang relevan (Evidence Gap, Knowledge Gap, Practical Knowledge Gap, Methodological Gap, Empirical Gap, Theoretical Gap, atau Population Gap), beserta deskripsi singkat temuan Anda dari literatur.
+   - **TINGKAT**: Isi dengan tingkat pendidikan yang paling sesuai (Pilih salah satu: Sarjana, Magister, atau Doktoral).
+   - **NOVELTY**: Berikan usulan ide kebaruan (Novelty) yang konkret untuk mengisi celah tersebut sesuai dengan tingkat pendidikannya.
 
-Sajikan jawaban Anda dalam format Markdown yang rapi, profesional, dan mudah dibaca. Pastikan tabel dirender dengan baik.
+4. Di bawah tabel tersebut, berikan evaluasi khusus mengenai **Topik/Judul yang diajukan di atas**: Apakah topik saya sudah memiliki Novelty yang kuat? Jika belum, berikan saran perbaikan spesifik agar Topik tersebut memiliki Novelty yang kuat.
+
+Sajikan jawaban Anda dalam format Markdown yang rapi. Pastikan tabel dirender dengan sempurna.
   `;
 
   try {
