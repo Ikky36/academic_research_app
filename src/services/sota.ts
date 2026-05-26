@@ -1,6 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import OpenAI from 'openai';
+import Groq from 'groq-sdk';
 
 export async function generateSotaChunk(referencesChunk: any[], startIndex: number, userApiKey?: string, attempt = 1): Promise<string> {
   // Setup Gemini AI
@@ -76,12 +76,12 @@ Berikan *HANYA* format tabel Markdown sebagai output Anda. Pastikan setiap baris
 }
 
 export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic: string, userApiKey?: string): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    throw new Error('OpenAI API Key is missing. Please configure it in .env.local.');
+    throw new Error('GROQ API Key is missing. Please configure it in .env.local.');
   }
 
-  const openai = new OpenAI({ apiKey: apiKey });
+  const groq = new Groq({ apiKey: apiKey });
 
   const prompt = `
 Anda adalah pakar penelitian akademik yang ahli dalam menemukan Research Gap dan Novelty.
@@ -112,13 +112,13 @@ Sajikan jawaban Anda dalam format Markdown yang rapi. Pastikan tabel dirender de
   `;
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+    const response = await groq.chat.completions.create({
+      model: "llama3-70b-8192",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     });
     
-    let text = response.choices[0].message.content || '';
+    let text = response.choices[0]?.message?.content || '';
     text = text.replace(/```markdown/gi, '').replace(/```/g, '').trim();
     
     // Fix broken table formatting where AI forgets newlines between rows (e.g. `| Col | |:---|`)
@@ -128,11 +128,10 @@ Sajikan jawaban Anda dalam format Markdown yang rapi. Pastikan tabel dirender de
     // Ensure there is a blank line before the table so Markdown parses it correctly
     text = text.replace(/([^\n])\n(\|\s*.*\|\n\|[-:\s|]+\|)/g, '$1\n\n$2');
 
-
-
     return text;
   } catch (err: any) {
-    console.error('OpenAI API Error (Gap & Novelty):', err);
+    console.error('Groq API Error (Gap & Novelty):', err);
     throw new Error('Gagal menghasilkan analisis GAP & Novelty dari AI: ' + (err.message || ''));
   }
 }
+
