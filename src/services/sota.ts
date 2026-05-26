@@ -2,11 +2,25 @@ import { createClient } from '@/utils/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Groq from 'groq-sdk';
 
+let currentGeminiKeyIndex = 0;
+
 export async function generateSotaChunk(referencesChunk: any[], startIndex: number, userApiKey?: string, attempt = 1): Promise<string> {
   // Setup Gemini AI
-  const apiKey = userApiKey || process.env.GEMINI_API_KEY;
+  let apiKey = userApiKey;
+  let maxAttempts = 3;
+
   if (!apiKey) {
-    throw new Error('Gemini API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
+    const keysStr = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '';
+    const keys = keysStr.split(',').map(k => k.trim()).filter(Boolean);
+    
+    if (keys.length === 0) {
+      throw new Error('Gemini API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
+    }
+    
+    // Rotate keys
+    apiKey = keys[currentGeminiKeyIndex % keys.length];
+    currentGeminiKeyIndex = (currentGeminiKeyIndex + 1) % keys.length;
+    maxAttempts = Math.max(3, keys.length * 2); // Try multiple times if we have multiple keys
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
@@ -50,26 +64,28 @@ Berikan *HANYA* format tabel Markdown sebagai output Anda. Pastikan setiap baris
     text = text.replace(/```markdown/gi, '').replace(/```/g, '').trim();
     return text;
   } catch (err: any) {
-    console.error('Gemini API Error:', err);
+    console.error(`Gemini API Error (Attempt ${attempt}/${maxAttempts}):`, err);
     const errorMessage = err.message || '';
     
     // Auto-retry for 503 Service Unavailable or similar server errors
-    if ((errorMessage.includes('503') || errorMessage.includes('500') || errorMessage.includes('502')) && attempt < 3) {
+    if ((errorMessage.includes('503') || errorMessage.includes('500') || errorMessage.includes('502')) && attempt < maxAttempts) {
       console.log(`Gemini Server Busy. Retrying chunk ${startIndex} (Attempt ${attempt + 1})...`);
       await new Promise(resolve => setTimeout(resolve, 8000));
       return generateSotaChunk(referencesChunk, startIndex, userApiKey, attempt + 1);
     }
     
-    // Auto-retry for Rate Limit errors
-    if (errorMessage.includes('429') || errorMessage.includes('413') || errorMessage.toLowerCase().includes('rate limit')) {
-      if (attempt < 3) {
-        console.log(`Gemini Rate Limit. Retrying chunk ${startIndex} (Attempt ${attempt + 1})...`);
-        await new Promise(resolve => setTimeout(resolve, 15000));
+    // Auto-retry for Rate Limit or Quota errors
+    if (errorMessage.includes('429') || errorMessage.includes('413') || errorMessage.toLowerCase().includes('rate limit') || errorMessage.toLowerCase().includes('quota')) {
+      if (attempt < maxAttempts) {
+        console.log(`Gemini Rate Limit/Quota. Switching key and retrying chunk ${startIndex} (Attempt ${attempt + 1}/${maxAttempts})...`);
+        const keysCount = process.env.GEMINI_API_KEYS ? process.env.GEMINI_API_KEYS.split(',').length : 1;
+        const waitTime = keysCount > 1 ? 2000 : 15000; // Fast retry if rotating, slow if single key
+        await new Promise(resolve => setTimeout(resolve, waitTime));
         return generateSotaChunk(referencesChunk, startIndex, userApiKey, attempt + 1);
       }
       const match = errorMessage.match(/retry in ([\d\.]+)s/);
       const waitTime = match ? Math.ceil(parseFloat(match[1])) : 30;
-      throw new Error(`Batas penggunaan gratis Gemini API tercapai. Harap tunggu sekitar ${waitTime} detik lalu coba lagi.`);
+      throw new Error(`Batas penggunaan Gemini API tercapai pada semua kunci. Harap tunggu sekitar ${waitTime} detik lalu coba lagi.`);
     }
     throw new Error('Gagal menghasilkan tabel SOTA dari AI: ' + errorMessage);
   }

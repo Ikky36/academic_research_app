@@ -20,9 +20,19 @@ npx vercel env add GEMINI_API_KEY production --value $gemini --yes
 npx vercel env add GEMINI_API_KEY preview --value $gemini --yes
 npx vercel env add GEMINI_API_KEY development --value $gemini --yes
 
+$gemini_keys = "AIzaSyBpkF19RePFOYHrZTCrDYnqPkLX-v8x-tU,AIzaSyDMj9giYeMmQVAcN14B-XpSdDVOyeDhbKk,AIzaSyD3S4nH-rAQpn_0rYqBy5Ig1wh5dzBGPkA,AIzaSyAGT_hRjK9DWS6XlVzY7pP3Fz3HqamJwJI,AIzaSyDlnhj3cNRc9GG7DheJkfPDpuF4UxoukNE,AIzaSyAQRalzuW3oDv-mRNVMcY99Zk3mu7MjelQ"
+
 npx vercel env add GROQ_API_KEY production --value $groq --yes
 npx vercel env add GROQ_API_KEY preview --value $groq --yes
 npx vercel env add GROQ_API_KEY development --value $groq --yes
+
+npx vercel env add OPENAI_API_KEY production --value $openai --yes
+npx vercel env add OPENAI_API_KEY preview --value $openai --yes
+npx vercel env add OPENAI_API_KEY development --value $openai --yes
+
+npx vercel env add GEMINI_API_KEYS production --value $gemini_keys --yes
+npx vercel env add GEMINI_API_KEYS preview --value $gemini_keys --yes
+npx vercel env add GEMINI_API_KEYS development --value $gemini_keys --yes
 
 npx vercel env add OPENAI_API_KEY production --value $openai --yes
 npx vercel env add OPENAI_API_KEY preview --value $openai --yes
