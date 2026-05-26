@@ -96,7 +96,7 @@ Tugas Anda:
 1. Analisis seluruh literatur SOTA di atas.
 2. Identifikasi Research Gap (celah penelitian) dari literatur-literatur tersebut.
 3. **SAJIKAN HASILNYA DALAM BENTUK SATU TABEL MARKDOWN.** Tabel tersebut WAJIB hanya memiliki 3 kolom berikut:
-   - **JENIS RESEARCH GAP**: Isi dengan nama kategori dari 7 Research Gaps yang relevan (Evidence Gap, Knowledge Gap, Practical Knowledge Gap, Methodological Gap, Empirical Gap, Theoretical Gap, atau Population Gap), beserta deskripsi singkat temuan Anda dari literatur.
+   - **JENIS RESEARCH GAP**: Isi dengan nama kategori dari 7 Research Gaps yang relevan (Evidence Gap, Knowledge Gap, Practical Knowledge Gap, Methodological Gap, Empirical Gap, Theoretical Gap, atau Population Gap), beserta deskripsi singkat temuan Anda dari literatur. **Usahakan memberikan minimal 2 celah penelitian berbeda (2 baris) untuk masing-masing JENIS RESEARCH GAP yang Anda temukan**.
    - **TINGKAT**: Isi dengan tingkat pendidikan yang paling sesuai (Pilih salah satu: Sarjana, Magister, atau Doktoral).
    - **NOVELTY**: Berikan usulan ide kebaruan (Novelty) yang konkret untuk mengisi celah tersebut sesuai dengan tingkat pendidikannya.
 
