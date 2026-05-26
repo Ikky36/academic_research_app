@@ -91,13 +91,26 @@ Berikan *HANYA* format tabel Markdown sebagai output Anda. Pastikan setiap baris
   }
 }
 
-export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic: string, userApiKey?: string): Promise<string> {
-  const apiKey = process.env.GROQ_API_KEY;
+export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic: string, userApiKey?: string, attempt = 1): Promise<string> {
+  let apiKey = userApiKey;
+  let maxAttempts = 3;
+
   if (!apiKey) {
-    throw new Error('GROQ API Key is missing. Please configure it in .env.local.');
+    const keysStr = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '';
+    const keys = keysStr.split(',').map(k => k.trim()).filter(Boolean);
+    
+    if (keys.length === 0) {
+      throw new Error('Gemini API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
+    }
+    
+    // Rotate keys
+    apiKey = keys[currentGeminiKeyIndex % keys.length];
+    currentGeminiKeyIndex = (currentGeminiKeyIndex + 1) % keys.length;
+    maxAttempts = Math.max(3, keys.length * 2);
   }
 
-  const groq = new Groq({ apiKey: apiKey });
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
   const prompt = `
 Anda adalah pakar penelitian akademik yang ahli dalam menemukan Research Gap dan Novelty.
@@ -128,13 +141,8 @@ Sajikan jawaban Anda dalam format Markdown yang rapi. Pastikan tabel dirender de
   `;
 
   try {
-    const response = await groq.chat.completions.create({
-      model: "llama3-70b-8192",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-    });
-    
-    let text = response.choices[0]?.message?.content || '';
+    const result = await model.generateContent(prompt);
+    let text = result.response.text();
     text = text.replace(/```markdown/gi, '').replace(/```/g, '').trim();
     
     // Fix broken table formatting where AI forgets newlines between rows (e.g. `| Col | |:---|`)
@@ -146,8 +154,30 @@ Sajikan jawaban Anda dalam format Markdown yang rapi. Pastikan tabel dirender de
 
     return text;
   } catch (err: any) {
-    console.error('Groq API Error (Gap & Novelty):', err);
-    throw new Error('Gagal menghasilkan analisis GAP & Novelty dari AI: ' + (err.message || ''));
+    console.error(`Gemini API Error (Gap & Novelty Attempt ${attempt}/${maxAttempts}):`, err);
+    const errorMessage = err.message || '';
+    
+    // Auto-retry for 503 Service Unavailable or similar server errors
+    if ((errorMessage.includes('503') || errorMessage.includes('500') || errorMessage.includes('502')) && attempt < maxAttempts) {
+      console.log(`Gemini Server Busy. Retrying Gap & Novelty (Attempt ${attempt + 1})...`);
+      await new Promise(resolve => setTimeout(resolve, 8000));
+      return generateGapAndNovelty(sotaMarkdown, researchTopic, userApiKey, attempt + 1);
+    }
+    
+    // Auto-retry for Rate Limit or Quota errors
+    if (errorMessage.includes('429') || errorMessage.includes('413') || errorMessage.toLowerCase().includes('rate limit') || errorMessage.toLowerCase().includes('quota')) {
+      if (attempt < maxAttempts) {
+        console.log(`Gemini Rate Limit/Quota. Switching key and retrying Gap & Novelty (Attempt ${attempt + 1}/${maxAttempts})...`);
+        const keysCount = process.env.GEMINI_API_KEYS ? process.env.GEMINI_API_KEYS.split(',').length : 1;
+        const waitTime = keysCount > 1 ? 2000 : 15000;
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        return generateGapAndNovelty(sotaMarkdown, researchTopic, userApiKey, attempt + 1);
+      }
+      const match = errorMessage.match(/retry in ([\d\.]+)s/);
+      const waitTime = match ? Math.ceil(parseFloat(match[1])) : 30;
+      throw new Error(`Batas penggunaan Gemini API tercapai pada semua kunci. Harap tunggu sekitar ${waitTime} detik lalu coba lagi.`);
+    }
+    throw new Error('Gagal menghasilkan analisis GAP & Novelty dari AI: ' + errorMessage);
   }
 }
 
