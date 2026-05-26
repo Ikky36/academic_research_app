@@ -96,7 +96,11 @@ Tugas Anda:
 1. Analisis seluruh literatur SOTA di atas.
 2. Identifikasi Research Gap (celah penelitian) dari literatur-literatur tersebut.
 3. **SAJIKAN HASILNYA DALAM BENTUK SATU TABEL MARKDOWN.** Tabel tersebut WAJIB hanya memiliki 3 kolom berikut:
-   - **JENIS RESEARCH GAP**: Isi dengan nama kategori dari 7 Research Gaps yang relevan (Evidence Gap, Knowledge Gap, Practical Knowledge Gap, Methodological Gap, Empirical Gap, Theoretical Gap, atau Population Gap), beserta deskripsi singkat temuan Anda dari literatur. **Sertakan sitasi dalam format APA 7th edition dari literatur pada tabel SOTA untuk setiap pernyataan research gap yang Anda temukan**. **Usahakan memberikan minimal 2 celah penelitian berbeda (2 baris) untuk masing-masing JENIS RESEARCH GAP yang Anda temukan**.
+   - **JENIS RESEARCH GAP**: Isi dengan nama kategori dari 7 Research Gaps yang relevan (Evidence Gap, Knowledge Gap, Practical Knowledge Gap, Methodological Gap, Empirical Gap, Theoretical Gap, atau Population Gap).
+     **ATURAN SANGAT PENTING (WAJIB DIIKUTI)**: 
+     1. **JANGAN MENGGABUNGKAN KATEGORI GAP**. (Contoh SALAH: "Practical Knowledge Gap & Population Gap"). Tuliskan hanya SATU nama kategori (misal: "Population Gap") untuk setiap baris.
+     2. Untuk setiap jenis gap yang Anda pilih, Anda **WAJIB memberikan MINIMAL 2 celah penelitian yang berbeda**. Artinya, harus ada minimal 2 baris terpisah di tabel untuk kategori gap yang sama (contoh: 2 baris untuk Population Gap, 2 baris untuk Knowledge Gap).
+     3. Anda **WAJIB menyertakan sitasi dalam format APA 7th edition** (contoh: Smith et al., 2023) di dalam teks deskripsi gap. **DILARANG KERAS** menggunakan format "SOTA 13" atau "SOTA 3". Gunakan nama penulis dan tahun yang tercantum di kolom "Penulis" pada Tabel SOTA.
    - **TINGKAT**: Isi dengan tingkat pendidikan yang paling sesuai (Pilih salah satu: Sarjana, Magister, atau Doktoral).
    - **NOVELTY**: Berikan usulan ide kebaruan (Novelty) yang konkret untuk mengisi celah tersebut sesuai dengan tingkat pendidikannya.
 
