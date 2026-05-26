@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 
 export async function generateSotaChunk(referencesChunk: any[], startIndex: number, userApiKey?: string, attempt = 1): Promise<string> {
   // Setup Gemini AI
@@ -75,13 +76,12 @@ Berikan *HANYA* format tabel Markdown sebagai output Anda. Pastikan setiap baris
 }
 
 export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic: string, userApiKey?: string): Promise<string> {
-  const apiKey = userApiKey || process.env.GEMINI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error('Gemini API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
+    throw new Error('OpenAI API Key is missing. Please configure it in .env.local.');
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const openai = new OpenAI({ apiKey: apiKey });
 
   const prompt = `
 Anda adalah pakar penelitian akademik yang ahli dalam menemukan Research Gap dan Novelty.
@@ -104,7 +104,7 @@ Tugas Anda:
    - **TINGKAT**: Isi dengan tingkat pendidikan yang paling sesuai (Pilih salah satu: Sarjana, Magister, atau Doktoral).
    - **NOVELTY**: Berikan usulan ide kebaruan (Novelty) yang konkret untuk mengisi celah tersebut sesuai dengan tingkat pendidikannya.
 
-   *(Penting: Pastikan penulisan tabel Markdown menggunakan baris baru / ENTER yang benar antara baris header, baris pemisah `|---|`, dan baris isi tabel agar tabel bisa dirender dengan baik)*
+   *(Penting: Pastikan penulisan tabel Markdown menggunakan baris baru / ENTER yang benar antara baris header, baris pemisah \`|---|\`, dan baris isi tabel agar tabel bisa dirender dengan baik)*
 
 4. Di bawah tabel tersebut, berikan evaluasi khusus mengenai **Topik/Judul yang diajukan di atas**: Apakah topik saya sudah memiliki Novelty yang kuat? Jika belum, berikan saran perbaikan spesifik agar Topik tersebut memiliki Novelty yang kuat.
 
@@ -112,8 +112,13 @@ Sajikan jawaban Anda dalam format Markdown yang rapi. Pastikan tabel dirender de
   `;
 
   try {
-    const result = await model.generateContent(prompt);
-    let text = result.response.text();
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+    });
+    
+    let text = response.choices[0].message.content || '';
     text = text.replace(/```markdown/gi, '').replace(/```/g, '').trim();
     
     // Fix broken table formatting where AI forgets newlines between rows (e.g. `| Col | |:---|`)
@@ -127,7 +132,7 @@ Sajikan jawaban Anda dalam format Markdown yang rapi. Pastikan tabel dirender de
 
     return text;
   } catch (err: any) {
-    console.error('Gemini API Error (Gap & Novelty):', err);
+    console.error('OpenAI API Error (Gap & Novelty):', err);
     throw new Error('Gagal menghasilkan analisis GAP & Novelty dari AI: ' + (err.message || ''));
   }
 }
