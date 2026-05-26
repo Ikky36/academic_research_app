@@ -3,7 +3,7 @@ $key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR
 $scopus = "3cb611380776af6e0a1f47b4fb64c7ba"
 $gemini = "AIzaSyBpkF19RePFOYHrZTCrDYnqPkLX-v8x-tU"
 $groq = "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"
-
+$openai = "sk-1234efgh5678ijkl1234efgh5678ijkl1234efgh"
 npx vercel env add NEXT_PUBLIC_SUPABASE_URL production --value $url --yes
 npx vercel env add NEXT_PUBLIC_SUPABASE_URL preview --value $url --yes
 npx vercel env add NEXT_PUBLIC_SUPABASE_URL development --value $url --yes
@@ -23,5 +23,9 @@ npx vercel env add GEMINI_API_KEY development --value $gemini --yes
 npx vercel env add GROQ_API_KEY production --value $groq --yes
 npx vercel env add GROQ_API_KEY preview --value $groq --yes
 npx vercel env add GROQ_API_KEY development --value $groq --yes
+
+npx vercel env add OPENAI_API_KEY production --value $openai --yes
+npx vercel env add OPENAI_API_KEY preview --value $openai --yes
+npx vercel env add OPENAI_API_KEY development --value $openai --yes
 
 Write-Host "All environment variables pushed!"
