@@ -52,12 +52,19 @@ export async function searchSemanticScholar(query: string, limit = 10, page = 1)
   
   const randomIp = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
   
+  const headers: Record<string, string> = {
+    'User-Agent': 'AcademicResearchApp/1.0 (mailto:scholar@university.edu)',
+    'X-Forwarded-For': randomIp,
+    'X-Real-IP': randomIp
+  };
+
+  const apiKey = process.env.SEMANTIC_SCHOLAR_API_KEY || process.env.NEXT_PUBLIC_SEMANTIC_SCHOLAR_API_KEY;
+  if (apiKey) {
+    headers['x-api-key'] = apiKey;
+  }
+
   const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'AcademicResearchApp/1.0 (mailto:scholar@university.edu)',
-      'X-Forwarded-For': randomIp,
-      'X-Real-IP': randomIp
-    }
+    headers
   });
   
   if (!response.ok) {
