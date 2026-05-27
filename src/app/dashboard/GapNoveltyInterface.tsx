@@ -108,28 +108,8 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
         }
       }
 
-      // Generate Evaluation
-      const evalResponse = await fetch('/api/gap-novelty', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sotaMarkdown,
-          researchTopic,
-          projectId,
-          gapType: 'EVALUATION'
-        }),
-      });
-
-      let evaluationText = '> *Gagal menghasilkan evaluasi topik secara otomatis.*';
-      if (evalResponse.ok) {
-        const evalData = await evalResponse.json();
-        evaluationText = evalData.gapMarkdown || evaluationText;
       }
 
-      currentMarkdown += `\n\n### Evaluasi Topik\n\n${evaluationText}\n\n`;
-      setGapMarkdown(currentMarkdown);
       localStorage.setItem(`gap_novelty_${projectId}`, currentMarkdown);
       
     } catch (err: any) {
