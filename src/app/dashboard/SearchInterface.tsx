@@ -387,10 +387,10 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
               }} 
               className={styles.sourceSelect}
             >
-              <option value="semantic-scholar">Semantic Scholar (Terbaik & Komprehensif)</option>
-              <option value="openalex">OpenAlex (Alternatif Semantic Scholar)</option>
-              <option value="crossref">Crossref (Terbuka & Gratis)</option>
-              <option value="scopus">Scopus (Kualitas Tinggi)</option>
+              <option value="semantic-scholar">Semantic Scholar</option>
+              <option value="openalex">OpenAlex</option>
+              <option value="crossref">Crossref</option>
+              <option value="scopus">Scopus</option>
             </select>
             <button type="submit" disabled={loading || !booleanQuery} className={styles.searchButton}>
               {loading ? 'Mencari...' : 'Cari'}
