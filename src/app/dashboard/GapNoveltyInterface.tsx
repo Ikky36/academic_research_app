@@ -15,6 +15,7 @@ interface GapNoveltyInterfaceProps {
 export default function GapNoveltyInterface({ projectId, isActive, limits, role }: GapNoveltyInterfaceProps) {
   const [sotaMarkdown, setSotaMarkdown] = useState('');
   const [researchTopic, setResearchTopic] = useState('');
+  const [educationLevel, setEducationLevel] = useState('Sarjana');
   const [gapMarkdown, setGapMarkdown] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
@@ -36,6 +37,11 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
       if (savedGap) {
         setGapMarkdown(savedGap);
       }
+
+      const savedLevel = localStorage.getItem(`education_level_${projectId}`);
+      if (savedLevel) {
+        setEducationLevel(savedLevel);
+      }
     }
   }, [isActive, projectId]);
 
@@ -43,6 +49,12 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
     const value = e.target.value;
     setResearchTopic(value);
     localStorage.setItem(`research_topic_${projectId}`, value);
+  };
+
+  const handleLevelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setEducationLevel(value);
+    localStorage.setItem(`education_level_${projectId}`, value);
   };
 
   const handleGenerate = async () => {
@@ -70,7 +82,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
       "Population Gap"
     ];
 
-    let currentMarkdown = `| JENIS RESEARCH GAP | TINGKAT | NOVELTY |\n|---|---|---|\n`;
+    let currentMarkdown = `| JENIS RESEARCH GAP | NOVELTY |\n|---|---|\n`;
     setGapMarkdown(currentMarkdown);
 
     try {
@@ -84,7 +96,8 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
             sotaMarkdown,
             researchTopic,
             projectId,
-            gapType
+            gapType,
+            educationLevel
           }),
         });
 
@@ -96,7 +109,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
             if (errData.error) errorMsg = errData.error;
           } catch(e) {}
           
-          currentMarkdown += `| **${gapType}** | *Error* | *${errorMsg}* |\n`;
+          currentMarkdown += `| **${gapType}** | *Error: ${errorMsg}* |\n`;
           setGapMarkdown(currentMarkdown);
           continue;
         }
@@ -151,6 +164,19 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
           onChange={handleTopicChange}
           rows={3}
         />
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#9CA3AF' }}>Tingkat Pendidikan:</label>
+          <select 
+            value={educationLevel}
+            onChange={handleLevelChange}
+            style={{ padding: '10px', borderRadius: '8px', border: '1px solid #4B5563', background: '#1F2937', color: '#fff', width: '100%', fontSize: '15px' }}
+          >
+            <option value="Sarjana">S1 (Sarjana)</option>
+            <option value="Magister">S2 (Magister)</option>
+            <option value="Doktoral">S3 (Doktoral)</option>
+          </select>
+        </div>
 
         <div className={styles.buttonGroup}>
           <button 

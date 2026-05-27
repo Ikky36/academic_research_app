@@ -101,7 +101,7 @@ async function fetchWithRetry(model: any, prompt: string, attempt = 1): Promise<
   }
 }
 
-export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic: string, userApiKey?: string, gapType?: string): Promise<string> {
+export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic: string, userApiKey?: string, gapType?: string, educationLevel: string = 'Sarjana'): Promise<string> {
   const apiKey = userApiKey || process.env.GEMINI_GAP_API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('Gemini API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
@@ -121,7 +121,7 @@ Dan Topik/Judul penelitian yang diajukan:
 
 Tugas Anda:
 Berikan evaluasi khusus mengenai Topik/Judul yang diajukan di atas. Apakah topik ini sudah memiliki Novelty yang kuat dibandingkan literatur di SOTA? 
-Jika belum, berikan saran perbaikan spesifik agar Topik tersebut memiliki Novelty yang kuat.
+Jika belum, berikan saran perbaikan spesifik agar Topik tersebut memiliki Novelty yang kuat dan sesuai untuk tingkat pendidikan **${educationLevel}**.
 
 Berikan hanya teks evaluasi Anda dalam format Markdown yang rapi (paragraf/list), tanpa tabel apapun.
     `;
@@ -146,18 +146,18 @@ ${sotaMarkdown}
 
 Tugas Anda:
 Identifikasi **${gapType}** dari literatur-literatur SOTA di atas.
-Anda WAJIB memberikan **TEPAT 2** celah penelitian (Research Gap) yang berbeda untuk tipe ${gapType} ini.
+Anda WAJIB memberikan **TEPAT 2** celah penelitian (Research Gap) yang berbeda untuk tipe ${gapType} ini. 
+Bobot kebaruan (novelty) dan narasi gap yang Anda buat HARUS disesuaikan secara khusus untuk tingkat pendidikan **${educationLevel}**.
 
 Sajikan hasilnya HANYA dalam format tabel Markdown tanpa teks pengantar atau penutup apapun.
-Tabel harus memiliki tepat 3 kolom:
-| JENIS RESEARCH GAP | TINGKAT | NOVELTY |
-|---|---|---|
+Tabel harus memiliki tepat 2 kolom:
+| JENIS RESEARCH GAP | NOVELTY |
+|---|---|
 
 ATURAN SANGAT PENTING:
 1. Kolom "JENIS RESEARCH GAP": Isi dengan nama "${gapType}" diikuti dengan deskripsi celah penelitiannya. Anda WAJIB menyertakan sitasi APA 7th edition (contoh: Smith et al., 2023) yang merujuk pada penulis di tabel SOTA. JANGAN gunakan format "SOTA 1" atau "SOTA 3".
-2. Kolom "TINGKAT": Isi dengan tingkat pendidikan yang paling sesuai (Sarjana, Magister, atau Doktoral).
-3. Kolom "NOVELTY": Berikan usulan ide kebaruan konkret untuk mengisi celah tersebut.
-4. Anda WAJIB memberikan persis 2 baris isi tabel (artinya ada 2 pernyataan gap yang berbeda untuk tipe ${gapType} ini).
+2. Kolom "NOVELTY": Berikan usulan ide kebaruan konkret untuk mengisi celah tersebut. Pastikan narasi kebaruannya berbobot dan sesuai untuk standar tugas akhir **${educationLevel}**.
+3. Anda WAJIB memberikan persis 2 baris isi tabel (artinya ada 2 pernyataan gap yang berbeda untuk tipe ${gapType} ini).
     `;
 
     try {

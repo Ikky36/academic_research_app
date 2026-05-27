@@ -13,14 +13,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { sotaMarkdown, researchTopic, projectId, gapType } = await req.json();
+    const { sotaMarkdown, researchTopic, projectId, gapType, educationLevel } = await req.json();
 
     if (!sotaMarkdown || !researchTopic) {
       return NextResponse.json({ error: 'Missing sotaMarkdown or researchTopic' }, { status: 400 });
     }
 
     // Generate Gap and Novelty for a specific type
-    const gapMarkdown = await generateGapAndNovelty(sotaMarkdown, researchTopic, undefined, gapType);
+    const gapMarkdown = await generateGapAndNovelty(sotaMarkdown, researchTopic, undefined, gapType, educationLevel);
 
     return NextResponse.json({ gapMarkdown });
   } catch (error: any) {
