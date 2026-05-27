@@ -57,7 +57,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
     localStorage.setItem(`education_level_${projectId}`, value);
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (retryOnly: boolean = false) => {
     if (!sotaMarkdown) {
       setError('Tabel SOTA belum dibuat. Silakan buat Tabel SOTA terlebih dahulu di tab sebelah.');
       return;
@@ -70,7 +70,6 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
 
     setIsGenerating(true);
     setError('');
-    setGapMarkdown(''); // Reset previous output
 
     const gapTypes = [
       "Evidence Gap",
@@ -82,11 +81,22 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
       "Population Gap"
     ];
 
-    let currentMarkdown = `| JENIS RESEARCH GAP | NOVELTY |\n|---|---|\n`;
+    let currentMarkdown = retryOnly ? gapMarkdown : `| JENIS RESEARCH GAP | NOVELTY |\n|---|---|\n`;
+    
+    if (retryOnly) {
+      // Hapus baris yang mengandung error agar bisa di-fetch ulang
+      currentMarkdown = currentMarkdown.split('\n').filter(line => !line.includes('*Error')).join('\n');
+      if (!currentMarkdown.endsWith('\n')) currentMarkdown += '\n';
+    }
+
     setGapMarkdown(currentMarkdown);
 
     try {
       for (const gapType of gapTypes) {
+        if (retryOnly && currentMarkdown.includes(gapType)) {
+          continue; // Lewati yang sudah berhasil
+        }
+
         const response = await fetch('/api/gap-novelty', {
           method: 'POST',
           headers: {
@@ -180,11 +190,21 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
         <div className={styles.buttonGroup}>
           <button 
             className={styles.generateButton}
-            onClick={handleGenerate}
+            onClick={() => handleGenerate(false)}
             disabled={isGenerating || !researchTopic.trim()}
           >
             {isGenerating ? 'Menganalisis dengan AI... ⏳' : '✨ Analisis GAP & Novelty'}
           </button>
+
+          {gapMarkdown && gapMarkdown.includes('*Error') && !isGenerating && (
+            <button 
+              className={styles.generateButton} 
+              style={{ background: '#f59e0b' }}
+              onClick={() => handleGenerate(true)}
+            >
+              🔄 Ulangi yang Error
+            </button>
+          )}
           
           {gapMarkdown && (
             <button 
