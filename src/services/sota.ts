@@ -88,14 +88,16 @@ async function fetchWithRetry(model: any, prompt: string, attempt = 1): Promise<
       return fetchWithRetry(model, prompt, attempt + 1);
     }
     if (errorMessage.includes('429') || errorMessage.includes('413') || errorMessage.toLowerCase().includes('rate limit')) {
-      if (attempt < 3) {
-        console.log(`Gemini Rate Limit. Retrying (Attempt ${attempt + 1})...`);
-        await new Promise(resolve => setTimeout(resolve, 15000));
-        return fetchWithRetry(model, prompt, attempt + 1);
-      }
       const match = errorMessage.match(/retry in ([\d\.]+)s/);
-      const waitTime = match ? Math.ceil(parseFloat(match[1])) : 30;
-      throw new Error(`Batas penggunaan gratis Gemini API tercapai. Harap tunggu sekitar ${waitTime} detik lalu coba lagi.`);
+      const waitTime = match ? Math.ceil(parseFloat(match[1])) : 15;
+
+      if (waitTime > 15 || attempt >= 3) {
+        throw new Error(`Batas penggunaan gratis Gemini API tercapai. Harap tunggu sekitar ${waitTime} detik lalu coba lagi.`);
+      }
+
+      console.log(`Gemini Rate Limit. Retrying in ${waitTime}s (Attempt ${attempt + 1})...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+      return fetchWithRetry(model, prompt, attempt + 1);
     }
     throw new Error('Gagal dari AI: ' + errorMessage);
   }

@@ -92,8 +92,12 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
     setGapMarkdown(currentMarkdown);
 
     try {
-      for (const gapType of gapTypes) {
+      let i = 0;
+      while (i < gapTypes.length) {
+        const gapType = gapTypes[i];
+
         if (retryOnly && currentMarkdown.includes(gapType)) {
+          i++;
           continue; // Lewati yang sudah berhasil
         }
 
@@ -119,8 +123,23 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
             if (errData.error) errorMsg = errData.error;
           } catch(e) {}
           
+          // Auto-wait and retry on client if we hit rate limits
+          const waitMatch = errorMsg.match(/tunggu sekitar (\d+) detik/);
+          if (waitMatch) {
+            const waitTime = parseInt(waitMatch[1], 10);
+            const waitRow = `| **${gapType}** | *Batas API tercapai. Menunggu ${waitTime} detik untuk mencoba kembali secara otomatis...* |\n`;
+            setGapMarkdown(currentMarkdown + waitRow);
+            
+            // Sleep on the client side
+            await new Promise(resolve => setTimeout(resolve, (waitTime + 2) * 1000));
+            
+            // Do NOT increment i, it will loop and retry the exact same gapType
+            continue;
+          }
+
           currentMarkdown += `| **${gapType}** | *Error: ${errorMsg}* |\n`;
           setGapMarkdown(currentMarkdown);
+          i++;
           continue;
         }
 
@@ -129,6 +148,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
           currentMarkdown += data.gapMarkdown + '\n';
           setGapMarkdown(currentMarkdown);
         }
+        i++;
       }
 
     
