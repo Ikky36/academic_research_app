@@ -60,7 +60,7 @@ export async function saveReference(projectId: string, reference: any) {
       title: reference.title,
       abstract: reference.abstract,
       authors: reference.year ? `${reference.authors} (${reference.year})` : reference.authors,
-      source: reference.source,
+      source: ['crossref', 'scopus', 'pdf'].includes(reference.source) ? reference.source : null,
       pdf_drive_link: reference.url
     });
 
