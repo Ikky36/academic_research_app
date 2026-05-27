@@ -1,7 +1,7 @@
 $url = "https://dlwwrwwarmflxknynfvk.supabase.co"
 $key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsd3dyd3dhcm1mbHhrbnluZnZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NjUzMTcsImV4cCI6MjA5NTA0MTMxN30.cP2RE3TozEHqfexIHl1mL6v_5f5fu7bsEtNIVJeE1uU"
 $scopus = "3cb611380776af6e0a1f47b4fb64c7ba"
-$gemini = "AIzaSyBpkF19RePFOYHrZTCrDYnqPkLX-v8x-tU"
+$gemini = "AIzaSyD3S4nH-rAQpn_0rYqBy5Ig1wh5dzBGPkA"
 $groq = "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"
 $openai = "sk-1234efgh5678ijkl1234efgh5678ijkl1234efgh"
 npx vercel env add NEXT_PUBLIC_SUPABASE_URL production --value $url --yes
@@ -20,19 +20,19 @@ npx vercel env add GEMINI_API_KEY production --value $gemini --yes
 npx vercel env add GEMINI_API_KEY preview --value $gemini --yes
 npx vercel env add GEMINI_API_KEY development --value $gemini --yes
 
-$gemini_keys = "AIzaSyBpkF19RePFOYHrZTCrDYnqPkLX-v8x-tU,AIzaSyDMj9giYeMmQVAcN14B-XpSdDVOyeDhbKk,AIzaSyD3S4nH-rAQpn_0rYqBy5Ig1wh5dzBGPkA,AIzaSyAGT_hRjK9DWS6XlVzY7pP3Fz3HqamJwJI,AIzaSyDlnhj3cNRc9GG7DheJkfPDpuF4UxoukNE,AIzaSyAQRalzuW3oDv-mRNVMcY99Zk3mu7MjelQ"
+$gemini_gap = "AIzaSyDMj9giYeMmQVAcN14B-XpSdDVOyeDhbKk"
 
 npx vercel env add GROQ_API_KEY production --value $groq --yes
 npx vercel env add GROQ_API_KEY preview --value $groq --yes
 npx vercel env add GROQ_API_KEY development --value $groq --yes
 
+npx vercel env add GEMINI_GAP_API_KEY production --value $gemini_gap --yes
+npx vercel env add GEMINI_GAP_API_KEY preview --value $gemini_gap --yes
+npx vercel env add GEMINI_GAP_API_KEY development --value $gemini_gap --yes
+
 npx vercel env add OPENAI_API_KEY production --value $openai --yes
 npx vercel env add OPENAI_API_KEY preview --value $openai --yes
 npx vercel env add OPENAI_API_KEY development --value $openai --yes
-
-npx vercel env add GEMINI_API_KEYS production --value $gemini_keys --yes
-npx vercel env add GEMINI_API_KEYS preview --value $gemini_keys --yes
-npx vercel env add GEMINI_API_KEYS development --value $gemini_keys --yes
 
 npx vercel env add OPENAI_API_KEY production --value $openai --yes
 npx vercel env add OPENAI_API_KEY preview --value $openai --yes
