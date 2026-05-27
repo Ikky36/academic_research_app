@@ -121,8 +121,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
         }
       }
 
-      }
-
+    
       localStorage.setItem(`gap_novelty_${projectId}`, currentMarkdown);
       
     } catch (err: any) {
