@@ -161,23 +161,11 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
     }
   };
 
-  const handleDownload = () => {
-    if (!gapMarkdown) return;
-    
-    // Create markdown file
-    let content = `# Analisis Research GAP & Novelty\n\n`;
-    content += `**Topik Penelitian:** ${researchTopic}\n\n`;
-    content += gapMarkdown;
-    
-    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Research_GAP_Novelty_${projectId}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleReset = () => {
+    if (confirm('Apakah Anda yakin ingin mereset hasil Research GAP & Novelty ini?')) {
+      setGapMarkdown('');
+      localStorage.removeItem(`gap_novelty_${projectId}`);
+    }
   };
 
   return (
@@ -229,10 +217,10 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
           {gapMarkdown && (
             <button 
               className={styles.generateButton} 
-              style={{ background: '#10b981' }}
-              onClick={handleDownload}
+              style={{ background: '#ef4444' }}
+              onClick={handleReset}
             >
-              📥 Unduh Hasil (MD)
+              🗑️ Reset
             </button>
           )}
         </div>
