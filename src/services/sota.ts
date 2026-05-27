@@ -101,7 +101,7 @@ async function fetchWithRetry(model: any, prompt: string, attempt = 1): Promise<
   }
 }
 
-export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic: string, userApiKey?: string): Promise<string> {
+export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic: string, userApiKey?: string, gapType?: string): Promise<string> {
   const apiKey = userApiKey || process.env.GEMINI_GAP_API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('Gemini API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
@@ -110,21 +110,35 @@ export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic:
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-  const gapTypes = [
-    "Evidence Gap",
-    "Knowledge Gap",
-    "Practical Knowledge Gap",
-    "Methodological Gap",
-    "Empirical Gap",
-    "Theoretical Gap",
-    "Population Gap"
-  ];
+  // If EVALUATION is passed, evaluate the topic
+  if (gapType === 'EVALUATION') {
+    const evalPrompt = `
+Berdasarkan Tabel SOTA berikut:
+${sotaMarkdown}
 
-  let finalTable = `| JENIS RESEARCH GAP | TINGKAT | NOVELTY |\n|---|---|---|\n`;
+Dan Topik/Judul penelitian yang diajukan:
+"${researchTopic}"
 
-  // 1. Loop over each gap type sequentially to avoid rate limits and token overload
-  for (const gapType of gapTypes) {
-    console.log(`Generating gap: ${gapType}...`);
+Tugas Anda:
+Berikan evaluasi khusus mengenai Topik/Judul yang diajukan di atas. Apakah topik ini sudah memiliki Novelty yang kuat dibandingkan literatur di SOTA? 
+Jika belum, berikan saran perbaikan spesifik agar Topik tersebut memiliki Novelty yang kuat.
+
+Berikan hanya teks evaluasi Anda dalam format Markdown yang rapi (paragraf/list), tanpa tabel apapun.
+    `;
+    
+    let evaluationText = '';
+    try {
+      let evalRes = await fetchWithRetry(model, evalPrompt);
+      evaluationText = evalRes.replace(/```markdown/gi, '').replace(/```/g, '').trim();
+    } catch (err) {
+      console.error('Gagal mengevaluasi topik:', err);
+      evaluationText = '> *Gagal menghasilkan evaluasi topik secara otomatis.*';
+    }
+    return evaluationText;
+  }
+
+  // Generate for a specific gap type
+  if (gapType) {
     const prompt = `
 Anda adalah pakar penelitian akademik yang ahli dalam menemukan Research Gap dan Novelty.
 Berdasarkan Tabel State-of-the-Art (SOTA) berikut:
@@ -150,45 +164,15 @@ ATURAN SANGAT PENTING:
       let text = await fetchWithRetry(model, prompt);
       text = text.replace(/```markdown/gi, '').replace(/```/g, '').trim();
       
-      // Extract only the data rows from the generated table (ignore headers)
       const lines = text.split('\n').map(l => l.trim()).filter(l => l.startsWith('|'));
       const dataLines = lines.filter(l => !l.toUpperCase().includes('JENIS RESEARCH GAP') && !l.includes('---'));
       
-      if (dataLines.length > 0) {
-        finalTable += dataLines.join('\n') + '\n';
-      }
+      return dataLines.join('\n');
     } catch (err: any) {
-      console.error(`Gagal memproses ${gapType}:`, err);
-      // We continue to the next gap type even if one fails so we don't lose everything
+      throw new Error(`Gagal memproses ${gapType}: ${err.message}`);
     }
   }
 
-  // 2. Generate Evaluation
-  console.log(`Generating evaluation for topic...`);
-  const evalPrompt = `
-Berdasarkan Tabel SOTA berikut:
-${sotaMarkdown}
-
-Dan Topik/Judul penelitian yang diajukan:
-"${researchTopic}"
-
-Tugas Anda:
-Berikan evaluasi khusus mengenai Topik/Judul yang diajukan di atas. Apakah topik ini sudah memiliki Novelty yang kuat dibandingkan literatur di SOTA? 
-Jika belum, berikan saran perbaikan spesifik agar Topik tersebut memiliki Novelty yang kuat.
-
-Berikan hanya teks evaluasi Anda dalam format Markdown yang rapi (paragraf/list), tanpa tabel apapun.
-  `;
-  
-  let evaluationText = '';
-  try {
-    let evalRes = await fetchWithRetry(model, evalPrompt);
-    evaluationText = evalRes.replace(/```markdown/gi, '').replace(/```/g, '').trim();
-  } catch (err) {
-    console.error('Gagal mengevaluasi topik:', err);
-    evaluationText = '> *Gagal menghasilkan evaluasi topik secara otomatis.*';
-  }
-
-  // Ensure Markdown parses the table correctly with blank lines
-  return `\n\n${finalTable}\n\n### Evaluasi Topik\n\n${evaluationText}\n\n`;
+  return '';
 }
 

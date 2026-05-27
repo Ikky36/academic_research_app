@@ -58,9 +58,50 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
 
     setIsGenerating(true);
     setError('');
+    setGapMarkdown(''); // Reset previous output
+
+    const gapTypes = [
+      "Evidence Gap",
+      "Knowledge Gap",
+      "Practical Knowledge Gap",
+      "Methodological Gap",
+      "Empirical Gap",
+      "Theoretical Gap",
+      "Population Gap"
+    ];
+
+    let currentMarkdown = `| JENIS RESEARCH GAP | TINGKAT | NOVELTY |\n|---|---|---|\n`;
+    setGapMarkdown(currentMarkdown);
 
     try {
-      const response = await fetch('/api/gap-novelty', {
+      for (const gapType of gapTypes) {
+        const response = await fetch('/api/gap-novelty', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sotaMarkdown,
+            researchTopic,
+            projectId,
+            gapType
+          }),
+        });
+
+        if (!response.ok) {
+          console.warn(`Failed to generate gap type: ${gapType}`);
+          continue; // Skip errors for a single row so we don't break the whole table
+        }
+
+        const data = await response.json();
+        if (data.gapMarkdown) {
+          currentMarkdown += data.gapMarkdown + '\n';
+          setGapMarkdown(currentMarkdown);
+        }
+      }
+
+      // Generate Evaluation
+      const evalResponse = await fetch('/api/gap-novelty', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,20 +109,23 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
         body: JSON.stringify({
           sotaMarkdown,
           researchTopic,
-          projectId
+          projectId,
+          gapType: 'EVALUATION'
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Gagal menghasilkan analisis GAP & Novelty');
+      let evaluationText = '> *Gagal menghasilkan evaluasi topik secara otomatis.*';
+      if (evalResponse.ok) {
+        const evalData = await evalResponse.json();
+        evaluationText = evalData.gapMarkdown || evaluationText;
       }
 
-      const data = await response.json();
-      setGapMarkdown(data.gapMarkdown);
-      localStorage.setItem(`gap_novelty_${projectId}`, data.gapMarkdown);
+      currentMarkdown += `\n\n### Evaluasi Topik\n\n${evaluationText}\n\n`;
+      setGapMarkdown(currentMarkdown);
+      localStorage.setItem(`gap_novelty_${projectId}`, currentMarkdown);
+      
     } catch (err: any) {
-      setError(err.message || 'Terjadi kesalahan sistem.');
+      setError(err.message || 'Terjadi kesalahan sistem saat komunikasi dengan server.');
     } finally {
       setIsGenerating(false);
     }
