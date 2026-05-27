@@ -90,7 +90,15 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
 
         if (!response.ok) {
           console.warn(`Failed to generate gap type: ${gapType}`);
-          continue; // Skip errors for a single row so we don't break the whole table
+          let errorMsg = 'Gagal (Server Error)';
+          try {
+            const errData = await response.json();
+            if (errData.error) errorMsg = errData.error;
+          } catch(e) {}
+          
+          currentMarkdown += `| **${gapType}** | *Error* | *${errorMsg}* |\n`;
+          setGapMarkdown(currentMarkdown);
+          continue;
         }
 
         const data = await response.json();
