@@ -48,7 +48,7 @@ export async function searchSemanticScholar(query: string, limit = 10, page = 1)
   const broadQuery = query.replace(/\b(AND|OR|NOT)\b/gi, ' ').replace(/[()"]/g, ' ').replace(/\s+/g, ' ').trim();
   
   const FETCH_SIZE = 100; // Semantic scholar limits to 100 per request without pagination offset easily accessible in search
-  const url = `https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(broadQuery)}&limit=${FETCH_SIZE}&fields=title,authors,year,abstract,url,openAccessPdf,externalIds`;
+  const url = `https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(broadQuery)}&limit=${FETCH_SIZE}&fields=title,authors,year,abstract,url,openAccessPdf,externalIds,s2FieldsOfStudy,tldr`;
   
   const randomIp = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
   
@@ -82,14 +82,15 @@ export async function searchSemanticScholar(query: string, limit = 10, page = 1)
     title: item.title || 'No Title',
     authors: item.authors?.map((a: any) => a.name).join(', ') || 'Unknown Authors',
     year: item.year || '',
-    abstract: item.abstract || '',
+    abstract: item.abstract || item.tldr?.text || '',
     url: item.url || '',
-    pdfLink: item.openAccessPdf?.url || null
+    pdfLink: item.openAccessPdf?.url || null,
+    keywords: item.s2FieldsOfStudy?.map((f: any) => f.category).join(', ') || ''
   }));
 
   // Apply Strict Boolean Filtering locally
   const filteredItems = items.filter((item: any) => {
-    const combinedText = `${item.title} ${item.abstract}`;
+    const combinedText = `${item.title} ${item.abstract} ${item.keywords}`;
     return evaluateBooleanQuery(combinedText, query);
   });
 
