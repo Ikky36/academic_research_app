@@ -8,6 +8,7 @@ import { uploadToDrive } from '@/services/drive'
 import { getPdfUrlFromUnpaywall } from '@/services/unpaywall'
 import { generateSotaChunk } from '@/services/sota'
 import { searchOpenAlex } from '@/services/openalex'
+import { searchSemanticScholar } from '@/services/semantic-scholar'
 
 export async function generateAIQueryAction(topic: string, problem: string, userApiKey?: string) {
   try {
@@ -18,10 +19,16 @@ export async function generateAIQueryAction(topic: string, problem: string, user
   }
 }
 
-export async function searchPapers(query: string, source: 'crossref' | 'scopus' | 'openalex', limit: number = 10, page: number = 1) {
+export async function searchPapers(query: string, source: 'crossref' | 'scopus' | 'openalex' | 'semantic-scholar', limit: number = 10, page: number = 1) {
   if (source === 'crossref') {
     try {
       return await searchCrossref(query, limit, page);
+    } catch (e: any) {
+      return { error: e.message };
+    }
+  } else if (source === 'semantic-scholar') {
+    try {
+      return await searchSemanticScholar(query, limit, page);
     } catch (e: any) {
       return { error: e.message };
     }

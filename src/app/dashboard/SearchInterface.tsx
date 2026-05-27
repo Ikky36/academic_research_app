@@ -88,7 +88,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
   const [booleanQuery, setBooleanQuery] = useState('');
   const [generatingAI, setGeneratingAI] = useState(false);
   
-  const [source, setSource] = useState<'crossref' | 'scopus' | 'openalex'>('openalex');
+  const [source, setSource] = useState<'crossref' | 'scopus' | 'openalex' | 'semantic-scholar'>('semantic-scholar');
   const [results, setResults] = useState<any[]>([]);
   const [totalResults, setTotalResults] = useState(0);
   
@@ -106,7 +106,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
         setTopic(parsed.topic || '');
         setProblem(parsed.problem || '');
         setBooleanQuery(parsed.booleanQuery || '');
-        setSource(parsed.source || 'crossref');
+        setSource(parsed.source || 'semantic-scholar');
         setResults(parsed.results || []);
         setTotalResults(parsed.totalResults || 0);
         setPage(parsed.page || 1);
@@ -379,7 +379,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
             <select 
               value={source} 
               onChange={(e) => {
-                const newSource = e.target.value as 'crossref' | 'scopus' | 'openalex';
+                const newSource = e.target.value as 'crossref' | 'scopus' | 'openalex' | 'semantic-scholar';
                 setSource(newSource);
                 if (newSource === 'scopus' && limit > 25) {
                   setLimit(25);
@@ -387,6 +387,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
               }} 
               className={styles.sourceSelect}
             >
+              <option value="semantic-scholar">Semantic Scholar (Terbaik & Komprehensif)</option>
               <option value="openalex">OpenAlex (Alternatif Semantic Scholar)</option>
               <option value="crossref">Crossref (Terbuka & Gratis)</option>
               <option value="scopus">Scopus (Kualitas Tinggi)</option>
