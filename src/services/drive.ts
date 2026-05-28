@@ -35,8 +35,21 @@ export async function uploadToDrive(pdfUrl: string, projectId: string, title: st
   }
 
   // 3. Fetch PDF from URL
-  const pdfResponse = await fetch(pdfUrl);
-  if (!pdfResponse.ok) throw new Error('Failed to download PDF from source');
+  const pdfResponse = await fetch(pdfUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+  });
+  
+  if (!pdfResponse.ok) {
+    throw new Error(`Akses PDF diblokir oleh penerbit (Status: ${pdfResponse.status}). Coba unduh manual.`);
+  }
+  
+  const contentType = pdfResponse.headers.get('content-type');
+  if (contentType && contentType.includes('text/html')) {
+    throw new Error('Link PDF mengarah ke halaman website (HTML) atau berbayar, bukan file PDF langsung.');
+  }
+
   const pdfBuffer = await pdfResponse.arrayBuffer();
 
   // 4. Upload PDF to Project Folder

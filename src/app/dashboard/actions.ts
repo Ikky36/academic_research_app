@@ -73,11 +73,16 @@ export async function saveReference(projectId: string, reference: any) {
 
 export async function uploadToDriveAction(pdfUrl: string | null, doi: string | null, projectId: string, title: string) {
   try {
-    let finalPdfUrl = pdfUrl;
+    let finalPdfUrl = null;
     
-    // If no direct PDF URL but we have a DOI, try Unpaywall
-    if (!finalPdfUrl && doi) {
+    // Always try Unpaywall first if we have a DOI (since it provides direct PDF links reliably)
+    if (doi) {
       finalPdfUrl = await getPdfUrlFromUnpaywall(doi);
+    }
+    
+    // Fallback to the provided pdfUrl (e.g. from Semantic Scholar or OpenAlex) if Unpaywall fails
+    if (!finalPdfUrl) {
+      finalPdfUrl = pdfUrl;
     }
     
     if (!finalPdfUrl) {
