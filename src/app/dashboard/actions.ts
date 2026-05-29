@@ -198,12 +198,12 @@ export async function generateLiteratureReviewAction(
     const supabase = await createClient();
     const { data: references, error } = await supabase
       .from('extracted_data')
-      .select('title, authors, doi, published_year, journal_name')
+      .select('title, authors, doi')
       .eq('project_id', projectId);
       
     if (error) throw error;
     
-    const rawMetadata = references?.map(r => `Judul: ${r.title}\nPenulis: ${r.authors || 'Tidak diketahui'}\nDOI: ${r.doi || 'Tidak ada'}\nTahun: ${r.published_year || 'Tidak diketahui'}\nJurnal: ${r.journal_name || 'Tidak diketahui'}\n`).join('\n') || '';
+    const rawMetadata = references?.map(r => `Judul: ${r.title}\nPenulis: ${r.authors || 'Tidak diketahui'}\nDOI: ${r.doi || 'Tidak ada'}\n`).join('\n') || '';
 
     const result = await generateLiteratureReview(sotaMarkdown, topic, gapText, paragraphs, citationStyle, rawMetadata, userApiKey);
     return { data: result };
