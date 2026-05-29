@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import SearchInterface from './SearchInterface'
 import SotaInterface from './SotaInterface'
 import GapNoveltyInterface from './GapNoveltyInterface'
+import LitReviewInterface from './LitReviewInterface'
 import Sidebar from './Sidebar'
 import styles from './page.module.css'
 
@@ -98,6 +99,12 @@ export default async function DashboardPage({
           >
             💡 Research GAP & Novelty
           </Link>
+          <Link 
+            href={`/dashboard?tab=lit-review&project=${activeProject?.id}`} 
+            className={activeTab === 'lit-review' ? styles.activeTab : styles.tab}
+          >
+            📚 Literature Review
+          </Link>
         </div>
 
         <main className={styles.main}>
@@ -111,6 +118,9 @@ export default async function DashboardPage({
               </div>
               <div style={{ display: activeTab === 'gap-novelty' ? 'block' : 'none' }}>
                 <GapNoveltyInterface key={`gap-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'gap-novelty'} limits={limits} role={role} />
+              </div>
+              <div style={{ display: activeTab === 'lit-review' ? 'block' : 'none' }}>
+                <LitReviewInterface key={`lit-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'lit-review'} limits={limits} role={role} />
               </div>
             </>
           )}

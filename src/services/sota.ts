@@ -182,3 +182,48 @@ ATURAN SANGAT PENTING:
   return '';
 }
 
+
+export async function generateLiteratureReview(sotaMarkdown: string, topic: string, gapText: string, paragraphs: number, citationStyle: string, userApiKey?: string) {
+  const apiKey = userApiKey || process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Gemini API Key is missing.');
+  }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+  const prompt = `
+Anda adalah akademisi senior dan penulis jurnal internasional yang ahli dalam menyusun Tinjauan Pustaka (Literature Review).
+Tugas Anda adalah menulis sebuah Literature Review berbentuk esai naratif sebanyak ${paragraphs} paragraf, berdasarkan:
+
+1. Tabel State-of-the-Art (SOTA) berisi ringkasan jurnal-jurnal terdahulu:
+${sotaMarkdown}
+
+2. Topik/Judul Penelitian Baru yang dituju:
+"${topic}"
+
+3. Research Gap & Novelty spesifik yang sudah DIPILIH untuk menjadi fokus akhir:
+"${gapText}"
+
+ATURAN PENULISAN LITERATURE REVIEW:
+- Tulis TEPAT ${paragraphs} paragraf yang mengalir secara logis (paragraf 1: latar belakang/konteks umum dari SOTA, paragraf tengah: sintesis/perbandingan metode & hasil temuan SOTA, paragraf terakhir: mengerucut tajam pada Research Gap yang dipilih dan menegaskan urgensi/novelty dari Topik baru).
+- Lakukan kutipan dalam teks (in-text citation) dari tabel SOTA secara ketat mengikuti gaya kutipan **${citationStyle}**. 
+- DILARANG MENGARANG REFERENSI. Semua kutipan harus berasal murni dari Tabel SOTA yang diberikan.
+- Gunakan bahasa akademis yang baku, formal, dan analitis (bukan sekadar merangkum, melainkan mensintesis: membandingkan, mengontraskan, dan mencari tren).
+
+ATURAN PENULISAN DAFTAR PUSTAKA:
+- Di bagian paling bawah, setelah teks Literature Review selesai, buat judul "### Daftar Pustaka".
+- Tuliskan Daftar Pustaka lengkap HANYA untuk jurnal-jurnal yang Anda kutip di dalam teks, disusun sesuai pedoman gaya **${citationStyle}**.
+- Susun secara alfabetis (atau numerik jika IEEE).
+
+Berikan hasil akhirnya langsung dalam format Markdown yang rapi (paragraf naratif lalu daftar pustaka).
+`;
+
+  try {
+    let result = await fetchWithRetry(model, prompt);
+    return result.replace(/```markdown/gi, '').replace(/```/g, '').trim();
+  } catch (err: any) {
+    console.error('Literature Review generation error:', err);
+    throw new Error('Gagal menyusun Literature Review: ' + err.message);
+  }
+}

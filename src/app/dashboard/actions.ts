@@ -6,7 +6,7 @@ import { searchScopus } from '@/services/scopus'
 import { generateBooleanQuery } from '@/services/gemini'
 import { uploadToDrive } from '@/services/drive'
 import { getPdfUrlFromUnpaywall } from '@/services/unpaywall'
-import { generateSotaChunk } from '@/services/sota'
+import { generateSotaChunk, generateLiteratureReview } from '@/services/sota'
 import { searchOpenAlex } from '@/services/openalex'
 import { searchSemanticScholar } from '@/services/semantic-scholar'
 
@@ -180,6 +180,22 @@ export async function deleteReferenceAction(referenceId: string) {
 
     if (error) throw error;
     return { success: true };
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
+export async function generateLiteratureReviewAction(
+  sotaMarkdown: string,
+  topic: string,
+  gapText: string,
+  paragraphs: number,
+  citationStyle: string,
+  userApiKey?: string
+) {
+  try {
+    const result = await generateLiteratureReview(sotaMarkdown, topic, gapText, paragraphs, citationStyle, userApiKey);
+    return { data: result };
   } catch (e: any) {
     return { error: e.message };
   }
