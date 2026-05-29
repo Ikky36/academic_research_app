@@ -146,6 +146,9 @@ Anda adalah pakar penelitian akademik yang ahli dalam menemukan Research Gap dan
 Berdasarkan Tabel State-of-the-Art (SOTA) berikut:
 ${sotaMarkdown}
 
+Dan Topik/Judul penelitian yang ingin dituju:
+"${researchTopic}"
+
 Tugas Anda:
 Identifikasi **${gapType}** dari literatur-literatur SOTA di atas.
 Anda WAJIB memberikan **TEPAT 2** celah penelitian (Research Gap) yang berbeda untuk tipe ${gapType} ini. 
@@ -157,9 +160,10 @@ Tabel harus memiliki tepat 2 kolom:
 |---|---|
 
 ATURAN SANGAT PENTING:
-1. Kolom "JENIS RESEARCH GAP": Isi dengan nama "${gapType}" diikuti dengan deskripsi celah penelitiannya. Anda WAJIB menyertakan sitasi APA 7th edition (contoh: Smith et al., 2023) yang merujuk pada penulis di tabel SOTA. JANGAN gunakan format "SOTA 1" atau "SOTA 3".
-2. Kolom "NOVELTY": Berikan usulan ide kebaruan konkret untuk mengisi celah tersebut. Pastikan narasi kebaruannya berbobot dan sesuai untuk standar tugas akhir **${educationLevel}**.
-3. Anda WAJIB memberikan persis 2 baris isi tabel (artinya ada 2 pernyataan gap yang berbeda untuk tipe ${gapType} ini).
+1. Kolom "JENIS RESEARCH GAP": Isi dengan nama "${gapType}" diikuti dengan deskripsi celah penelitiannya. Anda WAJIB menyertakan sitasi APA 7th edition (contoh: Smith et al., 2023) yang merujuk pada penulis di tabel SOTA. 
+2. Kolom "NOVELTY": Berikan usulan ide kebaruan konkret untuk mengisi celah tersebut, dan PASTIKAN gagasan kebaruan ini sangat relevan dan mengarah pada Topik Penelitian: "${researchTopic}".
+3. Bobot narasi kebaruannya harus sesuai standar tugas akhir **${educationLevel}**.
+4. Anda WAJIB memberikan persis 2 baris isi tabel (artinya ada 2 pernyataan gap yang berbeda).
     `;
 
     try {
