@@ -183,7 +183,7 @@ ATURAN SANGAT PENTING:
 }
 
 
-export async function generateLiteratureReview(sotaMarkdown: string, topic: string, gapText: string, paragraphs: number, citationStyle: string, userApiKey?: string) {
+export async function generateLiteratureReview(sotaMarkdown: string, topic: string, gapText: string, paragraphs: number, citationStyle: string, rawMetadata: string, userApiKey?: string) {
   const apiKey = userApiKey || process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('Gemini API Key is missing.');
@@ -199,10 +199,13 @@ Tugas Anda adalah menulis sebuah Literature Review berbentuk esai naratif sebany
 1. Tabel State-of-the-Art (SOTA) berisi ringkasan jurnal-jurnal terdahulu:
 ${sotaMarkdown}
 
-2. Topik/Judul Penelitian Baru yang dituju:
+2. Metadata Asli Jurnal (termasuk DOI, Tahun, dan Jurnal):
+${rawMetadata}
+
+3. Topik/Judul Penelitian Baru yang dituju:
 "${topic}"
 
-3. Research Gap & Novelty spesifik yang sudah DIPILIH untuk menjadi fokus akhir:
+4. Research Gap & Novelty spesifik yang sudah DIPILIH untuk menjadi fokus akhir:
 "${gapText}"
 
 ATURAN PENULISAN LITERATURE REVIEW:
@@ -214,6 +217,7 @@ ATURAN PENULISAN LITERATURE REVIEW:
 ATURAN PENULISAN DAFTAR PUSTAKA:
 - Di bagian paling bawah, setelah teks Literature Review selesai, buat judul "### Daftar Pustaka".
 - Tuliskan Daftar Pustaka lengkap HANYA untuk jurnal-jurnal yang Anda kutip di dalam teks, disusun sesuai pedoman gaya **${citationStyle}**.
+- Pastikan informasi DOI, nama jurnal, dan tahun diterbitkan akurat dengan cara merujuk pada "Metadata Asli Jurnal" di atas. Jangan mengarang DOI! Jika DOI "Tidak ada", hilangkan bagian DOI dari daftar pustaka tersebut.
 - Susun secara alfabetis (atau numerik jika IEEE).
 
 Berikan hasil akhirnya langsung dalam format Markdown yang rapi (paragraf naratif lalu daftar pustaka).

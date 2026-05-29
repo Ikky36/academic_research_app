@@ -186,6 +186,7 @@ export async function deleteReferenceAction(referenceId: string) {
 }
 
 export async function generateLiteratureReviewAction(
+  projectId: string,
   sotaMarkdown: string,
   topic: string,
   gapText: string,
@@ -194,7 +195,17 @@ export async function generateLiteratureReviewAction(
   userApiKey?: string
 ) {
   try {
-    const result = await generateLiteratureReview(sotaMarkdown, topic, gapText, paragraphs, citationStyle, userApiKey);
+    const supabase = await createClient();
+    const { data: references, error } = await supabase
+      .from('extracted_data')
+      .select('title, authors, doi, published_year, journal_name')
+      .eq('project_id', projectId);
+      
+    if (error) throw error;
+    
+    const rawMetadata = references?.map(r => `Judul: ${r.title}\nPenulis: ${r.authors || 'Tidak diketahui'}\nDOI: ${r.doi || 'Tidak ada'}\nTahun: ${r.published_year || 'Tidak diketahui'}\nJurnal: ${r.journal_name || 'Tidak diketahui'}\n`).join('\n') || '';
+
+    const result = await generateLiteratureReview(sotaMarkdown, topic, gapText, paragraphs, citationStyle, rawMetadata, userApiKey);
     return { data: result };
   } catch (e: any) {
     return { error: e.message };

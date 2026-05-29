@@ -80,6 +80,7 @@ export default function LitReviewInterface({ projectId, isActive, limits, role }
     try {
       const userKey = localStorage.getItem('gemini_api_key') || undefined;
       const res = await generateLiteratureReviewAction(
+        projectId,
         sotaMarkdown, 
         researchTopic, 
         selectedGap, 
