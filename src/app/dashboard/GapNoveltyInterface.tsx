@@ -19,6 +19,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
   const [gapMarkdown, setGapMarkdown] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
+  const [selectedGap, setSelectedGap] = useState<string | null>(null);
 
   useEffect(() => {
     if (isActive && projectId) {
@@ -41,6 +42,11 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
       const savedLevel = localStorage.getItem(`education_level_${projectId}`);
       if (savedLevel) {
         setEducationLevel(savedLevel);
+      }
+
+      const savedSelected = localStorage.getItem(`selected_gap_${projectId}`);
+      if (savedSelected) {
+        setSelectedGap(savedSelected);
       }
     }
   }, [isActive, projectId]);
@@ -164,7 +170,19 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
   const handleReset = () => {
     if (confirm('Apakah Anda yakin ingin mereset hasil Research GAP & Novelty ini?')) {
       setGapMarkdown('');
+      setSelectedGap(null);
       localStorage.removeItem(`gap_novelty_${projectId}`);
+      localStorage.removeItem(`selected_gap_${projectId}`);
+    }
+  };
+
+  const handleSelectGap = (gapText: string) => {
+    if (selectedGap === gapText) {
+      setSelectedGap(null);
+      localStorage.removeItem(`selected_gap_${projectId}`);
+    } else {
+      setSelectedGap(gapText);
+      localStorage.setItem(`selected_gap_${projectId}`, gapText);
     }
   };
 
@@ -263,7 +281,65 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
                   <blockquote {...props} className={styles.gapBlockquote}>
                     {props.children}
                   </blockquote>
-                )
+                ),
+                table: ({node, ...props}) => (
+                  <div style={{ overflowX: 'auto', marginBottom: '20px' }}>
+                    <table {...props} className={styles.modernTable} />
+                  </div>
+                ),
+                tr: ({node, children, ...props}) => {
+                  const isHeader = (node as any)?.children?.some((child: any) => child.tagName === 'th');
+                  
+                  if (isHeader) {
+                    return (
+                      <tr {...props}>
+                        {children}
+                        <th style={{ width: '120px', textAlign: 'center' }}>Pilihan</th>
+                      </tr>
+                    );
+                  }
+
+                  // Extract text from the first cell (Research Gap) to use as unique ID
+                  const gapCell = (node as any)?.children?.find((c: any) => c.tagName === 'td');
+                  let gapText = '';
+                  if (gapCell && gapCell.children && gapCell.children.length > 0) {
+                    // Try to grab the raw text safely
+                    try {
+                      gapText = gapCell.children[0].value || gapCell.children[0].children?.[0]?.value || String(gapCell.position?.start?.line);
+                    } catch (e) {
+                      gapText = String(gapCell.position?.start?.line);
+                    }
+                  } else {
+                    gapText = String((node as any)?.position?.start?.line);
+                  }
+                  
+                  const isSelected = selectedGap === gapText;
+
+                  return (
+                    <tr {...props} style={{ backgroundColor: isSelected ? 'rgba(16, 185, 129, 0.15)' : 'transparent', borderLeft: isSelected ? '4px solid #10b981' : 'none' }}>
+                      {children}
+                      <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                        <button 
+                          onClick={() => handleSelectGap(gapText)}
+                          style={{
+                            background: isSelected ? '#10b981' : '#374151',
+                            color: 'white',
+                            border: 'none',
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            fontWeight: 'bold',
+                            transition: 'all 0.2s ease',
+                            boxShadow: isSelected ? '0 0 10px rgba(16, 185, 129, 0.3)' : 'none'
+                          }}
+                        >
+                          {isSelected ? '✅ Terpilih' : 'Pilih Ini'}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                }
               }}
             >
               {gapMarkdown}
