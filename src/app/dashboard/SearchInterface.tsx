@@ -564,7 +564,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
             failedDois={failedDois}
             handleSave={handleSave}
             handleUploadDrive={handleUploadDrive}
-            onUpdate={(updatedRes) => {
+            onUpdate={(updatedRes: any) => {
               const newResults = [...results];
               newResults[i] = updatedRes;
               setResults(newResults);
