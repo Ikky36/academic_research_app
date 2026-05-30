@@ -1,10 +1,35 @@
 import { createClient } from '@/utils/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Groq from 'groq-sdk';
+import fs from 'fs';
+import path from 'path';
+
+function getEnvFallback(key: string): string | undefined {
+  if (process.env[key]) return process.env[key];
+  try {
+    const envPath = path.resolve(process.cwd(), '.env.local');
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf8');
+      const match = content.match(new RegExp(`^${key}=(.*)$`, 'm'));
+      if (match) return match[1].trim();
+    }
+  } catch (e) {
+    // Ignore error
+  }
+  return undefined;
+}
 
 export async function generateSotaChunk(referencesChunk: any[], startIndex: number, userApiKey?: string, isPaidApi?: boolean, attempt = 1): Promise<string> {
   // Setup Gemini AI
-  const apiKey = userApiKey || (isPaidApi ? process.env.GEMINI_PAID_API_KEY : process.env.GEMINI_API_KEY);
+  const paidKey = getEnvFallback('GEMINI_PAID_API_KEY');
+  const freeKey = getEnvFallback('GEMINI_API_KEY');
+  console.log('--- DEBUG SOTA CHUNK ---');
+  console.log('isPaidApi:', isPaidApi);
+  console.log('paidKey exists:', !!paidKey);
+  console.log('freeKey exists:', !!freeKey);
+  console.log('userApiKey:', userApiKey);
+  
+  const apiKey = userApiKey || (isPaidApi ? paidKey : freeKey);
   if (!apiKey) {
     throw new Error('Gemini API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
   }
@@ -104,7 +129,10 @@ async function fetchWithRetry(model: any, prompt: string, attempt = 1): Promise<
 }
 
 export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic: string, userApiKey?: string, gapType?: string, educationLevel: string = 'Sarjana', isPaidApi?: boolean): Promise<string> {
-  const apiKey = userApiKey || (isPaidApi ? process.env.GEMINI_PAID_API_KEY : (process.env.GEMINI_GAP_API_KEY || process.env.GEMINI_API_KEY));
+  const paidKey = getEnvFallback('GEMINI_PAID_API_KEY');
+  const gapKey = getEnvFallback('GEMINI_GAP_API_KEY');
+  const freeKey = getEnvFallback('GEMINI_API_KEY');
+  const apiKey = userApiKey || (isPaidApi ? paidKey : (gapKey || freeKey));
   if (!apiKey) {
     throw new Error('Gemini API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
   }
@@ -152,7 +180,7 @@ Dan Topik/Judul penelitian yang ingin dituju:
 
 Tugas Anda:
 Identifikasi **${gapType}** dari literatur-literatur SOTA di atas.
-Anda WAJIB memberikan **TEPAT ${isPaidApi ? '6' : '2'}** celah penelitian (Research Gap) yang berbeda untuk tipe ${gapType} ini. 
+Anda WAJIB memberikan **TEPAT 2** celah penelitian (Research Gap) yang berbeda untuk tipe ${gapType} ini. 
 Bobot kebaruan (novelty) dan narasi gap yang Anda buat HARUS disesuaikan secara khusus untuk tingkat pendidikan **${educationLevel}**.
 
 Sajikan hasilnya HANYA dalam format tabel Markdown tanpa teks pengantar atau penutup apapun.
@@ -164,7 +192,7 @@ ATURAN SANGAT PENTING:
 1. Kolom "JENIS RESEARCH GAP": Isi dengan nama "${gapType}" diikuti dengan deskripsi celah penelitiannya. Anda WAJIB menyertakan sitasi APA 7th edition (contoh: Smith et al., 2023) yang merujuk pada penulis di tabel SOTA. 
 2. Kolom "NOVELTY": Berikan usulan ide kebaruan konkret untuk mengisi celah tersebut, dan PASTIKAN gagasan kebaruan ini sangat relevan dan mengarah pada Topik Penelitian: "${researchTopic}".
 3. Bobot narasi kebaruannya harus sesuai standar tugas akhir **${educationLevel}**.
-4. Anda WAJIB memberikan persis ${isPaidApi ? '6' : '2'} baris isi tabel (artinya ada ${isPaidApi ? '6' : '2'} pernyataan gap yang berbeda).
+4. Anda WAJIB memberikan persis 2 baris isi tabel (artinya ada 2 pernyataan gap yang berbeda).
     `;
 
     try {
@@ -185,7 +213,9 @@ ATURAN SANGAT PENTING:
 
 
 export async function generateLiteratureReview(sotaMarkdown: string, topic: string, gapText: string, paragraphs: number, citationStyle: string, rawMetadata: string, userApiKey?: string, isPaidApi?: boolean) {
-  const apiKey = userApiKey || (isPaidApi ? process.env.GEMINI_PAID_API_KEY : process.env.GEMINI_API_KEY);
+  const paidKey = getEnvFallback('GEMINI_PAID_API_KEY');
+  const freeKey = getEnvFallback('GEMINI_API_KEY');
+  const apiKey = userApiKey || (isPaidApi ? paidKey : freeKey);
   if (!apiKey) {
     throw new Error('Gemini API Key is missing.');
   }
