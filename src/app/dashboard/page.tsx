@@ -48,7 +48,7 @@ export default async function DashboardPage({
   // Fetch user role
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
   const role = profile?.role || 'free';
-  const canUseByok = user.user_metadata?.can_use_byok === true || role === 'admin';
+  const canUseByok = user.user_metadata?.can_use_byok === true;
   
   // Fetch tier limits
   const { data: tierLimits } = await supabase.from('tier_limits').select('*').eq('role', role).single();
