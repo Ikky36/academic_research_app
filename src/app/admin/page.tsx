@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction } from './actions';
+import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction } from './actions';
 import styles from './page.module.css';
 
 export default function AdminDashboard() {
@@ -52,6 +52,19 @@ export default function AdminDashboard() {
       setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
     } else {
       setError(res.error || 'Gagal mengubah tipe akun.');
+    }
+  };
+
+  const handleByokToggle = async (userId: string, currentStatus: boolean) => {
+    setSuccess('');
+    setError('');
+    
+    const res = await toggleByokAction(userId, currentStatus);
+    if (res.success) {
+      setSuccess(`Akses BYOK berhasil ${!currentStatus ? 'diaktifkan' : 'dinonaktifkan'}.`);
+      setUsers(users.map(u => u.id === userId ? { ...u, can_use_byok: !currentStatus } : u));
+    } else {
+      setError(res.error || 'Gagal mengubah akses BYOK.');
     }
   };
 
@@ -179,6 +192,7 @@ export default function AdminDashboard() {
                     <th>Email Pengguna</th>
                     <th>Tipe Akun</th>
                     <th>Tgl Mendaftar</th>
+                    <th>Akses BYOK</th>
                     <th>Aksi (Ubah Tipe)</th>
                   </tr>
                 </thead>
@@ -192,6 +206,17 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td>{new Date(u.created_at).toLocaleDateString('id-ID')}</td>
+                      <td>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={u.can_use_byok || false}
+                            onChange={() => handleByokToggle(u.id, u.can_use_byok || false)}
+                            style={{ marginRight: '8px', cursor: 'pointer' }}
+                          />
+                          {u.can_use_byok ? 'Aktif' : 'Off'}
+                        </label>
+                      </td>
                       <td>
                         <select 
                           className={styles.roleSelect}

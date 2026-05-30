@@ -48,6 +48,7 @@ export default async function DashboardPage({
   // Fetch user role
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
   const role = profile?.role || 'free';
+  const canUseByok = user.user_metadata?.can_use_byok === true || role === 'admin';
   
   // Fetch tier limits
   const { data: tierLimits } = await supabase.from('tier_limits').select('*').eq('role', role).single();
@@ -66,7 +67,7 @@ export default async function DashboardPage({
         <header className={styles.header}>
           <div className={styles.headerSpacer}></div>
           <div className={styles.headerRightControls}>
-          <SettingsButton />
+          {canUseByok && <SettingsButton />}
           {role === 'admin' && (
             <Link href="/admin" className={styles.adminButton}>Admin Dashboard</Link>
           )}

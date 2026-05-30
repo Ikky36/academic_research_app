@@ -1,7 +1,13 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
+
+const supabaseAdmin = createSupabaseClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // Middleware-like check for admin
 async function requireAdmin() {
@@ -19,13 +25,28 @@ export async function getUsersAction() {
   try {
     const supabase = await requireAdmin();
     // In a real large app, add pagination
-    const { data, error } = await supabase
+    const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, email, role, created_at')
       .order('created_at', { ascending: false });
 
-    if (error) return { error: error.message };
-    return { data };
+    if (profilesError) return { error: profilesError.message };
+
+    // Fetch auth users to get user_metadata
+    const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    let mergedData = profiles || [];
+    if (!authError && authUsers?.users) {
+      mergedData = mergedData.map(p => {
+        const authUser = authUsers.users.find((u: any) => u.id === p.id);
+        return {
+          ...p,
+          can_use_byok: authUser?.user_metadata?.can_use_byok === true
+        };
+      });
+    }
+
+    return { data: mergedData };
   } catch (err: any) {
     return { error: err.message };
   }
@@ -38,6 +59,21 @@ export async function updateUserRoleAction(userId: string, newRole: string) {
       .from('profiles')
       .update({ role: newRole })
       .eq('id', userId);
+
+    if (error) return { error: error.message };
+    revalidatePath('/admin');
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}
+
+export async function toggleByokAction(userId: string, currentStatus: boolean) {
+  try {
+    await requireAdmin();
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      user_metadata: { can_use_byok: !currentStatus }
+    });
 
     if (error) return { error: error.message };
     revalidatePath('/admin');
