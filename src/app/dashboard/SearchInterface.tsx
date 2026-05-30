@@ -59,7 +59,7 @@ const ExpandableAbstract = ({ text, terms }: { text: string, terms: string[] }) 
   const maxLength = 250;
 
   if (!text || text === 'Abstrak tidak tersedia di metadata.') {
-    return <span>{text || 'Abstrak tidak tersedia di metadata.'}</span>;
+    return <span style={{ fontStyle: 'italic', color: '#9ca3af' }}>{text || 'Abstrak tidak tersedia di metadata.'}</span>;
   }
 
   if (text.length <= maxLength) {
@@ -79,6 +79,105 @@ const ExpandableAbstract = ({ text, terms }: { text: string, terms: string[] }) 
         {expanded ? ' Lebih sedikit' : ' Selengkapnya'}
       </button>
     </>
+  );
+};
+
+const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uploadedDois, failedDois, handleSave, handleUploadDrive, onUpdate }: any) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editAuthors, setEditAuthors] = useState(res.authors || '');
+  const [editAbstract, setEditAbstract] = useState(res.abstract || '');
+
+  const handleSaveEdit = () => {
+    onUpdate({
+      ...res,
+      authors: editAuthors,
+      abstract: editAbstract
+    });
+    setIsEditing(false);
+  };
+
+  return (
+    <div className={styles.resultCard}>
+      <div className={styles.cardHeader}>
+        <h3 className={styles.paperTitle}>
+          <HighlightText text={res.title} terms={highlightTerms} />
+        </h3>
+        <span className={styles.yearBadge}>{res.year || 'N/A'}</span>
+      </div>
+      
+      {isEditing ? (
+        <div style={{ marginBottom: '10px' }}>
+          <label style={{ display: 'block', fontSize: '12px', color: '#9CA3AF', marginBottom: '4px' }}>Penulis:</label>
+          <input 
+            type="text" 
+            value={editAuthors} 
+            onChange={(e) => setEditAuthors(e.target.value)}
+            style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #4B5563', background: '#1F2937', color: 'white', marginBottom: '10px' }}
+          />
+          
+          <label style={{ display: 'block', fontSize: '12px', color: '#9CA3AF', marginBottom: '4px' }}>Abstrak:</label>
+          <textarea 
+            value={editAbstract} 
+            onChange={(e) => setEditAbstract(e.target.value)}
+            rows={5}
+            style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #4B5563', background: '#1F2937', color: 'white' }}
+          />
+          
+          <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+            <button onClick={handleSaveEdit} style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>Simpan Editan</button>
+            <button onClick={() => setIsEditing(false)} style={{ background: '#4B5563', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>Batal</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <p className={styles.authors}>
+            {res.authors}
+            <button onClick={() => { setIsEditing(true); setEditAuthors(res.authors); setEditAbstract(res.abstract); }} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', marginLeft: '8px', fontSize: '12px' }}>✏️ Edit Info</button>
+          </p>
+          {res.doi && <p className={styles.doi}>DOI: <a href={`https://doi.org/${res.doi}`} target="_blank" rel="noreferrer">{res.doi}</a></p>}
+          
+          <div className={styles.abstract}>
+            <ExpandableAbstract 
+              text={res.abstract} 
+              terms={highlightTerms} 
+            />
+          </div>
+        </>
+      )}
+      
+      <div className={styles.cardActions}>
+        <button 
+          onClick={() => handleSave(res)} 
+          disabled={savedDois.has(res.doi) || !res.doi}
+          className={savedDois.has(res.doi) ? styles.savedButton : styles.saveButton}
+        >
+          {savedDois.has(res.doi) ? 'Tersimpan ✓' : 'Simpan ke Proyek'}
+        </button>
+        
+        { (res.pdfLink || res.doi) && (
+          <button 
+            onClick={() => handleUploadDrive(res)} 
+            disabled={uploadingDois.has(res.doi) || uploadedDois.has(res.doi) || failedDois.has(res.doi)}
+            className={
+              failedDois.has(res.doi) ? styles.driveFailButton :
+              uploadedDois.has(res.doi) ? styles.driveSuccessButton : 
+              styles.driveButton
+            }
+          >
+            {failedDois.has(res.doi) ? 'Gagal Unduh ❌' :
+             uploadingDois.has(res.doi) ? 'Mencari & Mengunggah...' : 
+             (uploadedDois.has(res.doi) ? 'Tersimpan di Drive ✓' : '📥 Cari & Simpan PDF ke Drive')
+            }
+          </button>
+        )}
+
+        {res.url && (
+          <a href={res.url} target="_blank" rel="noreferrer" className={styles.sourceLink}>
+            Lihat Sumber Utama
+          </a>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -454,56 +553,23 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
         )}
 
         {results.map((res, i) => (
-          <div key={i} className={styles.resultCard}>
-            <div className={styles.cardHeader}>
-              <h3 className={styles.paperTitle}>
-                <HighlightText text={res.title} terms={highlightTerms} />
-              </h3>
-              <span className={styles.yearBadge}>{res.year || 'N/A'}</span>
-            </div>
-            <p className={styles.authors}>{res.authors}</p>
-            {res.doi && <p className={styles.doi}>DOI: <a href={`https://doi.org/${res.doi}`} target="_blank" rel="noreferrer">{res.doi}</a></p>}
-            
-            <div className={styles.abstract}>
-              <ExpandableAbstract 
-                text={res.abstract} 
-                terms={highlightTerms} 
-              />
-            </div>
-            
-            <div className={styles.cardActions}>
-              <button 
-                onClick={() => handleSave(res)} 
-                disabled={savedDois.has(res.doi) || !res.doi}
-                className={savedDois.has(res.doi) ? styles.savedButton : styles.saveButton}
-              >
-                {savedDois.has(res.doi) ? 'Tersimpan ✓' : 'Simpan ke Proyek'}
-              </button>
-              
-              { (res.pdfLink || res.doi) && (
-                <button 
-                  onClick={() => handleUploadDrive(res)} 
-                  disabled={uploadingDois.has(res.doi) || uploadedDois.has(res.doi) || failedDois.has(res.doi)}
-                  className={
-                    failedDois.has(res.doi) ? styles.driveFailButton :
-                    uploadedDois.has(res.doi) ? styles.driveSuccessButton : 
-                    styles.driveButton
-                  }
-                >
-                  {failedDois.has(res.doi) ? 'Gagal Unduh ❌' :
-                   uploadingDois.has(res.doi) ? 'Mencari & Mengunggah...' : 
-                   (uploadedDois.has(res.doi) ? 'Tersimpan di Drive ✓' : '📥 Cari & Simpan PDF ke Drive')
-                  }
-                </button>
-              )}
-
-              {res.url && (
-                <a href={res.url} target="_blank" rel="noreferrer" className={styles.sourceLink}>
-                  Lihat Sumber Utama
-                </a>
-              )}
-            </div>
-          </div>
+          <ResultCard 
+            key={i} 
+            res={res} 
+            index={i} 
+            highlightTerms={highlightTerms}
+            savedDois={savedDois}
+            uploadingDois={uploadingDois}
+            uploadedDois={uploadedDois}
+            failedDois={failedDois}
+            handleSave={handleSave}
+            handleUploadDrive={handleUploadDrive}
+            onUpdate={(updatedRes) => {
+              const newResults = [...results];
+              newResults[i] = updatedRes;
+              setResults(newResults);
+            }}
+          />
         ))}
 
         {totalPages > 1 && !loading && (
