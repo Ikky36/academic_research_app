@@ -2,16 +2,16 @@ import { createClient } from '@/utils/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Groq from 'groq-sdk';
 
-export async function generateSotaChunk(referencesChunk: any[], startIndex: number, userApiKey?: string, attempt = 1): Promise<string> {
+export async function generateSotaChunk(referencesChunk: any[], startIndex: number, userApiKey?: string, isPaidApi?: boolean, attempt = 1): Promise<string> {
   // Setup Gemini AI
-  const apiKey = userApiKey || process.env.GEMINI_API_KEY;
+  const apiKey = userApiKey || (isPaidApi ? process.env.GEMINI_PAID_API_KEY : process.env.GEMINI_API_KEY);
   if (!apiKey) {
     throw new Error('Gemini API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
   }
 
-
+  const modelName = isPaidApi ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const model = genAI.getGenerativeModel({ model: modelName });
 
   const referencesText = referencesChunk.map((ref, index) => {
     return `
@@ -58,7 +58,7 @@ Berikan *HANYA* format tabel Markdown sebagai output Anda. Pastikan setiap baris
     if ((errorMessage.includes('503') || errorMessage.includes('500') || errorMessage.includes('502')) && attempt < 3) {
       console.log(`Gemini Server Busy. Retrying chunk ${startIndex} (Attempt ${attempt + 1})...`);
       await new Promise(resolve => setTimeout(resolve, 8000));
-      return generateSotaChunk(referencesChunk, startIndex, userApiKey, attempt + 1);
+      return generateSotaChunk(referencesChunk, startIndex, userApiKey, isPaidApi, attempt + 1);
     }
     
     // Auto-retry for Rate Limit errors
@@ -66,7 +66,7 @@ Berikan *HANYA* format tabel Markdown sebagai output Anda. Pastikan setiap baris
       if (attempt < 3) {
         console.log(`Gemini Rate Limit. Retrying chunk ${startIndex} (Attempt ${attempt + 1})...`);
         await new Promise(resolve => setTimeout(resolve, 15000));
-        return generateSotaChunk(referencesChunk, startIndex, userApiKey, attempt + 1);
+        return generateSotaChunk(referencesChunk, startIndex, userApiKey, isPaidApi, attempt + 1);
       }
       const match = errorMessage.match(/retry in ([\d\.]+)s/);
       const waitTime = match ? Math.ceil(parseFloat(match[1])) : 30;
@@ -103,14 +103,15 @@ async function fetchWithRetry(model: any, prompt: string, attempt = 1): Promise<
   }
 }
 
-export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic: string, userApiKey?: string, gapType?: string, educationLevel: string = 'Sarjana'): Promise<string> {
-  const apiKey = userApiKey || process.env.GEMINI_GAP_API_KEY || process.env.GEMINI_API_KEY;
+export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic: string, userApiKey?: string, gapType?: string, educationLevel: string = 'Sarjana', isPaidApi?: boolean): Promise<string> {
+  const apiKey = userApiKey || (isPaidApi ? process.env.GEMINI_PAID_API_KEY : (process.env.GEMINI_GAP_API_KEY || process.env.GEMINI_API_KEY));
   if (!apiKey) {
     throw new Error('Gemini API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
   }
 
+  const modelName = isPaidApi ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const model = genAI.getGenerativeModel({ model: modelName });
 
   // If EVALUATION is passed, evaluate the topic
   if (gapType === 'EVALUATION') {
@@ -151,7 +152,7 @@ Dan Topik/Judul penelitian yang ingin dituju:
 
 Tugas Anda:
 Identifikasi **${gapType}** dari literatur-literatur SOTA di atas.
-Anda WAJIB memberikan **TEPAT 2** celah penelitian (Research Gap) yang berbeda untuk tipe ${gapType} ini. 
+Anda WAJIB memberikan **TEPAT ${isPaidApi ? '6' : '2'}** celah penelitian (Research Gap) yang berbeda untuk tipe ${gapType} ini. 
 Bobot kebaruan (novelty) dan narasi gap yang Anda buat HARUS disesuaikan secara khusus untuk tingkat pendidikan **${educationLevel}**.
 
 Sajikan hasilnya HANYA dalam format tabel Markdown tanpa teks pengantar atau penutup apapun.
@@ -163,7 +164,7 @@ ATURAN SANGAT PENTING:
 1. Kolom "JENIS RESEARCH GAP": Isi dengan nama "${gapType}" diikuti dengan deskripsi celah penelitiannya. Anda WAJIB menyertakan sitasi APA 7th edition (contoh: Smith et al., 2023) yang merujuk pada penulis di tabel SOTA. 
 2. Kolom "NOVELTY": Berikan usulan ide kebaruan konkret untuk mengisi celah tersebut, dan PASTIKAN gagasan kebaruan ini sangat relevan dan mengarah pada Topik Penelitian: "${researchTopic}".
 3. Bobot narasi kebaruannya harus sesuai standar tugas akhir **${educationLevel}**.
-4. Anda WAJIB memberikan persis 2 baris isi tabel (artinya ada 2 pernyataan gap yang berbeda).
+4. Anda WAJIB memberikan persis ${isPaidApi ? '6' : '2'} baris isi tabel (artinya ada ${isPaidApi ? '6' : '2'} pernyataan gap yang berbeda).
     `;
 
     try {
@@ -183,14 +184,15 @@ ATURAN SANGAT PENTING:
 }
 
 
-export async function generateLiteratureReview(sotaMarkdown: string, topic: string, gapText: string, paragraphs: number, citationStyle: string, rawMetadata: string, userApiKey?: string) {
-  const apiKey = userApiKey || process.env.GEMINI_API_KEY;
+export async function generateLiteratureReview(sotaMarkdown: string, topic: string, gapText: string, paragraphs: number, citationStyle: string, rawMetadata: string, userApiKey?: string, isPaidApi?: boolean) {
+  const apiKey = userApiKey || (isPaidApi ? process.env.GEMINI_PAID_API_KEY : process.env.GEMINI_API_KEY);
   if (!apiKey) {
     throw new Error('Gemini API Key is missing.');
   }
 
+  const modelName = isPaidApi ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const model = genAI.getGenerativeModel({ model: modelName });
 
   const prompt = `
 Anda adalah akademisi senior dan penulis jurnal internasional yang ahli dalam menyusun Tinjauan Pustaka (Literature Review).

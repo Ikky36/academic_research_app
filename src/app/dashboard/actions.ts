@@ -113,9 +113,9 @@ export async function getSavedReferencesAction(projectId: string) {
 }
 
 
-export async function generateSotaChunkAction(referencesChunk: any[], startIndex: number, userApiKey?: string) {
+export async function generateSotaChunkAction(referencesChunk: any[], startIndex: number, userApiKey?: string, isPaidApi?: boolean) {
   try {
-    const sotaMarkdown = await generateSotaChunk(referencesChunk, startIndex, userApiKey);
+    const sotaMarkdown = await generateSotaChunk(referencesChunk, startIndex, userApiKey, isPaidApi);
     return { data: sotaMarkdown };
   } catch (e: any) {
     return { error: e.message };
@@ -192,7 +192,8 @@ export async function generateLiteratureReviewAction(
   gapText: string,
   paragraphs: number,
   citationStyle: string,
-  userApiKey?: string
+  userApiKey?: string,
+  isPaidApi?: boolean
 ) {
   try {
     const supabase = await createClient();
@@ -205,7 +206,7 @@ export async function generateLiteratureReviewAction(
     
     const rawMetadata = references?.map(r => `Judul: ${r.title}\nPenulis: ${r.authors || 'Tidak diketahui'}\nDOI: ${r.doi || 'Tidak ada'}\n`).join('\n') || '';
 
-    const result = await generateLiteratureReview(sotaMarkdown, topic, gapText, paragraphs, citationStyle, rawMetadata, userApiKey);
+    const result = await generateLiteratureReview(sotaMarkdown, topic, gapText, paragraphs, citationStyle, rawMetadata, userApiKey, isPaidApi);
     return { data: result };
   } catch (e: any) {
     return { error: e.message };

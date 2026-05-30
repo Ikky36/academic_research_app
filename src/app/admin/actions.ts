@@ -41,7 +41,8 @@ export async function getUsersAction() {
         const authUser = authUsers.users.find((u: any) => u.id === p.id);
         return {
           ...p,
-          can_use_byok: authUser?.user_metadata?.can_use_byok === true
+          can_use_byok: authUser?.user_metadata?.can_use_byok === true,
+          paid_api_override: authUser?.user_metadata?.paid_api_override || null
         };
       });
     }
@@ -83,6 +84,21 @@ export async function toggleByokAction(userId: string, currentStatus: boolean) {
   }
 }
 
+export async function overridePaidApiAction(userId: string, overrideValue: boolean | null) {
+  try {
+    await requireAdmin();
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      user_metadata: { paid_api_override: overrideValue }
+    });
+
+    if (error) return { error: error.message };
+    revalidatePath('/admin');
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}
+
 export async function getTierLimitsAction() {
   try {
     const supabase = await requireAdmin();
@@ -107,7 +123,8 @@ export async function updateTierLimitAction(role: string, limits: any) {
         max_projects: parseInt(limits.max_projects),
         max_search_results: parseInt(limits.max_search_results),
         max_sota_rows: parseInt(limits.max_sota_rows),
-        can_bulk_download_gdrive: limits.can_bulk_download_gdrive === 'true' || limits.can_bulk_download_gdrive === true
+        can_bulk_download_gdrive: limits.can_bulk_download_gdrive === 'true' || limits.can_bulk_download_gdrive === true,
+        can_use_paid_api: limits.can_use_paid_api === 'true' || limits.can_use_paid_api === true
       })
       .eq('role', role);
 

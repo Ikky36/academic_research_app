@@ -56,8 +56,19 @@ export default async function DashboardPage({
     max_projects: 3,
     max_search_results: 20,
     max_sota_rows: 5,
-    can_bulk_download_gdrive: false
+    can_bulk_download_gdrive: false,
+    can_use_paid_api: false
   };
+
+  let isPaidApi = false;
+  const paidApiOverride = user.user_metadata?.paid_api_override;
+  if (paidApiOverride === true) {
+    isPaidApi = true;
+  } else if (paidApiOverride === false) {
+    isPaidApi = false;
+  } else {
+    isPaidApi = limits.can_use_paid_api === true;
+  }
 
   return (
     <div className={styles.appContainer}>
@@ -115,13 +126,13 @@ export default async function DashboardPage({
                 <SearchInterface key={`search-${activeProject.id}`} projectId={activeProject.id} limits={limits} role={role} />
               </div>
               <div style={{ display: activeTab === 'sota' ? 'block' : 'none' }}>
-                <SotaInterface key={`sota-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'sota'} limits={limits} role={role} />
+                <SotaInterface key={`sota-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'sota'} limits={limits} role={role} isPaidApi={isPaidApi} />
               </div>
               <div style={{ display: activeTab === 'gap-novelty' ? 'block' : 'none' }}>
-                <GapNoveltyInterface key={`gap-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'gap-novelty'} limits={limits} role={role} />
+                <GapNoveltyInterface key={`gap-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'gap-novelty'} limits={limits} role={role} isPaidApi={isPaidApi} />
               </div>
               <div style={{ display: activeTab === 'lit-review' ? 'block' : 'none' }}>
-                <LitReviewInterface key={`lit-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'lit-review'} limits={limits} role={role} />
+                <LitReviewInterface key={`lit-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'lit-review'} limits={limits} role={role} isPaidApi={isPaidApi} />
               </div>
             </>
           )}

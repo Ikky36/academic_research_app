@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { getSavedReferencesAction, generateSotaChunkAction, clearReferencesAction, deleteReferenceAction } from './actions';
 import styles from './SotaInterface.module.css';
 
-export default function SotaInterface({ projectId, isActive, limits, role }: { projectId: string, isActive?: boolean, limits?: any, role?: string }) {
+export default function SotaInterface({ projectId, isActive, limits, role, isPaidApi }: { projectId: string, isActive?: boolean, limits?: any, role?: string, isPaidApi?: boolean }) {
   const [references, setReferences] = useState<any[]>([]);
   const [loadingRefs, setLoadingRefs] = useState(true);
   
@@ -65,7 +65,7 @@ export default function SotaInterface({ projectId, isActive, limits, role }: { p
     setError('');
     setProgressText('');
     
-    const CHUNK_SIZE = 5;
+    const CHUNK_SIZE = isPaidApi ? 25 : 5;
     let accumulatedMarkdown = sotaMarkdown;
     let currentProcessedIds = [...processedIds];
     const userKey = localStorage.getItem('geminiApiKey') || undefined;
@@ -77,7 +77,7 @@ export default function SotaInterface({ projectId, isActive, limits, role }: { p
       
       setProgressText(`Memproses artikel baru ${i+1} sampai ${i+chunk.length} (dari total ${toProcess.length} baru)...`);
       
-      const res = await generateSotaChunkAction(chunk, startIdx, userKey);
+      const res = await generateSotaChunkAction(chunk, startIdx, userKey, isPaidApi);
       
       if (res.error) {
         setError(`Terhenti di artikel ${startIdx}-${endIdx}: ` + res.error);

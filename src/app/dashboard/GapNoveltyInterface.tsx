@@ -10,9 +10,10 @@ interface GapNoveltyInterfaceProps {
   isActive: boolean;
   limits: any;
   role: string;
+  isPaidApi?: boolean;
 }
 
-export default function GapNoveltyInterface({ projectId, isActive, limits, role }: GapNoveltyInterfaceProps) {
+export default function GapNoveltyInterface({ projectId, isActive, limits, role, isPaidApi }: GapNoveltyInterfaceProps) {
   const [sotaMarkdown, setSotaMarkdown] = useState('');
   const [researchTopic, setResearchTopic] = useState('');
   const [educationLevel, setEducationLevel] = useState('Sarjana');
@@ -117,7 +118,8 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role 
             researchTopic,
             projectId,
             gapType,
-            educationLevel
+            educationLevel,
+            isPaidApi
           }),
         });
 

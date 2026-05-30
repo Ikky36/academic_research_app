@@ -11,9 +11,10 @@ interface LitReviewInterfaceProps {
   isActive: boolean;
   limits: any;
   role: string;
+  isPaidApi?: boolean;
 }
 
-export default function LitReviewInterface({ projectId, isActive, limits, role }: LitReviewInterfaceProps) {
+export default function LitReviewInterface({ projectId, isActive, limits, role, isPaidApi }: LitReviewInterfaceProps) {
   const [sotaMarkdown, setSotaMarkdown] = useState('');
   const [researchTopic, setResearchTopic] = useState('');
   const [selectedGap, setSelectedGap] = useState('');
@@ -86,7 +87,8 @@ export default function LitReviewInterface({ projectId, isActive, limits, role }
         selectedGap, 
         parseInt(paragraphs), 
         citationStyle,
-        userKey
+        userKey,
+        isPaidApi
       );
       
       if (res.error) {

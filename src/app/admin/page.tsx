@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction } from './actions';
+import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction } from './actions';
 import styles from './page.module.css';
 
 export default function AdminDashboard() {
@@ -65,6 +65,23 @@ export default function AdminDashboard() {
       setUsers(users.map(u => u.id === userId ? { ...u, can_use_byok: !currentStatus } : u));
     } else {
       setError(res.error || 'Gagal mengubah akses BYOK.');
+    }
+  };
+
+  const handlePaidApiOverride = async (userId: string, val: string) => {
+    setSuccess('');
+    setError('');
+    
+    let overrideValue: boolean | null = null;
+    if (val === 'true') overrideValue = true;
+    if (val === 'false') overrideValue = false;
+
+    const res = await overridePaidApiAction(userId, overrideValue);
+    if (res.success) {
+      setSuccess('Pengaturan Paid API khusus untuk akun ini berhasil disimpan.');
+      setUsers(users.map(u => u.id === userId ? { ...u, paid_api_override: overrideValue } : u));
+    } else {
+      setError(res.error || 'Gagal mengubah pengaturan Paid API.');
     }
   };
 
@@ -193,6 +210,7 @@ export default function AdminDashboard() {
                     <th>Tipe Akun</th>
                     <th>Tgl Mendaftar</th>
                     <th>Akses BYOK</th>
+                    <th>Override Paid API</th>
                     <th>Aksi (Ubah Tipe)</th>
                   </tr>
                 </thead>
@@ -216,6 +234,17 @@ export default function AdminDashboard() {
                           />
                           {u.can_use_byok ? 'Aktif' : 'Off'}
                         </label>
+                      </td>
+                      <td>
+                        <select 
+                          className={styles.roleSelect}
+                          value={u.paid_api_override === true ? 'true' : u.paid_api_override === false ? 'false' : 'null'}
+                          onChange={(e) => handlePaidApiOverride(u.id, e.target.value)}
+                        >
+                          <option value="null">Ikuti Tier</option>
+                          <option value="true">Selalu Aktif (Paid)</option>
+                          <option value="false">Selalu Off (Free)</option>
+                        </select>
                       </td>
                       <td>
                         <select 
@@ -309,6 +338,18 @@ export default function AdminDashboard() {
                           onChange={e => setLimits(limits.map(l => l.role === limitObj.role ? {...l, can_bulk_download_gdrive: e.target.checked} : l))}
                         />
                         Bisa Upload Massal ke Google Drive?
+                      </label>
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label className={styles.checkboxLabel}>
+                        <input 
+                          type="checkbox" 
+                          className={styles.checkbox}
+                          checked={limitObj.can_use_paid_api || false}
+                          onChange={e => setLimits(limits.map(l => l.role === limitObj.role ? {...l, can_use_paid_api: e.target.checked} : l))}
+                        />
+                        Akses API Berbayar (SOTA 25 Baris, Gap 6 Baris)?
                       </label>
                     </div>
                     
