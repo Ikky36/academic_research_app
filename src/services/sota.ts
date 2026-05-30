@@ -189,22 +189,60 @@ Tabel harus memiliki tepat 2 kolom:
 |---|---|
 
 ATURAN SANGAT PENTING:
-1. Kolom "JENIS RESEARCH GAP": Isi dengan nama "${gapType}" diikuti dengan deskripsi celah penelitiannya. Anda WAJIB menyertakan sitasi APA 7th edition (contoh: Smith et al., 2023) yang merujuk pada penulis di tabel SOTA. 
-2. Kolom "NOVELTY": Berikan usulan ide kebaruan konkret untuk mengisi celah tersebut, dan PASTIKAN gagasan kebaruan ini sangat relevan dan mengarah pada Topik Penelitian: "${researchTopic}".
+1. Kolom "JENIS RESEARCH GAP": WAJIB diawali dengan teks "**${gapType}:** " lalu diikuti dengan deskripsi celah penelitiannya. Anda WAJIB menyertakan sitasi APA 7th edition (contoh: Smith et al., 2023). 
+2. Kolom "NOVELTY": TIDAK BOLEH KOSONG! WAJIB diisi dengan paragraf usulan ide kebaruan konkret untuk mengisi celah tersebut. PASTIKAN gagasan ini sangat relevan dan mengarah pada Topik: "${researchTopic}".
 3. Bobot narasi kebaruannya harus sesuai standar tugas akhir **${educationLevel}**.
 4. Anda WAJIB memberikan persis 2 baris isi tabel (artinya ada 2 pernyataan gap yang berbeda).
     `;
 
-    try {
-      let text = await fetchWithRetry(model, prompt);
-      text = text.replace(/```markdown/gi, '').replace(/```/g, '').trim();
-      
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l.startsWith('|'));
-      const dataLines = lines.filter(l => !l.toUpperCase().includes('JENIS RESEARCH GAP') && !l.includes('---'));
-      
-      return dataLines.join('\n');
-    } catch (err: any) {
-      throw new Error(`Gagal memproses ${gapType}: ${err.message}`);
+    let attempts = 0;
+    while (attempts < 3) {
+      attempts++;
+      try {
+        let text = await fetchWithRetry(model, prompt);
+        text = text.replace(/```markdown/gi, '').replace(/```/g, '').trim();
+        
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.startsWith('|'));
+        let dataLines = lines.filter(l => !l.toUpperCase().includes('JENIS RESEARCH GAP') && !l.includes('---'));
+        
+        // Validasi ketat
+        if (dataLines.length === 0) {
+          throw new Error('AI tidak menghasilkan baris tabel yang valid.');
+        }
+        
+        for (const line of dataLines) {
+          const cols = line.split('|');
+          if (cols.length < 3) {
+            throw new Error('Format kolom tabel tidak valid.');
+          }
+          const gapCol = cols[1].trim();
+          const noveltyCol = cols[2].trim();
+          
+          if (noveltyCol.length < 20) {
+            throw new Error('Kolom NOVELTY kosong atau terlalu singkat. AI gagal memberikan narasi novelty.');
+          }
+          if (!gapCol.toLowerCase().includes(gapType.toLowerCase())) {
+            // Force inject gapType prefix if AI forgot it but provided good novelty
+            dataLines = dataLines.map(l => {
+              const parts = l.split('|');
+              if (parts.length >= 3) {
+                if (!parts[1].toLowerCase().includes(gapType.toLowerCase())) {
+                   parts[1] = ` **${gapType}:** ` + parts[1].trim();
+                }
+              }
+              return parts.join('|');
+            });
+          }
+        }
+        
+        return dataLines.join('\n');
+      } catch (err: any) {
+        if (attempts >= 3) {
+          throw new Error(`${err.message}`);
+        }
+        // Tunggu sebentar sebelum mencoba lagi
+        await new Promise(r => setTimeout(r, 1000));
+      }
     }
   }
 
