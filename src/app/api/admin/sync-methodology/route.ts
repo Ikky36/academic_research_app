@@ -103,7 +103,10 @@ Anda adalah asisten peneliti ahli. Saya memberikan Anda teks lengkap dari sebuah
 Tugas Anda adalah:
 1. Identifikasi METADATA BUKU (Judul, Penulis, Tahun, Penerbit) dari teks (biasanya ada di halaman-halaman awal). Jika tidak ditemukan, gunakan tebakan terbaik atau kosongkan.
 2. Identifikasi BERBAGAI METODE PENELITIAN yang dibahas secara mendetail dalam buku ini (misal: Kualitatif Studi Kasus, Kuantitatif Eksperimen, Research & Development model ADDIE, Mix Method, dsb).
-3. Ekstrak bagian teks yang berisi RINCIAN TAHAPAN (prosedur operasional) untuk setiap metode tersebut.
+3. Ekstrak bagian teks yang berisi penjelasan mendalam untuk setiap metode, yang mencakup:
+   - DEFINISI & KONSEP DASAR metode tersebut.
+   - INSTRUMEN PENELITIAN (teknik pembuatan instrumen, macam-macam uji instrumen seperti validitas/reliabilitas yang terkait dengan metode tersebut).
+   - RINCIAN TAHAPAN (prosedur operasional/langkah-langkah) pelaksanaan metode tersebut.
 4. Perkirakan rentang halaman (page_start, page_end) untuk setiap metode berdasarkan posisi teks.
 
 Teks Buku:
@@ -120,7 +123,7 @@ Keluarkan respons dalam format JSON dengan struktur yang tepat seperti berikut H
   "methods": [
     {
       "method_category": "Nama Kategori Metode (Misal: Research & Development (R&D))",
-      "content": "Isi teks lengkap yang menjelaskan rincian tahapan/langkah-langkah metodologi tersebut secara spesifik...",
+      "content": "Isi teks gabungan lengkap yang berisi Definisi, Instrumen & Uji Instrumen, serta Rincian Tahapan metodologi tersebut secara spesifik...",
       "page_start": 45,
       "page_end": 52
     }
