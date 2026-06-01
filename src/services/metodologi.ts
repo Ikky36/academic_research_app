@@ -1,0 +1,108 @@
+import { createClient } from '@/utils/supabase/client';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+export async function generateMetodologiAction(
+  projectId: string,
+  pendekatan: string,
+  gap: string,
+  novelty: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+): Promise<{ result?: string, error?: string }> {
+  try {
+    const supabase = createClient();
+    
+    // Check auth
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('User not authenticated');
+
+    // 1. Setup Gemini AI
+    let apiKey = userApiKey;
+    let modelName = 'gemini-2.5-flash';
+
+    if (!apiKey) {
+      if (isPaidApi) {
+        apiKey = process.env.NEXT_PUBLIC_GEMINI_PAID_API_KEY || process.env.GEMINI_PAID_API_KEY;
+        if (!apiKey) throw new Error('System Paid API Key not configured');
+      } else {
+        apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+        modelName = 'gemini-2.5-flash-lite'; // Use Lite for free tier fallback
+      }
+    }
+
+    if (!apiKey) throw new Error('API Key is missing');
+    
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: modelName });
+
+    // 2. Identify specific method category based on Gap & Novelty
+    const identifyPrompt = `
+Berdasarkan informasi berikut:
+Pendekatan yang dipilih: ${pendekatan}
+Research Gap: ${gap}
+Novelty: ${novelty}
+
+Sebutkan 1 (satu) Kategori Metode Penelitian spesifik yang paling tepat untuk penelitian ini. 
+Hanya sebutkan namanya saja (misalnya: "Kualitatif Studi Kasus", "Kuantitatif Eksperimen", "Research and Development (R&D)", "Mix Method", dll). Jangan tambahkan penjelasan apapun.
+`;
+    
+    const identifyResult = await model.generateContent(identifyPrompt);
+    const methodCategory = identifyResult.response.text().trim();
+
+    // 3. Query relevant chunks from database (RAG)
+    // We fetch all chunks that might be relevant to the method category
+    const { data: chunks, error: chunksError } = await supabase
+      .from('methodology_chunks')
+      .select('content, page_start, page_end, methodology_books(title, author, year)')
+      .ilike('method_category', `%${methodCategory.split(' ')[0]}%`)
+      .limit(5);
+
+    if (chunksError) {
+      console.error('Error fetching methodology chunks:', chunksError);
+      // We don't throw, we just proceed without specific RAG context if it fails or table doesn't exist
+    }
+
+    // 4. Construct Context from Chunks
+    let contextText = '';
+    let hasContext = false;
+    
+    if (chunks && chunks.length > 0) {
+      hasContext = true;
+      contextText = "REFERENSI BUKU METODOLOGI:\n\n";
+      chunks.forEach((chunk: any, index: number) => {
+        const book = chunk.methodology_books;
+        contextText += `[Referensi ${index + 1}]\nBuku: ${book?.title} (${book?.year})\nPenulis: ${book?.author}\nHalaman: ${chunk.page_start} - ${chunk.page_end}\nIsi Tahapan: ${chunk.content}\n\n`;
+      });
+    }
+
+    // 5. Generate final Bab III
+    const finalPrompt = `
+Anda adalah seorang dosen metodologi penelitian yang sangat teliti.
+Tugas Anda adalah menulis Bab III (Metodologi Penelitian) yang lengkap, komprehensif, dan siap digunakan.
+
+Informasi Penelitian:
+- Pendekatan: ${pendekatan}
+- Metode Spesifik: ${methodCategory}
+- Gap: ${gap}
+- Novelty: ${novelty}
+
+${hasContext ? contextText : ''}
+
+INSTRUKSI WAJIB:
+1. Tulis dalam format Markdown.
+2. Gunakan gaya bahasa akademik yang formal dan baku (Bahasa Indonesia).
+3. Buat sub-bab yang sistematis (contoh: 3.1 Pendekatan dan Jenis Penelitian, 3.2 Prosedur/Tahapan Penelitian, 3.3 Teknik Pengumpulan Data, 3.4 Teknik Analisis Data).
+4. Khusus pada bagian **Prosedur/Tahapan Penelitian**, rancang langkah-langkahnya agar benar-benar menjawab *Research Gap* dan *Novelty* di atas.
+${hasContext ? '5. SANGAT PENTING: Anda WAJIB merujuk pada REFERENSI BUKU METODOLOGI yang diberikan di atas saat menjelaskan tahapan/metode. Setiap kali Anda menggunakan informasi dari referensi, sisipkan kutipan (sitasi) format APA (Contoh: Sugiyono, 2015: 45) di akhir kalimat/paragraf.\n6. Di bagian paling akhir, tambahkan sub-judul "Daftar Pustaka Buku Metodologi" dan susun referensi buku yang Anda kutip tadi sesuai format APA.' : '5. Karena belum ada buku rujukan metodologi di sistem, susunlah tahapan penelitian berdasarkan standar akademik umum yang lazim untuk metode ' + methodCategory + '.'}
+`;
+
+    const finalResult = await model.generateContent(finalPrompt);
+    const finalMarkdown = finalResult.response.text();
+
+    return { result: finalMarkdown };
+
+  } catch (err: any) {
+    console.error('Generate Metodologi Error:', err);
+    return { error: err.message || 'Terjadi kesalahan saat merumuskan Metodologi.' };
+  }
+}

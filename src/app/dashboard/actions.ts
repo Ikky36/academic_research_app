@@ -10,6 +10,18 @@ import { generateSotaChunk, generateLiteratureReview } from '@/services/sota'
 import { searchOpenAlex } from '@/services/openalex'
 import { searchSemanticScholar } from '@/services/semantic-scholar'
 import { generateOutline, generateKajianPustakaChunk, generateDaftarPustaka } from '@/services/kajianPustaka'
+import { generateMetodologiAction as serviceGenerateMetodologiAction } from '@/services/metodologi'
+
+export async function generateMetodologiAction(
+  projectId: string,
+  pendekatan: string,
+  gap: string,
+  novelty: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+) {
+  return await serviceGenerateMetodologiAction(projectId, pendekatan, gap, novelty, userApiKey, isPaidApi);
+}
 
 export async function generateAIQueryAction(topic: string, problem: string, userApiKey?: string) {
   try {

@@ -14,6 +14,11 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
+  // Methodology Sync state
+  const [driveFolderId, setDriveFolderId] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState('');
+  
   // Create user form state
   const [newEmail, setNewEmail] = useState('');
   const [newRole, setNewRole] = useState('free');
@@ -157,6 +162,12 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab('limits')}
           >
             ⚙️ Pengaturan Batasan (Limits)
+          </button>
+          <button 
+            className={activeTab === 'methodology' ? styles.activeTab : styles.tab} 
+            onClick={() => setActiveTab('methodology')}
+          >
+            📚 Sinkronisasi Metodologi
           </button>
         </div>
 
@@ -358,7 +369,72 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
-          )}
+          ) : activeTab === 'methodology' ? (
+            <div className={styles.methodologySection}>
+              <h2>Sinkronisasi Buku Metodologi</h2>
+              <p style={{ color: '#9ca3af', marginBottom: '20px' }}>
+                Masukkan ID Folder Google Drive Publik yang berisi buku-buku PDF metodologi penelitian. Sistem akan mengunduh, mengekstrak teks, dan memecahnya berdasarkan kategori metode penelitian ke dalam database.
+              </p>
+              
+              <div className={styles.formGroup}>
+                <label>Google Drive Folder ID</label>
+                <input 
+                  type="text" 
+                  placeholder="Contoh: 1A2b3C4d5E6f7G8h9I0j..." 
+                  className={styles.input} 
+                  value={driveFolderId}
+                  onChange={e => setDriveFolderId(e.target.value)}
+                />
+              </div>
+              
+              <button 
+                className={styles.saveButton}
+                onClick={async () => {
+                  if (!driveFolderId) {
+                    setError('Folder ID tidak boleh kosong');
+                    return;
+                  }
+                  setIsSyncing(true);
+                  setError('');
+                  setSuccess('');
+                  setSyncProgress('Sedang menyinkronkan... Proses ini mungkin memakan waktu beberapa menit tergantung ukuran buku.');
+                  
+                  // TODO: Call API route to process sync
+                  try {
+                    const response = await fetch('/api/admin/sync-methodology', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ folderId: driveFolderId })
+                    });
+                    
+                    const data = await response.json();
+                    if (response.ok) {
+                      setSuccess(`Sinkronisasi berhasil! ${data.booksCount || 0} buku diproses, ${data.chunksCount || 0} pecahan metode tersimpan.`);
+                      setSyncProgress('');
+                    } else {
+                      setError(data.error || 'Terjadi kesalahan saat sinkronisasi');
+                      setSyncProgress('');
+                    }
+                  } catch (err: any) {
+                    setError(err.message || 'Terjadi kesalahan jaringan');
+                    setSyncProgress('');
+                  }
+                  
+                  setIsSyncing(false);
+                }}
+                disabled={isSyncing}
+                style={{ marginTop: '10px' }}
+              >
+                {isSyncing ? '⏳ Sinkronisasi Berjalan...' : '🔄 Sinkronkan Buku'}
+              </button>
+              
+              {syncProgress && (
+                <div style={{ marginTop: '15px', padding: '10px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', borderRadius: '6px', fontSize: '14px' }}>
+                  ℹ️ {syncProgress}
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
       </main>
     </div>

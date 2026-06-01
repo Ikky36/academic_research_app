@@ -6,6 +6,7 @@ import SotaInterface from './SotaInterface'
 import GapNoveltyInterface from './GapNoveltyInterface'
 import LitReviewInterface from './LitReviewInterface'
 import KajianPustakaInterface from './KajianPustakaInterface'
+import MetodologiInterface from './MetodologiInterface'
 import Sidebar from './Sidebar'
 import styles from './page.module.css'
 
@@ -124,6 +125,12 @@ export default async function DashboardPage({
           >
             🧠 Kajian Pustaka (Bab II)
           </Link>
+          <Link 
+            href={`/dashboard?tab=metodologi&project=${activeProject?.id}`} 
+            className={activeTab === 'metodologi' ? styles.activeTab : styles.tab}
+          >
+            📋 Metodologi (Bab III)
+          </Link>
         </div>
 
         <main className={styles.main}>
@@ -143,6 +150,9 @@ export default async function DashboardPage({
               </div>
               <div style={{ display: activeTab === 'kajian-pustaka' ? 'block' : 'none' }}>
                 <KajianPustakaInterface key={`kp-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'kajian-pustaka'} limits={limits} role={role} isPaidApi={isPaidApi} />
+              </div>
+              <div style={{ display: activeTab === 'metodologi' ? 'block' : 'none' }}>
+                <MetodologiInterface key={`met-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'metodologi'} limits={limits} role={role} isPaidApi={isPaidApi} />
               </div>
             </>
           )}
