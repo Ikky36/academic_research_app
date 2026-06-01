@@ -117,6 +117,11 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
     setIsGeneratingOutline(true);
     setError('');
     
+    // Save current values to local storage before generating just in case they were never changed via onChange
+    localStorage.setItem(`kp_approach_${projectId}`, approach);
+    localStorage.setItem(`kp_variables_${projectId}`, variables);
+    localStorage.setItem(`kp_style_${projectId}`, citationStyle);
+    
     try {
       const userKey = localStorage.getItem('gemini_api_key') || undefined;
       const res = await generateOutlineAction(

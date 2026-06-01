@@ -95,7 +95,27 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
       {!metodologiResult ? (
         <div className={styles.stepContainer}>
           <div className={styles.infoBox}>
-            <p><strong>Pendekatan:</strong> {approach || '-'}</p>
+            <p><strong>Pendekatan:</strong></p>
+            <select 
+              className={styles.input} 
+              value={approach}
+              onChange={(e) => {
+                setApproach(e.target.value);
+                localStorage.setItem(`kp_approach_${projectId}`, e.target.value);
+              }}
+              style={{ marginBottom: '10px', padding: '8px', width: '100%', borderRadius: '6px', border: '1px solid #374151', backgroundColor: '#1f2937', color: 'white' }}
+            >
+              <option value="">-- Pilih Pendekatan --</option>
+              <option value="Kuantitatif">Kuantitatif</option>
+              <option value="Kualitatif">Kualitatif</option>
+              <option value="Mixed Methods">Mixed Methods</option>
+              <option value="Research & Development (R&D)">Research & Development (R&D)</option>
+              <option value="Kajian Pustaka (Literature Review)">Kajian Pustaka (Literature Review)</option>
+              <option value="Tafsir/Kajian Tokoh">Tafsir/Kajian Tokoh</option>
+              <option value="Eksperimen">Eksperimen</option>
+              <option value="Tindakan Kelas (PTK)">Tindakan Kelas (PTK)</option>
+            </select>
+
             <p><strong>Research Gap:</strong> {gap ? gap.substring(0, 100) + '...' : '-'}</p>
           </div>
           <button 
