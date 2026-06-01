@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server';
+import { UserRole } from '@/types/database';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 

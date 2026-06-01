@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction } from './actions';
+import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction, getSyncedBooksAction } from './actions';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
@@ -17,10 +17,12 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
+  // Methodology Sync state
   const [driveFolderId, setDriveFolderId] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState('');
+  const [syncedBooks, setSyncedBooks] = useState<any[]>([]);
   
   // Create user form state
   const [newEmail, setNewEmail] = useState('');
@@ -33,16 +35,19 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     setLoading(true);
-    const [usersRes, limitsRes] = await Promise.all([
+    const [usersRes, limitsRes, booksRes] = await Promise.all([
       getUsersAction(),
-      getTierLimitsAction()
+      getTierLimitsAction(),
+      getSyncedBooksAction()
     ]);
     
     if (usersRes.data) setUsers(usersRes.data);
     if (limitsRes.data) setLimits(limitsRes.data);
+    if (booksRes.data) setSyncedBooks(booksRes.data);
     
     if (usersRes.error) setError(usersRes.error);
     if (limitsRes.error) setError(limitsRes.error);
+    if (booksRes.error) setError(booksRes.error);
     
     setLoading(false);
   };
@@ -474,6 +479,9 @@ export default function AdminDashboard() {
                       setSyncProgress('');
                       setDriveFolderId('');
                       setUploadFile(null);
+                      // Reload books table
+                      const booksRes = await getSyncedBooksAction();
+                      if (booksRes.data) setSyncedBooks(booksRes.data);
                     } else {
                       setError(data.error || 'Terjadi kesalahan saat sinkronisasi');
                       setSyncProgress('');
@@ -496,6 +504,50 @@ export default function AdminDashboard() {
                   ℹ️ {syncProgress}
                 </div>
               )}
+              
+              <div style={{ marginTop: '40px' }}>
+                <h3>Daftar Buku Metodologi Tersinkronisasi</h3>
+                <p style={{ color: '#9ca3af', marginBottom: '15px', fontSize: '14px' }}>
+                  Berikut adalah daftar buku dan kategori metode yang telah berhasil diekstrak dan tersimpan di database.
+                </p>
+                <div className={styles.tableContainer}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Judul Buku</th>
+                        <th>Penulis</th>
+                        <th>Kategori Metode</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {syncedBooks.length === 0 ? (
+                        <tr><td colSpan={3} style={{textAlign: 'center', padding: '20px'}}>Belum ada buku metodologi yang tersinkronisasi</td></tr>
+                      ) : (
+                        syncedBooks.map((book: any) => (
+                          <tr key={book.id}>
+                            <td style={{verticalAlign: 'top', padding: '15px 10px'}}>
+                              <strong>{book.title}</strong><br/>
+                              <span style={{fontSize: '12px', color: '#9ca3af'}}>{book.publisher} ({book.year})</span>
+                            </td>
+                            <td style={{verticalAlign: 'top', padding: '15px 10px'}}>{book.author}</td>
+                            <td style={{verticalAlign: 'top', padding: '15px 10px'}}>
+                              <ul style={{ margin: 0, paddingLeft: '20px' }}>
+                                {book.methodology_chunks && book.methodology_chunks.length > 0 ? (
+                                  book.methodology_chunks.map((chunk: any, i: number) => (
+                                    <li key={i} style={{ marginBottom: '5px' }}>{chunk.method_category}</li>
+                                  ))
+                                ) : (
+                                  <li style={{ color: '#ef4444' }}>Tidak ada metode terdeteksi</li>
+                                )}
+                              </ul>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           ) : null}
         </div>
