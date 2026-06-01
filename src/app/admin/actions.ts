@@ -201,3 +201,29 @@ export async function deleteUserAction(userId: string) {
     return { error: err.message };
   }
 }
+
+export async function getSyncedBooksAction() {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { error: 'Unauthorized' };
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+  if (profile?.role !== 'admin') return { error: 'Forbidden' };
+
+  const { data, error } = await supabase
+    .from('methodology_books')
+    .select(`
+      id,
+      title,
+      author,
+      publisher,
+      year,
+      methodology_chunks (
+        method_category
+      )
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) return { error: error.message };
+  return { data };
+}
