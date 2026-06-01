@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction } from './actions';
+import { createClient } from '@/utils/supabase/client';
 import styles from './page.module.css';
 
 export default function AdminDashboard() {
@@ -401,10 +402,14 @@ export default function AdminDashboard() {
                   
                   // TODO: Call API route to process sync
                   try {
+                    const supabase = createClient();
+                    const { data: { session } } = await supabase.auth.getSession();
+                    const providerToken = session?.provider_token;
+
                     const response = await fetch('/api/admin/sync-methodology', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ folderId: driveFolderId })
+                      body: JSON.stringify({ folderId: driveFolderId, providerToken })
                     });
                     
                     const data = await response.json();

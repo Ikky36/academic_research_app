@@ -14,7 +14,7 @@ export const maxDuration = 300; // 5 minutes max on Vercel Pro
 
 export async function POST(req: NextRequest) {
   try {
-    const { folderId } = await req.json();
+    const { folderId, providerToken } = await req.json();
     if (!folderId) {
       return NextResponse.json({ error: 'Folder ID is required' }, { status: 400 });
     }
@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
     }
 
     // We use the provider_token (Google OAuth token) to access Drive API
-    const googleToken = session.provider_token;
+    // Fallback to providerToken passed from client side if server session doesn't have it
+    const googleToken = providerToken || session.provider_token;
     if (!googleToken) {
       return NextResponse.json({ error: 'Not connected to Google Drive' }, { status: 400 });
     }
