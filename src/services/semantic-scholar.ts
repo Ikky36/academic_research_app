@@ -50,12 +50,8 @@ export async function searchSemanticScholar(query: string, limit = 10, page = 1)
   const FETCH_SIZE = 100; // Semantic scholar limits to 100 per request without pagination offset easily accessible in search
   const url = `https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(broadQuery)}&limit=${FETCH_SIZE}&fields=title,authors,year,abstract,url,openAccessPdf,externalIds,s2FieldsOfStudy,tldr`;
   
-  const randomIp = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-  
   const headers: Record<string, string> = {
     'User-Agent': 'AcademicResearchApp/1.0 (mailto:scholar@university.edu)',
-    'X-Forwarded-For': randomIp,
-    'X-Real-IP': randomIp
   };
 
   const apiKey = process.env.SEMANTIC_SCHOLAR_API_KEY || process.env.NEXT_PUBLIC_SEMANTIC_SCHOLAR_API_KEY;
@@ -68,6 +64,9 @@ export async function searchSemanticScholar(query: string, limit = 10, page = 1)
   });
   
   if (!response.ok) {
+     if (response.status === 403 || response.status === 429) {
+       throw new Error(`Akses ke Semantic Scholar ditolak (Status: ${response.status}). Server publik Semantic Scholar sedang membatasi request dari server ini. Silakan ubah opsi pencarian ke "OpenAlex" yang lebih stabil dan gratis.`);
+     }
      throw new Error(`Failed to fetch from Semantic Scholar (Status: ${response.status})`);
   }
   
