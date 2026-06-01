@@ -12,8 +12,18 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
   const [isCreating, setIsCreating] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
   const [isLinking, setIsLinking] = useState(false);
+  const [isGoogleConnected, setIsGoogleConnected] = useState(false);
 
   useEffect(() => {
+    // Check Google Auth Status
+    const checkGoogleAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.app_metadata?.providers?.includes('google')) {
+        setIsGoogleConnected(true);
+      }
+    };
+    checkGoogleAuth();
     // Load search history from local storage
     const saved = localStorage.getItem('search_history');
     if (saved) {
@@ -166,25 +176,26 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
           Simpan PDF langsung ke cloud
         </div>
         <button 
-          onClick={handleConnectGoogle} 
-          disabled={isLinking}
+          onClick={isGoogleConnected ? undefined : handleConnectGoogle} 
+          disabled={isLinking || isGoogleConnected}
           style={{
             width: '100%',
             padding: '10px',
-            backgroundColor: '#1a73e8',
+            backgroundColor: isGoogleConnected ? '#10b981' : '#1a73e8',
             color: 'white',
             border: 'none',
             borderRadius: '6px',
-            cursor: 'pointer',
+            cursor: isGoogleConnected ? 'default' : 'pointer',
             fontSize: '13px',
             fontWeight: 'bold',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px'
+            gap: '8px',
+            opacity: (isLinking || isGoogleConnected) ? 0.9 : 1
           }}
         >
-          {isLinking ? 'Menghubungkan...' : '🔗 Hubungkan Google Drive'}
+          {isGoogleConnected ? '✅ Terhubung ke Google Drive' : (isLinking ? 'Menghubungkan...' : '🔗 Hubungkan Google Drive')}
         </button>
       </div>
 
