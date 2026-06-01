@@ -216,13 +216,14 @@ export async function generateLiteratureReviewAction(
 
 export async function generateOutlineAction(
   approach: string,
+  variables: string,
   topic: string,
   gap: string,
   userApiKey?: string,
   isPaidApi?: boolean
 ) {
   try {
-    const data = await generateOutline(approach, topic, gap, userApiKey, isPaidApi);
+    const data = await generateOutline(approach, variables, topic, gap, userApiKey, isPaidApi);
     return { data };
   } catch (e: any) {
     return { error: e.message };
@@ -231,6 +232,7 @@ export async function generateOutlineAction(
 
 export async function generateKajianPustakaChunkAction(
   approach: string,
+  variables: string,
   citationStyle: string,
   topic: string,
   sota: string,
@@ -245,6 +247,7 @@ export async function generateKajianPustakaChunkAction(
   try {
     const data = await generateKajianPustakaChunk(
       approach,
+      variables,
       citationStyle,
       topic,
       sota,

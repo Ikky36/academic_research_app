@@ -92,6 +92,7 @@ export async function fetchGoogleBooksData(topic: string, gap: string): Promise<
 
 export async function generateOutline(
   approach: string, 
+  variables: string,
   topic: string, 
   gap: string, 
   userApiKey?: string, 
@@ -142,6 +143,7 @@ Tugas Anda adalah membuat rancangan / kerangka Sub-Bab (Outline) untuk BAB II (K
 Topik Penelitian: "${topic}"
 Fokus Research Gap: "${gap}"
 Pendekatan Penelitian: "${approach}"
+Variabel / Fokus Penelitian: "${variables}"
 
 Panduan Keilmuan (berdasarkan Creswell):
 ${structureGuide}
@@ -176,6 +178,7 @@ Jangan tambahkan teks apapun selain array JSON tersebut.`;
 
 export async function generateKajianPustakaChunk(
   approach: string,
+  variables: string,
   citationStyle: string,
   topic: string,
   sota: string,
@@ -219,6 +222,7 @@ export async function generateKajianPustakaChunk(
 
 Topik Penelitian: "${topic}"
 Pendekatan Penelitian: "${approach}"
+Variabel / Fokus Penelitian: "${variables}"
 Gaya Sitasi: ${citationStyle}
 Fokus Gap & Kebaruan (Novelty): "${gap}"
 

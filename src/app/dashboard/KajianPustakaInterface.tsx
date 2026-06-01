@@ -19,6 +19,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
   
   // Step 1 State
   const [approach, setApproach] = useState('Kuantitatif');
+  const [variables, setVariables] = useState('');
   const [citationStyle, setCitationStyle] = useState('APA 7th Edition');
   
   // Step 2 State
@@ -53,6 +54,9 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
       const savedApproach = localStorage.getItem(`kp_approach_${projectId}`);
       if (savedApproach) setApproach(savedApproach);
       
+      const savedVariables = localStorage.getItem(`kp_variables_${projectId}`);
+      if (savedVariables) setVariables(savedVariables);
+      
       const savedStyle = localStorage.getItem(`kp_style_${projectId}`);
       if (savedStyle) setCitationStyle(savedStyle);
       
@@ -70,6 +74,11 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
   const handleApproachChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setApproach(e.target.value);
     localStorage.setItem(`kp_approach_${projectId}`, e.target.value);
+  };
+
+  const handleVariablesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setVariables(e.target.value);
+    localStorage.setItem(`kp_variables_${projectId}`, e.target.value);
   };
 
   const handleStyleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -99,6 +108,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
       const userKey = localStorage.getItem('gemini_api_key') || undefined;
       const res = await generateOutlineAction(
         approach,
+        variables,
         researchTopic,
         selectedGap,
         userKey,
@@ -161,6 +171,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
         // Call action chunk by chunk
         const res = await generateKajianPustakaChunkAction(
           approach,
+          variables,
           citationStyle,
           researchTopic,
           sotaMarkdown,
@@ -253,6 +264,21 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
             </select>
             <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '8px' }}>
               *Sistem akan menyesuaikan alur logika generasi (Creswell, 2023) berdasarkan pilihan ini.
+            </p>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label>Variabel / Fokus Penelitian</label>
+            <input 
+              type="text" 
+              value={variables} 
+              onChange={handleVariablesChange} 
+              className={styles.input}
+              placeholder="Contoh: Motivasi Belajar (Y), Problem Based Learning (X)"
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#111827', color: 'white', marginTop: '4px' }}
+            />
+            <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '8px' }}>
+              *Isi dengan variabel terikat/bebas (jika Kuantitatif) atau fokus fenomena/teori (jika Kualitatif). Bisa lebih dari satu.
             </p>
           </div>
 
