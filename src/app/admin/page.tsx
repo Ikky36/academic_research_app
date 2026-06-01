@@ -295,7 +295,7 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
             </>
-          ) : (
+          ) : activeTab === 'limits' ? (
             <div className={styles.limitsGrid}>
               {limits.filter(l => l.role !== 'admin').map((limitObj) => (
                 <div key={limitObj.role} className={styles.limitCard}>
