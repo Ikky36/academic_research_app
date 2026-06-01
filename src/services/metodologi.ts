@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/client';
+import { createClient } from '@/utils/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export async function generateMetodologiAction(
@@ -10,11 +10,11 @@ export async function generateMetodologiAction(
   isPaidApi?: boolean
 ): Promise<{ result?: string, error?: string }> {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     
     // Check auth
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('User not authenticated');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
 
     // 1. Setup Gemini AI
     let apiKey = userApiKey;
