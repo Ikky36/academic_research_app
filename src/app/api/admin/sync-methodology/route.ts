@@ -28,15 +28,26 @@ export async function POST(req: NextRequest) {
 
     // We use the provider_token (Google OAuth token) to access Drive API
     // Fallback to providerToken passed from client side if server session doesn't have it
-    const googleToken = providerToken || session.provider_token;
-    if (!googleToken) {
-      return NextResponse.json({ error: 'Not connected to Google Drive' }, { status: 400 });
+    let googleToken = providerToken || session.provider_token;
+    
+    // Fallback to API Key if token is missing
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    
+    if (!googleToken && !apiKey) {
+      return NextResponse.json({ error: 'Not connected to Google Drive and no API Key available' }, { status: 400 });
     }
 
     // 1. List files in the folder
-    const filesRes = await fetch(`https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType='application/pdf'&fields=files(id,name)`, {
-      headers: { Authorization: `Bearer ${googleToken}` }
-    });
+    let filesUrl = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType='application/pdf'&fields=files(id,name)`;
+    let headers: any = {};
+    
+    if (googleToken) {
+      headers['Authorization'] = `Bearer ${googleToken}`;
+    } else {
+      filesUrl += `&key=${apiKey}`;
+    }
+
+    const filesRes = await fetch(filesUrl, { headers });
 
     if (!filesRes.ok) {
       const errorData = await filesRes.json();
@@ -63,9 +74,16 @@ export async function POST(req: NextRequest) {
     for (const file of files) {
       try {
         // Download PDF
-        const pdfRes = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, {
-          headers: { Authorization: `Bearer ${googleToken}` }
-        });
+        let pdfUrl = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`;
+        let pdfHeaders: any = {};
+        
+        if (googleToken) {
+          pdfHeaders['Authorization'] = `Bearer ${googleToken}`;
+        } else {
+          pdfUrl += `&key=${apiKey}`;
+        }
+
+        const pdfRes = await fetch(pdfUrl, { headers: pdfHeaders });
 
         if (!pdfRes.ok) {
           console.error(`Failed to download ${file.name}`);
