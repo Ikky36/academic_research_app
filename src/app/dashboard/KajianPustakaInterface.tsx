@@ -15,7 +15,13 @@ interface KajianPustakaInterfaceProps {
 }
 
 export default function KajianPustakaInterface({ projectId, isActive, limits, role, isPaidApi }: KajianPustakaInterfaceProps) {
-  const [step, setStep] = useState(1);
+  const [step, setStepState] = useState(1);
+  
+  // Custom setter to always persist step
+  const setStep = (newStep: number) => {
+    setStepState(newStep);
+    localStorage.setItem(`kp_step_${projectId}`, newStep.toString());
+  };
   
   // Step 1 State
   const [approach, setApproach] = useState('Kuantitatif');
@@ -71,6 +77,9 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
       
       const savedCompleted = localStorage.getItem(`kp_completed_${projectId}`);
       if (savedCompleted) setCompletedSubBabs(parseInt(savedCompleted, 10));
+
+      const savedStep = localStorage.getItem(`kp_step_${projectId}`);
+      if (savedStep) setStepState(parseInt(savedStep, 10));
     }
   }, [isActive, projectId]);
 
