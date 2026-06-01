@@ -28,10 +28,18 @@ export async function uploadToDrive(pdfUrl: string, projectId: string, title: st
     rootFolderId = await createFolder(driveFetch, 'Academic Research App', 'root');
   }
 
+  // Fetch Project Title
+  const { data: project } = await supabase.from('projects').select('title').eq('id', projectId).single();
+  const projectTitle = project?.title || 'Untitled Project';
+  
+  // Format folder name: "Title (ID)" or "Title - ID"
+  // Keep ID in name so it's unique
+  const folderName = `${projectTitle} (${projectId.substring(0, 8)})`;
+
   // 2. Check or Create Project Folder
-  let projectFolderId = await getFolderIdByName(driveFetch, `Project ${projectId}`, rootFolderId);
+  let projectFolderId = await getFolderIdByName(driveFetch, folderName, rootFolderId);
   if (!projectFolderId) {
-    projectFolderId = await createFolder(driveFetch, `Project ${projectId}`, rootFolderId);
+    projectFolderId = await createFolder(driveFetch, folderName, rootFolderId);
   }
 
   // 3. Fetch PDF from URL
