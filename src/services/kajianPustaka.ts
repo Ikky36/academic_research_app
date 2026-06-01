@@ -263,6 +263,7 @@ export async function generateDaftarPustaka(
   citationStyle: string,
   sota: string,
   booksData: string,
+  dois: string[],
   userApiKey?: string,
   isPaidApi?: boolean
 ): Promise<string> {
@@ -292,10 +293,7 @@ export async function generateDaftarPustaka(
   else if (citationStyle.toLowerCase().includes('harvard')) styleParam = 'harvard3';
   else if (citationStyle.toLowerCase().includes('chicago')) styleParam = 'chicago-author-date';
 
-  // Extract DOIs from sota string
-  const doiRegex = /10\.\d{4,9}\/[-._;()/:A-Z0-9]+/gi;
-  const matches = sota.match(doiRegex) || [];
-  const uniqueDois = [...new Set(matches)];
+  const uniqueDois = [...new Set(dois)];
 
   let fetchedCitations = '';
   if (uniqueDois.length > 0) {

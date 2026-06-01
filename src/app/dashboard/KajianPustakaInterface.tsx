@@ -196,6 +196,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
       
       // Generate Daftar Pustaka
       const dpRes = await generateDaftarPustakaAction(
+        projectId,
         sotaMarkdown,
         booksData,
         citationStyle,

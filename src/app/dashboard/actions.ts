@@ -266,6 +266,7 @@ export async function generateKajianPustakaChunkAction(
 }
 
 export async function generateDaftarPustakaAction(
+  projectId: string,
   sota: string,
   booksData: string,
   citationStyle: string,
@@ -273,7 +274,15 @@ export async function generateDaftarPustakaAction(
   isPaidApi?: boolean
 ) {
   try {
-    const data = await generateDaftarPustaka(citationStyle, sota, booksData, userApiKey, isPaidApi);
+    const supabase = await createClient();
+    const { data: references } = await supabase
+      .from('extracted_data')
+      .select('doi')
+      .eq('project_id', projectId)
+      .not('doi', 'is', null);
+      
+    const dois = (references || []).map(r => r.doi).filter(Boolean);
+    const data = await generateDaftarPustaka(citationStyle, sota, booksData, dois, userApiKey, isPaidApi);
     return { data };
   } catch (e: any) {
     return { error: e.message };
