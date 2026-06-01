@@ -199,8 +199,10 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
         </button>
 
         {isGoogleConnected && (
-          <button 
-            onClick={() => window.open('https://drive.google.com/drive/search?q=Academic%20Research%20App', '_blank')}
+          <a 
+            href="https://drive.google.com/drive/search?q=Academic%20Research%20App"
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
               width: '100%',
               padding: '10px',
@@ -215,11 +217,12 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
-              marginTop: '10px'
+              marginTop: '10px',
+              textDecoration: 'none'
             }}
           >
             📂 Buka Folder Drive
-          </button>
+          </a>
         )}
       </div>
 
