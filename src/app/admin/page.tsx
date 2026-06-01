@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction } from './actions';
 import { createClient } from '@/utils/supabase/client';
+import { useRouter } from 'next/navigation';
+import Script from 'next/script';
 import styles from './page.module.css';
 
 export default function AdminDashboard() {
@@ -420,12 +422,38 @@ export default function AdminDashboard() {
                     let response;
                     
                     if (uploadFile) {
-                      // OPSI B: File Upload
-                      const formData = new FormData();
-                      formData.append('file', uploadFile);
-                      response = await fetch('/api/admin/sync-upload', {
+                      // OPSI B: File Upload - Extract text on client side first to bypass Vercel 4.5MB limit
+                      setSyncProgress('Sedang membaca PDF di perangkat Anda (ini mungkin memakan waktu untuk buku besar)...');
+                      
+                      const arrayBuffer = await uploadFile.arrayBuffer();
+                      // @ts-ignore
+                      const pdfjsLib = window['pdfjs-dist/build/pdf'];
+                      if (!pdfjsLib) {
+                        throw new Error('Sistem pembaca PDF belum siap, silakan muat ulang halaman.');
+                      }
+                      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                      
+                      const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
+                      const pdf = await loadingTask.promise;
+                      
+                      let fullText = '';
+                      for (let i = 1; i <= pdf.numPages; i++) {
+                        setSyncProgress(`Membaca halaman ${i} dari ${pdf.numPages}...`);
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map((item: any) => item.str).join(' ');
+                        fullText += pageText + '\n';
+                      }
+                      
+                      setSyncProgress('Mengirim teks ke AI untuk analisis dan klasifikasi metode (Harap bersabar, bisa memakan waktu hingga 2 menit)...');
+                      
+                      response = await fetch('/api/admin/sync-upload-text', {
                         method: 'POST',
-                        body: formData
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                          text: fullText, 
+                          fileName: uploadFile.name 
+                        })
                       });
                     } else {
                       // OPSI A: Google Drive Folder ID
@@ -472,6 +500,9 @@ export default function AdminDashboard() {
           ) : null}
         </div>
       </main>
+      
+      {/* Load PDF.js from CDN for client-side PDF text extraction */}
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" strategy="lazyOnload" />
     </div>
   );
 }
