@@ -15,8 +15,8 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  // Methodology Sync state
   const [driveFolderId, setDriveFolderId] = useState('');
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState('');
   
@@ -378,44 +378,73 @@ export default function AdminDashboard() {
               </p>
               
               <div className={styles.formGroup}>
-                <label>Google Drive Folder ID</label>
+              <div style={{ marginBottom: '15px' }}>
+                <label>Google Drive Folder ID (Opsi A)</label>
                 <input 
                   type="text" 
                   placeholder="Contoh: 1A2b3C4d5E6f7G8h9I0j..." 
                   className={styles.input} 
                   value={driveFolderId}
                   onChange={e => setDriveFolderId(e.target.value)}
+                  disabled={!!uploadFile}
+                />
+              </div>
+
+              <div style={{ marginBottom: '15px', textAlign: 'center', fontWeight: 'bold' }}>ATAU</div>
+
+              <div style={{ marginBottom: '15px' }}>
+                <label>Unggah File PDF Langsung (Opsi B)</label>
+                <input 
+                  type="file" 
+                  accept="application/pdf"
+                  className={styles.input} 
+                  onChange={e => setUploadFile(e.target.files ? e.target.files[0] : null)}
+                  disabled={!!driveFolderId}
                 />
               </div>
               
               <button 
                 className={styles.saveButton}
                 onClick={async () => {
-                  if (!driveFolderId) {
-                    setError('Folder ID tidak boleh kosong');
+                  if (!driveFolderId && !uploadFile) {
+                    setError('Pilih salah satu: masukkan Folder ID ATAU unggah File PDF');
                     return;
                   }
                   setIsSyncing(true);
                   setError('');
                   setSuccess('');
-                  setSyncProgress('Sedang menyinkronkan... Proses ini mungkin memakan waktu beberapa menit tergantung ukuran buku.');
+                  setSyncProgress('Sedang memproses buku... (Harap bersabar, bisa memakan waktu hingga 2 menit)');
                   
-                  // TODO: Call API route to process sync
                   try {
-                    const supabase = createClient();
-                    const { data: { session } } = await supabase.auth.getSession();
-                    const providerToken = session?.provider_token;
+                    let response;
+                    
+                    if (uploadFile) {
+                      // OPSI B: File Upload
+                      const formData = new FormData();
+                      formData.append('file', uploadFile);
+                      response = await fetch('/api/admin/sync-upload', {
+                        method: 'POST',
+                        body: formData
+                      });
+                    } else {
+                      // OPSI A: Google Drive Folder ID
+                      const supabase = createClient();
+                      const { data: { session } } = await supabase.auth.getSession();
+                      const providerToken = session?.provider_token;
 
-                    const response = await fetch('/api/admin/sync-methodology', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ folderId: driveFolderId, providerToken })
-                    });
+                      response = await fetch('/api/admin/sync-methodology', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ folderId: driveFolderId, providerToken })
+                      });
+                    }
                     
                     const data = await response.json();
                     if (response.ok) {
                       setSuccess(`Sinkronisasi berhasil! ${data.booksCount || 0} buku diproses, ${data.chunksCount || 0} pecahan metode tersimpan.`);
                       setSyncProgress('');
+                      setDriveFolderId('');
+                      setUploadFile(null);
                     } else {
                       setError(data.error || 'Terjadi kesalahan saat sinkronisasi');
                       setSyncProgress('');
