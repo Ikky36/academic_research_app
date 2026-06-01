@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+// Polyfill DOMMatrix for pdf-parse which uses pdf.js under the hood
+if (typeof global.DOMMatrix === 'undefined') {
+  global.DOMMatrix = class DOMMatrix {} as any;
+}
+
 const pdfParse = require('pdf-parse');
 
 export const runtime = 'nodejs';
