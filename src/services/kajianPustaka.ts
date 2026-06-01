@@ -102,7 +102,7 @@ export async function generateOutline(
   
   if (userApiKey && userApiKey !== 'null' && userApiKey.trim() !== '') {
     const genAI = new GoogleGenerativeAI(userApiKey);
-    aiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    aiModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
   } else {
     // Check global BYOK status
     const supabase = await createClient();
@@ -122,7 +122,7 @@ export async function generateOutline(
     }
     
     const genAI = new GoogleGenerativeAI(keyToUse);
-    aiModel = genAI.getGenerativeModel({ model: isPaidApi ? "gemini-2.5-flash" : "gemini-2.5-flash" });
+    aiModel = genAI.getGenerativeModel({ model: isPaidApi ? "gemini-1.5-pro" : "gemini-1.5-flash" });
   }
 
   let structureGuide = "";
@@ -192,7 +192,7 @@ export async function generateKajianPustakaChunk(
   
   if (userApiKey && userApiKey !== 'null' && userApiKey.trim() !== '') {
     const genAI = new GoogleGenerativeAI(userApiKey);
-    aiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    aiModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
   } else {
     const supabase = await createClient();
     const { data: globalSettings } = await supabase
@@ -211,8 +211,8 @@ export async function generateKajianPustakaChunk(
     }
     
     const genAI = new GoogleGenerativeAI(keyToUse);
-    // Use flash for generation
-    aiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    // Use stable models to avoid 503 high demand errors from 2.5-flash
+    aiModel = genAI.getGenerativeModel({ model: isPaidApi ? "gemini-1.5-pro" : "gemini-1.5-flash" });
   }
 
   const prompt = `Anda adalah seorang Profesor dan Peneliti Akademik terkemuka. Tugas Anda adalah menulis bagian spesifik dari BAB II (Kajian Pustaka) berdasarkan parameter berikut:

@@ -137,7 +137,7 @@ export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic:
     throw new Error('Gemini API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
   }
 
-  const modelName = isPaidApi ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
+  const modelName = isPaidApi ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: modelName });
 
@@ -258,7 +258,7 @@ export async function generateLiteratureReview(sotaMarkdown: string, topic: stri
     throw new Error('Gemini API Key is missing.');
   }
 
-  const modelName = isPaidApi ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
+  const modelName = isPaidApi ? 'gemini-1.5-pro' : 'gemini-1.5-flash';
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: modelName });
 
