@@ -378,7 +378,7 @@ export default function AdminDashboard() {
               </p>
               
               <div className={styles.formGroup}>
-              <div style={{ marginBottom: '15px' }}>
+                <div style={{ marginBottom: '15px' }}>
                 <label>Google Drive Folder ID (Opsi A)</label>
                 <input 
                   type="text" 
@@ -401,6 +401,7 @@ export default function AdminDashboard() {
                   onChange={e => setUploadFile(e.target.files ? e.target.files[0] : null)}
                   disabled={!!driveFolderId}
                 />
+              </div>
               </div>
               
               <button 
