@@ -9,25 +9,7 @@ export default function LoginForm({ message }: { message?: string }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
 
-  const handleGoogleLogin = async () => {
-    setLoadingGoogle(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        scopes: 'https://www.googleapis.com/auth/drive.file',
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-        },
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    });
-    if (error) {
-      setLoadingGoogle(false);
-      alert(error.message);
-    }
-  };
+    // Google login disabled on this page
 
   return (
     <form className={styles.form}>
@@ -85,18 +67,6 @@ export default function LoginForm({ message }: { message?: string }) {
         </button>
       </div>
 
-      <div className={styles.divider}>
-        <span>ATAU</span>
-      </div>
-
-      <button 
-        type="button" 
-        onClick={handleGoogleLogin} 
-        disabled={loadingGoogle}
-        className={styles.googleButton}
-      >
-        {loadingGoogle ? 'Memuat...' : 'Lanjutkan dengan Google'}
-      </button>
     </form>
   );
 }
