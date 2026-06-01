@@ -197,6 +197,30 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
         >
           {isGoogleConnected ? '✅ Terhubung ke Google Drive' : (isLinking ? 'Menghubungkan...' : '🔗 Hubungkan Google Drive')}
         </button>
+
+        {isGoogleConnected && (
+          <button 
+            onClick={() => window.open('https://drive.google.com/drive/search?q=Academic%20Research%20App', '_blank')}
+            style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              marginTop: '10px'
+            }}
+          >
+            📂 Buka Folder Drive
+          </button>
+        )}
       </div>
 
     </aside>
