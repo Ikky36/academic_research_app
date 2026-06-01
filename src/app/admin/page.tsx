@@ -6,7 +6,7 @@ import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLi
 import styles from './page.module.css';
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'users' | 'limits'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'limits' | 'methodology'>('users');
   
   const [users, setUsers] = useState<any[]>([]);
   const [limits, setLimits] = useState<any[]>([]);
