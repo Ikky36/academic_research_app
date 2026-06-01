@@ -5,6 +5,7 @@ import SearchInterface from './SearchInterface'
 import SotaInterface from './SotaInterface'
 import GapNoveltyInterface from './GapNoveltyInterface'
 import LitReviewInterface from './LitReviewInterface'
+import KajianPustakaInterface from './KajianPustakaInterface'
 import Sidebar from './Sidebar'
 import styles from './page.module.css'
 
@@ -117,6 +118,12 @@ export default async function DashboardPage({
           >
             📚 Literature Review
           </Link>
+          <Link 
+            href={`/dashboard?tab=kajian-pustaka&project=${activeProject?.id}`} 
+            className={activeTab === 'kajian-pustaka' ? styles.activeTab : styles.tab}
+          >
+            🧠 Kajian Pustaka (Bab II)
+          </Link>
         </div>
 
         <main className={styles.main}>
@@ -133,6 +140,9 @@ export default async function DashboardPage({
               </div>
               <div style={{ display: activeTab === 'lit-review' ? 'block' : 'none' }}>
                 <LitReviewInterface key={`lit-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'lit-review'} limits={limits} role={role} isPaidApi={isPaidApi} />
+              </div>
+              <div style={{ display: activeTab === 'kajian-pustaka' ? 'block' : 'none' }}>
+                <KajianPustakaInterface key={`kp-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'kajian-pustaka'} limits={limits} role={role} isPaidApi={isPaidApi} />
               </div>
             </>
           )}

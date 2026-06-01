@@ -9,6 +9,7 @@ import { getPdfUrlFromUnpaywall } from '@/services/unpaywall'
 import { generateSotaChunk, generateLiteratureReview } from '@/services/sota'
 import { searchOpenAlex } from '@/services/openalex'
 import { searchSemanticScholar } from '@/services/semantic-scholar'
+import { generateOutline, generateKajianPustaka } from '@/services/kajianPustaka'
 
 export async function generateAIQueryAction(topic: string, problem: string, userApiKey?: string) {
   try {
@@ -208,6 +209,50 @@ export async function generateLiteratureReviewAction(
 
     const result = await generateLiteratureReview(sotaMarkdown, topic, gapText, paragraphs, citationStyle, rawMetadata, userApiKey, isPaidApi);
     return { data: result };
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
+export async function generateOutlineAction(
+  approach: string,
+  topic: string,
+  gap: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+) {
+  try {
+    const data = await generateOutline(approach, topic, gap, userApiKey, isPaidApi);
+    return { data };
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
+export async function generateKajianPustakaAction(
+  approach: string,
+  citationStyle: string,
+  topic: string,
+  sota: string,
+  gap: string,
+  outline: string[],
+  booksData: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+) {
+  try {
+    const data = await generateKajianPustaka(
+      approach,
+      citationStyle,
+      topic,
+      sota,
+      gap,
+      outline,
+      booksData,
+      userApiKey,
+      isPaidApi
+    );
+    return { data };
   } catch (e: any) {
     return { error: e.message };
   }
