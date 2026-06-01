@@ -301,17 +301,22 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
                     );
                   }
 
-                  // Extract text from the first cell (Research Gap) to use as unique ID
+                  // Extract full text from the first cell (Research Gap) to use as unique ID and data for AI
                   const gapCell = (node as any)?.children?.find((c: any) => c.tagName === 'td');
                   let gapText = '';
-                  if (gapCell && gapCell.children && gapCell.children.length > 0) {
-                    // Try to grab the raw text safely
-                    try {
-                      gapText = gapCell.children[0].value || gapCell.children[0].children?.[0]?.value || String(gapCell.position?.start?.line);
-                    } catch (e) {
-                      gapText = String(gapCell.position?.start?.line);
-                    }
-                  } else {
+                  
+                  const extractText = (n: any): string => {
+                    if (n.type === 'text') return n.value || '';
+                    if (n.children) return n.children.map(extractText).join('');
+                    return '';
+                  };
+
+                  if (gapCell) {
+                    gapText = extractText(gapCell).trim();
+                  }
+                  
+                  // Fallback if extraction fails
+                  if (!gapText) {
                     gapText = String((node as any)?.position?.start?.line);
                   }
                   
