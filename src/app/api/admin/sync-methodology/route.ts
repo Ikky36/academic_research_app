@@ -105,7 +105,8 @@ Tugas Anda adalah:
 2. Identifikasi BERBAGAI METODE PENELITIAN yang dibahas secara mendetail dalam buku ini (misal: Kualitatif Studi Kasus, Kuantitatif Eksperimen, Research & Development model ADDIE, Mix Method, dsb).
 3. Ekstrak bagian teks yang berisi penjelasan mendalam untuk setiap metode, yang mencakup:
    - DEFINISI & KONSEP DASAR metode tersebut.
-   - INSTRUMEN PENELITIAN (teknik pembuatan instrumen, macam-macam uji instrumen seperti validitas/reliabilitas yang terkait dengan metode tersebut).
+   - INSTRUMEN PENELITIAN (teknik pembuatan instrumen, macam-macam uji instrumen seperti validitas/reliabilitas).
+   - TEKNIK ANALISIS DATA (jenis teknik analisis yang digunakan, tahapan-tahapannya, kriteria/penilaian, serta syarat-syarat penggunaannya).
    - RINCIAN TAHAPAN (prosedur operasional/langkah-langkah) pelaksanaan metode tersebut.
 4. Perkirakan rentang halaman (page_start, page_end) untuk setiap metode berdasarkan posisi teks.
 
@@ -123,7 +124,7 @@ Keluarkan respons dalam format JSON dengan struktur yang tepat seperti berikut H
   "methods": [
     {
       "method_category": "Nama Kategori Metode (Misal: Research & Development (R&D))",
-      "content": "Isi teks gabungan lengkap yang berisi Definisi, Instrumen & Uji Instrumen, serta Rincian Tahapan metodologi tersebut secara spesifik...",
+      "content": "Isi teks gabungan lengkap yang berisi Definisi, Instrumen & Uji, Teknik Analisis Data, serta Rincian Tahapan metodologi tersebut secara spesifik...",
       "page_start": 45,
       "page_end": 52
     }
