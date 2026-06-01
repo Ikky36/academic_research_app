@@ -322,6 +322,7 @@ export async function generateDaftarPustaka(
 
   const prompt = `Buatlah sebuah DAFTAR PUSTAKA (References) berdasarkan SATU-SATUNYA referensi yang ada di bawah ini.
 JANGAN menambahkan daftar pustaka palsu atau halusinasi. Hanya gunakan referensi dari teks di bawah ini.
+PENTING: Jika ada informasi yang tidak tersedia dari referensi di bawah (seperti nama jurnal, volume, edisi, atau nomor halaman), JANGAN pernah menyebutkan ketiadaannya secara eksplisit (contoh: jangan menulis "[Nama Jurnal tidak disebutkan]" atau "[Volume tidak disebutkan]"). Cukup tuliskan informasi yang ada saja dengan format yang rapi dan benar.
 
 FORMAT: ${citationStyle}
 
