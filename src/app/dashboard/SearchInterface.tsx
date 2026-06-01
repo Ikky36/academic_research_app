@@ -82,7 +82,7 @@ const ExpandableAbstract = ({ text, terms }: { text: string, terms: string[] }) 
   );
 };
 
-const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uploadedDois, failedDois, handleSave, handleUploadDrive, onUpdate }: any) => {
+const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uploadedDois, failedDois, handleSave, handleUploadDrive, onUpdate, handleDelete }: any) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editAuthors, setEditAuthors] = useState(res.authors || '');
   const [editAbstract, setEditAbstract] = useState(res.abstract || '');
@@ -176,6 +176,16 @@ const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uplo
             Lihat Sumber Utama
           </a>
         )}
+
+        <button 
+          onClick={() => handleDelete(index)}
+          style={{ background: 'none', border: '1px solid #ef4444', color: '#ef4444', cursor: 'pointer', marginLeft: 'auto', fontWeight: 'bold', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}
+          title="Hapus baris ini dari hasil pencarian"
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = 'white'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#ef4444'; }}
+        >
+          ❌ Hapus Baris
+        </button>
       </div>
     </div>
   );
@@ -567,6 +577,11 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
             onUpdate={(updatedRes: any) => {
               const newResults = [...results];
               newResults[i] = updatedRes;
+              setResults(newResults);
+            }}
+            handleDelete={(idx: number) => {
+              const newResults = [...results];
+              newResults.splice(idx, 1);
               setResults(newResults);
             }}
           />
