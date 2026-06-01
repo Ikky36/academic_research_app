@@ -174,13 +174,15 @@ Jangan tambahkan teks apapun selain array JSON tersebut.`;
   return [];
 }
 
-export async function generateKajianPustaka(
+export async function generateKajianPustakaChunk(
   approach: string,
   citationStyle: string,
   topic: string,
   sota: string,
   gap: string,
   outline: string[],
+  subChapterTitle: string,
+  subChapterIndex: number,
   booksData: string,
   userApiKey?: string,
   isPaidApi?: boolean
@@ -213,33 +215,36 @@ export async function generateKajianPustaka(
     aiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
   }
 
-  const prompt = `Anda adalah seorang Profesor dan Peneliti Akademik terkemuka. Tugas Anda adalah menulis keseluruhan teks BAB II (Kajian Pustaka) yang utuh, koheren, dan mendalam berdasarkan parameter berikut:
+  const prompt = `Anda adalah seorang Profesor dan Peneliti Akademik terkemuka. Tugas Anda adalah menulis bagian spesifik dari BAB II (Kajian Pustaka) berdasarkan parameter berikut:
 
 Topik Penelitian: "${topic}"
 Pendekatan Penelitian: "${approach}"
 Gaya Sitasi: ${citationStyle}
 Fokus Gap & Kebaruan (Novelty): "${gap}"
 
-STRUKTUR SUB-BAB YANG WAJIB ANDA IKUTI:
-${outline.map((o, i) => `${i+1}. ${o}`).join('\n')}
+TUGAS ANDA SAAT INI:
+Tulislah HANYA untuk Sub-Bab ke-${subChapterIndex} dengan judul: "2.${subChapterIndex} ${subChapterTitle}"
+
+(Sebagai konteks, berikut adalah keseluruhan struktur sub-bab dari Bab II ini:
+${outline.map((o, i) => `${i+1}. ${o}`).join('\n')})
 
 DATA JURNAL (STATE OF THE ART):
-Gunakan tabel SOTA berikut untuk mendukung argumen empiris Anda. Anda WAJIB mensintesis (abstracting) literatur ini dengan mengutip permasalahan, populasi/sampel (jika ada), dan hasil penelitian mereka:
+Gunakan tabel SOTA berikut untuk mendukung argumen empiris Anda (hanya gunakan yang relevan dengan sub-bab ini):
 ${sota}
 
 DATA BUKU REFERENSI (TEORI):
-Gunakan referensi buku berikut untuk memperkuat landasan teori konseptual Anda:
+Gunakan referensi buku berikut untuk memperkuat landasan teori konseptual Anda (jika relevan):
 ${booksData ? booksData : '(Tidak ada data buku yang ditemukan, silakan gunakan teori umum yang relevan)'}
 
 PANDUAN KEILMUAN MENULIS KAJIAN PUSTAKA (BERDASARKAN CRESWELL):
-1. Jika Kuantitatif: Teks harus mengalir secara deduktif (membedah variabel independen, dependen, dan kaitannya), menggunakan data SOTA untuk menunjukkan pertentangan empiris, dan diakhiri dengan perumusan hipotesis yang tegas.
-2. Jika Kualitatif: Teks harus mengalir secara tematis/induktif. Gunakan data Buku untuk pendalaman konsep, gunakan SOTA untuk menegaskan 'Contextual/Conceptual Gap', lalu arahkan pada pemahaman fenomena.
+1. Jika Kuantitatif: Teks harus mengalir secara deduktif.
+2. Jika Kualitatif: Teks harus mengalir secara tematis/induktif.
 3. Aturan Sitasi: Setiap klaim faktual WAJIB menyertakan in-text citation yang mengacu pada data SOTA atau Buku yang diberikan, dengan format TEPAT sesuai gaya ${citationStyle}.
 4. Kualitas Teks: Gunakan bahasa Indonesia ilmiah yang formal, baku, dan objektif. 
-5. JANGAN menuliskan teks basa-basi AI di awal atau akhir (seperti "Berikut adalah kajian pustaka Anda"). Langsung mulai dengan format Markdown heading (##) untuk sub-bab pertama.
+5. JANGAN menuliskan teks basa-basi AI di awal atau akhir. Langsung mulai dengan format Markdown heading (## 2.${subChapterIndex} ${subChapterTitle}).
 6. Buat paragraf yang panjang, padat, dan analitis. Jangan sekadar membuat list/bullet points. Sintesiskan berbagai penulis menjadi satu paragraf diskusi.
 
-Hasilkan teks Bab II secara lengkap dalam format Markdown sekarang.`;
+Hasilkan teks untuk sub-bab ini secara lengkap dalam format Markdown sekarang.`;
 
   try {
     let text = await fetchWithRetry(aiModel, prompt);

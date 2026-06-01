@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import styles from './KajianPustakaInterface.module.css';
-import { generateOutlineAction, generateKajianPustakaAction } from './actions';
+import { generateOutlineAction, generateKajianPustakaChunkAction } from './actions';
 
 interface KajianPustakaInterfaceProps {
   projectId: string;
@@ -148,32 +148,45 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
 
     setIsGeneratingKajian(true);
     setError('');
+    setKajianPustaka('');
+    setStep(3); // Pindah ke langkah 3 untuk melihat proses secara real-time
     
+    let currentText = '';
+    let successCount = 0;
+
     try {
       const userKey = localStorage.getItem('gemini_api_key') || undefined;
       
-      // Call action
-      const res = await generateKajianPustakaAction(
-        approach,
-        citationStyle,
-        researchTopic,
-        sotaMarkdown,
-        selectedGap,
-        outline,
-        booksData,
-        userKey,
-        isPaidApi
-      );
-      
-      if (res.error) throw new Error(res.error);
-      
-      if (res.data) {
-        setKajianPustaka(res.data);
-        localStorage.setItem(`kp_result_${projectId}`, res.data);
-        setStep(3);
+      for (let i = 0; i < outline.length; i++) {
+        // Call action chunk by chunk
+        const res = await generateKajianPustakaChunkAction(
+          approach,
+          citationStyle,
+          researchTopic,
+          sotaMarkdown,
+          selectedGap,
+          outline,
+          outline[i],
+          i + 1,
+          booksData,
+          userKey,
+          isPaidApi
+        );
+        
+        if (res.error) throw new Error(`Error sub-bab ke-${i + 1}: ${res.error}`);
+        
+        if (res.data) {
+          currentText += res.data + '\n\n';
+          setKajianPustaka(currentText);
+          localStorage.setItem(`kp_result_${projectId}`, currentText);
+          successCount++;
+        }
       }
     } catch (err: any) {
       setError(err.message);
+      if (successCount === 0) {
+        setStep(2); // Kembali jika gagal total di awal
+      }
     } finally {
       setIsGeneratingKajian(false);
     }
@@ -308,19 +321,9 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
               onClick={handleGenerateKajianPustaka}
               disabled={isGeneratingKajian || outline.length === 0}
             >
-              {isGeneratingKajian ? (
-                <><div className={styles.loader}></div> Menyusun Kajian Pustaka...</>
-              ) : '⚡ Buat Kajian Pustaka (Bab II)'}
+              ⚡ Buat Kajian Pustaka (Bab II)
             </button>
           </div>
-
-          {isGeneratingKajian && (
-            <div className={styles.loadingState}>
-              <div className={styles.loaderLarge}></div>
-              <p style={{ margin: '0 0 8px 0', fontWeight: 'bold' }}>Sedang mensintesis literatur...</p>
-              <p style={{ margin: 0, fontSize: '13px' }}>Proses ini mungkin memakan waktu hingga 30 detik untuk membaca data SOTA, mengekstraksi teori, dan menulis teks akademis.</p>
-            </div>
-          )}
         </div>
       )}
 
@@ -329,10 +332,10 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h3 style={{ margin: 0, fontSize: '18px' }}>Hasil Kajian Pustaka (Bab II)</h3>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button className={styles.btnSecondary} onClick={() => setStep(2)}>
+              <button className={styles.btnSecondary} onClick={() => setStep(2)} disabled={isGeneratingKajian}>
                 Edit Outline
               </button>
-              <button className={styles.btnPrimary} onClick={handleCopy}>
+              <button className={styles.btnPrimary} onClick={handleCopy} disabled={isGeneratingKajian}>
                 {copySuccess ? '✓ Tersalin!' : '📋 Salin Teks'}
               </button>
             </div>
@@ -340,10 +343,21 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
           
           <div className={styles.resultContent}>
             <div className={styles.markdownContainer}>
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {kajianPustaka}
-              </ReactMarkdown>
+              {kajianPustaka ? (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {kajianPustaka}
+                </ReactMarkdown>
+              ) : (
+                <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>Menunggu proses generasi dimulai...</p>
+              )}
             </div>
+            {isGeneratingKajian && (
+              <div className={styles.loadingState} style={{ padding: '20px 0 0 0', marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <div className={styles.loaderLarge}></div>
+                <p style={{ margin: '0 0 8px 0', fontWeight: 'bold' }}>Sedang menulis sub-bab demi sub-bab...</p>
+                <p style={{ margin: 0, fontSize: '13px', color: '#9ca3af' }}>AI sedang menyusun dan mensintesis literatur per bagian untuk hasil yang lebih detail.</p>
+              </div>
+            )}
           </div>
         </div>
       )}

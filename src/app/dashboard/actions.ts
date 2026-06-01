@@ -9,7 +9,7 @@ import { getPdfUrlFromUnpaywall } from '@/services/unpaywall'
 import { generateSotaChunk, generateLiteratureReview } from '@/services/sota'
 import { searchOpenAlex } from '@/services/openalex'
 import { searchSemanticScholar } from '@/services/semantic-scholar'
-import { generateOutline, generateKajianPustaka } from '@/services/kajianPustaka'
+import { generateOutline, generateKajianPustakaChunk } from '@/services/kajianPustaka'
 
 export async function generateAIQueryAction(topic: string, problem: string, userApiKey?: string) {
   try {
@@ -229,25 +229,29 @@ export async function generateOutlineAction(
   }
 }
 
-export async function generateKajianPustakaAction(
+export async function generateKajianPustakaChunkAction(
   approach: string,
   citationStyle: string,
   topic: string,
   sota: string,
   gap: string,
   outline: string[],
+  subChapterTitle: string,
+  subChapterIndex: number,
   booksData: string,
   userApiKey?: string,
   isPaidApi?: boolean
 ) {
   try {
-    const data = await generateKajianPustaka(
+    const data = await generateKajianPustakaChunk(
       approach,
       citationStyle,
       topic,
       sota,
       gap,
       outline,
+      subChapterTitle,
+      subChapterIndex,
       booksData,
       userApiKey,
       isPaidApi
