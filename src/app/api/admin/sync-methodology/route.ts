@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { sanitizeError } from '@/utils/error-handler';
+import { sanitizeError, parseGeminiJSON } from '@/utils/error-handler';
 
 // Polyfill DOMMatrix for pdf-parse which uses pdf.js under the hood
 if (typeof global.DOMMatrix === 'undefined') {
@@ -136,7 +136,7 @@ Keluarkan respons dalam format JSON dengan struktur yang tepat seperti berikut H
 
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
-        const parsedData = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, ''));
+        const parsedData = parseGeminiJSON(responseText);
 
         // Save Book Metadata to Supabase
         const { data: bookRecord, error: bookError } = await supabase
