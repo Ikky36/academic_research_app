@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { generateGapAndNovelty } from '@/services/sota';
+import { sanitizeError } from '@/utils/error-handler';
 
 export const maxDuration = 60;
 
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Error generating gap and novelty:', error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: sanitizeError(error) },
       { status: 500 }
     );
   }

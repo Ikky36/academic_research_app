@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { sanitizeError } from '@/utils/error-handler';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300; // 5 minutes max on Vercel Pro
@@ -111,6 +112,6 @@ Keluarkan respons dalam format JSON dengan struktur yang tepat seperti berikut H
 
   } catch (error: any) {
     console.error("Methodology Upload Text Sync Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
   }
 }

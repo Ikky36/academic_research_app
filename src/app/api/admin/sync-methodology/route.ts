@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { sanitizeError } from '@/utils/error-handler';
 
 // Polyfill DOMMatrix for pdf-parse which uses pdf.js under the hood
 if (typeof global.DOMMatrix === 'undefined') {
@@ -190,6 +191,6 @@ Keluarkan respons dalam format JSON dengan struktur yang tepat seperti berikut H
 
   } catch (error: any) {
     console.error("Methodology Sync Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
   }
 }
