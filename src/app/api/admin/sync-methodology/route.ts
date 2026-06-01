@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { sanitizeError, parseGeminiJSON } from '@/utils/error-handler';
 
 // Polyfill DOMMatrix for pdf-parse which uses pdf.js under the hood
@@ -65,8 +65,37 @@ export async function POST(req: NextRequest) {
     const geminiKey = process.env.GEMINI_API_KEY;
     if (!geminiKey) throw new Error('GEMINI_API_KEY is not configured');
     const genAI = new GoogleGenerativeAI(geminiKey);
+    
+    const responseSchema = {
+      type: SchemaType.OBJECT,
+      properties: {
+        title: { type: SchemaType.STRING, description: "Judul Buku" },
+        author: { type: SchemaType.STRING, description: "Nama Penulis" },
+        year: { type: SchemaType.STRING, description: "Tahun Terbit" },
+        publisher: { type: SchemaType.STRING, description: "Nama Penerbit" },
+        methods: {
+          type: SchemaType.ARRAY,
+          items: {
+            type: SchemaType.OBJECT,
+            properties: {
+              method_category: { type: SchemaType.STRING, description: "Nama Kategori Metode (Misal: Research & Development (R&D))" },
+              content: { type: SchemaType.STRING, description: "Isi teks gabungan lengkap yang berisi Definisi, Data & Sampel, Instrumen & Uji, Teknik Analisis Data, serta Rincian Tahapan metodologi tersebut secara spesifik..." },
+              page_start: { type: SchemaType.INTEGER, description: "Halaman awal" },
+              page_end: { type: SchemaType.INTEGER, description: "Halaman akhir" },
+            },
+          },
+        },
+      },
+    };
+
     // Use Flash for high speed and large context window
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', generationConfig: { responseMimeType: "application/json" } });
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.5-flash', 
+      generationConfig: { 
+        responseMimeType: "application/json",
+        responseSchema: responseSchema
+      } 
+    });
 
     let totalBooksProcessed = 0;
     let totalChunksSaved = 0;
@@ -116,22 +145,6 @@ Teks Buku:
 """
 ${fullText.substring(0, 500000)} // Limiting to 500k chars to avoid massive payloads, adjust if needed
 """
-
-Keluarkan respons dalam format JSON dengan struktur yang tepat seperti berikut HANYA JSON SAJA:
-{
-  "title": "Judul Buku",
-  "author": "Nama Penulis",
-  "year": "Tahun Terbit",
-  "publisher": "Nama Penerbit",
-  "methods": [
-    {
-      "method_category": "Nama Kategori Metode (Misal: Research & Development (R&D))",
-      "content": "Isi teks gabungan lengkap yang berisi Definisi, Data & Sampel, Instrumen & Uji, Teknik Analisis Data, serta Rincian Tahapan metodologi tersebut secara spesifik...",
-      "page_start": 45,
-      "page_end": 52
-    }
-  ]
-}
 `;
 
         const result = await model.generateContent(prompt);
