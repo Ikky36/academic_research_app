@@ -473,7 +473,16 @@ export default function AdminDashboard() {
                       });
                     }
                     
-                    const data = await response.json();
+                    const textResponse = await response.text();
+                    let data;
+                    try {
+                      data = JSON.parse(textResponse);
+                    } catch (e) {
+                      if (response.status === 504) throw new Error('[Sistem Analisis]: Waktu pemrosesan habis (Timeout). Buku ini terlalu tebal untuk diproses AI sekaligus dalam batas waktu peladen.');
+                      if (response.status === 413) throw new Error('[Sistem Analisis]: Ukuran teks buku terlalu besar melebihi kapasitas maksimal peladen.');
+                      throw new Error(`[Sistem Analisis]: Gagal memproses data. Peladen merespons dengan kesalahan non-JSON (Mungkin buku terlalu berat). Status: ${response.status}`);
+                    }
+                    
                     if (response.ok) {
                       setSuccess(`Sinkronisasi berhasil! ${data.booksCount || 0} buku diproses, ${data.chunksCount || 0} pecahan metode tersimpan.`);
                       setSyncProgress('');

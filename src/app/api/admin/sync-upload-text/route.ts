@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+import { GoogleGenerativeAI, SchemaType, Schema } from '@google/generative-ai';
 import { sanitizeError, parseGeminiJSON } from '@/utils/error-handler';
 
 export const runtime = 'nodejs';
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     if (!geminiKey) throw new Error('GEMINI_API_KEY is not configured');
     const genAI = new GoogleGenerativeAI(geminiKey);
     
-    const responseSchema = {
+    const responseSchema: Schema = {
       type: SchemaType.OBJECT,
       properties: {
         title: { type: SchemaType.STRING, description: "Judul Buku" },
