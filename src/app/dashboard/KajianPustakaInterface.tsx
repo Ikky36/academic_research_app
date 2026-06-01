@@ -29,6 +29,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
   // Step 3 State
   const [kajianPustaka, setKajianPustaka] = useState('');
   const [isGeneratingKajian, setIsGeneratingKajian] = useState(false);
+  const [completedSubBabs, setCompletedSubBabs] = useState(0);
   const [booksData, setBooksData] = useState(''); // Hidden state to hold fetched books
   
   // Global/Existing State
@@ -67,6 +68,9 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
       
       const savedKp = localStorage.getItem(`kp_result_${projectId}`);
       if (savedKp) setKajianPustaka(savedKp);
+      
+      const savedCompleted = localStorage.getItem(`kp_completed_${projectId}`);
+      if (savedCompleted) setCompletedSubBabs(parseInt(savedCompleted, 10));
     }
   }, [isActive, projectId]);
 
@@ -150,7 +154,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
   };
 
   // Step 2 -> 3
-  const handleGenerateKajianPustaka = async () => {
+  const handleGenerateKajianPustaka = async (resume = false) => {
     if (outline.length === 0) {
       setError('Outline sub-bab tidak boleh kosong.');
       return;
@@ -158,11 +162,17 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
 
     setIsGeneratingKajian(true);
     setError('');
-    setKajianPustaka('');
+    
+    let currentText = resume ? kajianPustaka : '';
+    if (!resume) {
+      setKajianPustaka('');
+      setCompletedSubBabs(0);
+      localStorage.setItem(`kp_completed_${projectId}`, '0');
+    }
     setStep(3); // Pindah ke langkah 3 untuk melihat proses secara real-time
     
-    let currentText = '';
-    let successCount = 0;
+    let successCount = resume ? completedSubBabs : 0;
+    const startIndex = resume ? completedSubBabs : 0;
 
     try {
       const userKey = localStorage.getItem('gemini_api_key') || undefined;
@@ -191,6 +201,8 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
           setKajianPustaka(currentText);
           localStorage.setItem(`kp_result_${projectId}`, currentText);
           successCount++;
+          setCompletedSubBabs(successCount);
+          localStorage.setItem(`kp_completed_${projectId}`, successCount.toString());
         }
       }
       
@@ -212,7 +224,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
 
     } catch (err: any) {
       setError(err.message);
-      if (successCount === 0) {
+      if (successCount === 0 && !resume) {
         setStep(2); // Kembali jika gagal total di awal
       }
     } finally {
@@ -248,7 +260,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
         </div>
       </div>
 
-      {error && (
+      {error && step !== 3 && (
         <div className={`${styles.alert} ${styles.error}`}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
           <div>
@@ -361,7 +373,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
             </button>
             <button 
               className={styles.btnPrimary} 
-              onClick={handleGenerateKajianPustaka}
+              onClick={() => handleGenerateKajianPustaka(false)}
               disabled={isGeneratingKajian || outline.length === 0}
             >
               ⚡ Buat Kajian Pustaka (Bab II)
@@ -384,6 +396,27 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
             </div>
           </div>
           
+          {error && !isGeneratingKajian && (
+            <div className={`${styles.alert} ${styles.error}`} style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                <div>
+                  <h4 style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>Proses Terhenti</h4>
+                  <p style={{ margin: 0, fontSize: '14px' }}>{error}</p>
+                </div>
+              </div>
+              {completedSubBabs > 0 && completedSubBabs < outline.length && (
+                <button 
+                  className={styles.btnPrimary} 
+                  onClick={() => handleGenerateKajianPustaka(true)}
+                  style={{ marginLeft: '16px', flexShrink: 0, background: '#10b981' }}
+                >
+                  ▶️ Lanjutkan ({completedSubBabs}/{outline.length})
+                </button>
+              )}
+            </div>
+          )}
+
           <div className={styles.resultContent}>
             <div className={styles.markdownContainer}>
               {kajianPustaka ? (
