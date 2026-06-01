@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import styles from './KajianPustakaInterface.module.css';
-import { generateOutlineAction, generateKajianPustakaChunkAction } from './actions';
+import { generateOutlineAction, generateKajianPustakaChunkAction, generateDaftarPustakaAction } from './actions';
 
 interface KajianPustakaInterfaceProps {
   projectId: string;
@@ -193,6 +193,22 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
           successCount++;
         }
       }
+      
+      // Generate Daftar Pustaka
+      const dpRes = await generateDaftarPustakaAction(
+        sotaMarkdown,
+        booksData,
+        citationStyle,
+        userKey,
+        isPaidApi
+      );
+      
+      if (dpRes.data) {
+        currentText += '\n\n' + dpRes.data;
+        setKajianPustaka(currentText);
+        localStorage.setItem(`kp_result_${projectId}`, currentText);
+      }
+
     } catch (err: any) {
       setError(err.message);
       if (successCount === 0) {

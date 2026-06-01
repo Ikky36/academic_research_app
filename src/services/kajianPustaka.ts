@@ -258,3 +258,52 @@ Hasilkan teks untuk sub-bab ini secara lengkap dalam format Markdown sekarang.`;
     throw new Error(`Gagal membuat Kajian Pustaka: ${err.message}`);
   }
 }
+
+export async function generateDaftarPustaka(
+  citationStyle: string,
+  sota: string,
+  booksData: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+): Promise<string> {
+  let aiModel: any;
+  if (userApiKey && userApiKey !== 'null' && userApiKey.trim() !== '') {
+    const genAI = new GoogleGenerativeAI(userApiKey);
+    aiModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+  } else {
+    const supabase = await createClient();
+    const { data: globalSettings } = await supabase
+      .from('admin_settings')
+      .select('can_use_byok')
+      .eq('id', 1)
+      .single();
+    if (globalSettings?.can_use_byok) {
+      throw new Error('Sistem mewajibkan penggunaan API Key pribadi (BYOK).');
+    }
+    const keyToUse = isPaidApi ? paidGeminiKey : freeGeminiKey;
+    if (!keyToUse) throw new Error('Gemini API Key is missing.');
+    const genAI = new GoogleGenerativeAI(keyToUse);
+    aiModel = genAI.getGenerativeModel({ model: isPaidApi ? 'gemini-2.5-flash-lite' : 'gemini-2.0-flash' });
+  }
+
+  const prompt = `Buatlah sebuah DAFTAR PUSTAKA (References) berdasarkan SATU-SATUNYA referensi yang ada di bawah ini.
+JANGAN menambahkan daftar pustaka palsu atau halusinasi. Hanya gunakan referensi dari teks di bawah ini.
+
+FORMAT: ${citationStyle}
+
+REFERENSI JURNAL (STATE OF THE ART):
+${sota}
+
+REFERENSI BUKU TEORI:
+${booksData}
+
+KEMBALIKAN OUTPUT DENGAN FORMAT MARKDOWN (dimulai dengan ## Daftar Pustaka). Urutkan berdasarkan abjad (A-Z).`;
+
+  try {
+    let text = await fetchWithRetry(aiModel, prompt);
+    text = text.replace(/^```markdown/gi, '').replace(/```$/g, '').trim();
+    return text;
+  } catch (err: any) {
+    throw new Error('Gagal membuat Daftar Pustaka: ' + err.message);
+  }
+}

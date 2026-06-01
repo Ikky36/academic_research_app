@@ -9,7 +9,7 @@ import { getPdfUrlFromUnpaywall } from '@/services/unpaywall'
 import { generateSotaChunk, generateLiteratureReview } from '@/services/sota'
 import { searchOpenAlex } from '@/services/openalex'
 import { searchSemanticScholar } from '@/services/semantic-scholar'
-import { generateOutline, generateKajianPustakaChunk } from '@/services/kajianPustaka'
+import { generateOutline, generateKajianPustakaChunk, generateDaftarPustaka } from '@/services/kajianPustaka'
 
 export async function generateAIQueryAction(topic: string, problem: string, userApiKey?: string) {
   try {
@@ -259,6 +259,21 @@ export async function generateKajianPustakaChunkAction(
       userApiKey,
       isPaidApi
     );
+    return { data };
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
+export async function generateDaftarPustakaAction(
+  sota: string,
+  booksData: string,
+  citationStyle: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+) {
+  try {
+    const data = await generateDaftarPustaka(citationStyle, sota, booksData, userApiKey, isPaidApi);
     return { data };
   } catch (e: any) {
     return { error: e.message };
