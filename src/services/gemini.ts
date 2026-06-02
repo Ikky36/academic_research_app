@@ -19,9 +19,9 @@ Instructions:
 2. WAJIB gunakan sinonim, singkatan, atau terjemahan (Inggris/Indonesia) yang MASUK AKAL dan NATURAL. Hindari pengulangan kata yang aneh.
 3. WAJIB gunakan tanda kutip ganda ("...") untuk frasa yang terdiri dari lebih dari satu kata agar pencarian lebih akurat.
 4. ATURAN KRUSIAL: Sinonim dan terjemahan dari konsep yang sama HARUS berada di dalam SATU tanda kurung menggunakan OR.
-   - Contoh BENAR: ("climate change" OR "perubahan iklim") AND ("carbon emission" OR "emisi karbon")
-   - Contoh SALAH: ("climate change") AND ("perubahan iklim")
-5. SANGAT PENTING: JANGAN SEKALI-KALI memasukkan kata atau topik dari contoh di atas ke dalam query Anda. HANYA gunakan konsep dari Research Topic atau Research Problem yang diberikan.
+   - Contoh BENAR (Format): ("Term A1" OR "Term A2") AND ("Term B1" OR "Term B2")
+   - Contoh SALAH (Format): ("Term A1") AND ("Term A2")
+5. SANGAT PENTING: Gunakan HANYA konsep dari Research Topic atau Research Problem yang diberikan oleh pengguna. Jangan menebak-nebak atau menambahkan topik luar.
 6. Keep the syntax very strict to avoid API errors.
 7. IMPORTANT: Do NOT output anything else except the final boolean query string. No explanations, no markdown formatting.
 `;
