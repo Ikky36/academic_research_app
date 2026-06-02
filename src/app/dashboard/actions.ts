@@ -10,17 +10,32 @@ import { generateSotaChunk, generateLiteratureReview } from '@/services/sota'
 import { searchOpenAlex } from '@/services/openalex'
 import { searchSemanticScholar } from '@/services/semantic-scholar'
 import { generateOutline, generateKajianPustakaChunk, generateDaftarPustaka } from '@/services/kajianPustaka'
-import { generateMetodologiAction as serviceGenerateMetodologiAction } from '@/services/metodologi'
+import { generateMetodologiAction as serviceGenerateMetodologiAction, generateMethodologyQuestions } from '@/services/metodologi'
 
 export async function generateMetodologiAction(
   projectId: string,
   pendekatan: string,
   gap: string,
   novelty: string,
+  userAnswers: { question: string, answer: string }[],
   userApiKey?: string,
   isPaidApi?: boolean
 ) {
-  return await serviceGenerateMetodologiAction(projectId, pendekatan, gap, novelty, userApiKey, isPaidApi);
+  return await serviceGenerateMetodologiAction(projectId, pendekatan, gap, novelty, userAnswers, userApiKey, isPaidApi);
+}
+
+export async function generateMethodologyQuestionsAction(
+  pendekatan: string,
+  gap: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+) {
+  try {
+    const data = await generateMethodologyQuestions(pendekatan, gap, userApiKey, isPaidApi);
+    return data;
+  } catch (e: any) {
+    return { error: e.message };
+  }
 }
 
 export async function generateAIQueryAction(topic: string, problem: string, userApiKey?: string) {

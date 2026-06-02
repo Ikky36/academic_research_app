@@ -6,6 +6,7 @@ export async function generateMetodologiAction(
   pendekatan: string,
   gap: string,
   novelty: string,
+  userAnswers: { question: string, answer: string }[],
   userApiKey?: string,
   isPaidApi?: boolean
 ): Promise<{ result?: string, error?: string }> {
@@ -86,6 +87,10 @@ Informasi Penelitian:
 - Gap: ${gap}
 - Novelty: ${novelty}
 
+${userAnswers && userAnswers.length > 0 ? `Berdasarkan wawancara dengan peneliti, berikut adalah elemen-elemen metodologi yang spesifik akan digunakan:
+${userAnswers.map((a, i) => `${i + 1}. Pertanyaan: ${a.question}\nJawaban: ${a.answer}`).join('\n\n')}
+(Gunakan elemen-elemen spesifik ini secara eksplisit saat Anda menyusun sub-bab Metodologi, jangan dikarang sendiri jika sudah ada di sini.)
+` : ''}
 ${hasContext ? contextText : ''}
 
 INSTRUKSI WAJIB:
@@ -106,3 +111,63 @@ ${hasContext ? '5. SANGAT PENTING: Anda WAJIB merujuk pada REFERENSI BUKU METODO
     return { error: err.message || 'Terjadi kesalahan saat merumuskan Metodologi.' };
   }
 }
+
+export async function generateMethodologyQuestions(
+  pendekatan: string,
+  gap: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+): Promise<{ questions?: string[], error?: string }> {
+  try {
+    let apiKey = userApiKey;
+    let modelName = 'gemini-2.5-flash';
+
+    if (!apiKey) {
+      if (isPaidApi) {
+        apiKey = process.env.NEXT_PUBLIC_GEMINI_PAID_API_KEY || process.env.GEMINI_PAID_API_KEY;
+        if (!apiKey) throw new Error('System Paid API Key not configured');
+      } else {
+        apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+        modelName = 'gemini-2.5-flash-lite';
+      }
+    }
+
+    if (!apiKey) throw new Error('API Key is missing');
+    
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: modelName });
+
+    const prompt = `Anda adalah dosen pembimbing metodologi penelitian yang cerdas.
+Berdasarkan pendekatan "${pendekatan}" dan fokus masalah (Gap): "${gap}", buatlah maksimal 4 pertanyaan kunci yang memandu mahasiswa untuk menetapkan elemen-elemen spesifik metodologinya.
+Contoh untuk eksperimen: Tanyakan tentang siapa kelas kontrol/eksperimen, apa instrumen pretest/posttest, dll.
+Contoh untuk kualitatif: Tanyakan siapa informan kunci, apa metode wawancara, dll.
+KEMBALIKAN HANYA ARRAY JSON berisi string pertanyaan tanpa markdown atau backticks (\`\`\`).
+Format wajib: ["pertanyaan 1", "pertanyaan 2"]`;
+
+    const result = await model.generateContent(prompt);
+    let text = result.response.text().trim();
+    
+    // Clean up potential markdown blocks
+    if (text.startsWith('\`\`\`json')) {
+      text = text.substring(7);
+    } else if (text.startsWith('\`\`\`')) {
+      text = text.substring(3);
+    }
+    if (text.endsWith('\`\`\`')) {
+      text = text.substring(0, text.length - 3);
+    }
+    
+    text = text.trim();
+    const questions = JSON.parse(text);
+    
+    if (!Array.isArray(questions)) {
+      throw new Error('Format pertanyaan tidak valid');
+    }
+    
+    return { questions };
+  } catch (err: any) {
+    console.error('Generate Questions Error:', err);
+    return { error: err.message || 'Gagal merumuskan pertanyaan panduan.' };
+  }
+}
+
