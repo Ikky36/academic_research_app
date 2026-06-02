@@ -220,9 +220,10 @@ Elemen yang perlu dikumpulkan:
 Riwayat percakapan sejauh ini:
 ${historyText || '(Belum ada percakapan, silakan mulai dengan pertanyaan pertama)'}
 
-INSTRUKSI:
+INSTRUKSI WAJIB:
+- SANGAT PENTING: JANGAN gunakan kalimat basa-basi (seperti "Baiklah", "Mari kita lanjutkan", "Bagus sekali", dll) untuk menghemat token. Langsung ajukan pertanyaan atau berikan respons/saran secara *to-the-point* dan ringkas.
 - Berdasarkan riwayat di atas, tentukan apakah informasi sudah CUKUP LENGKAP untuk menyusun Bab III.
-- JIKA BELUM: Ajukan SATU pertanyaan lanjutan secara natural. Jika mahasiswa terlihat bingung, berikan saran/pilihan.
+- JIKA BELUM: Ajukan SATU pertanyaan lanjutan secara natural dan langsung pada intinya. Jika mahasiswa terlihat bingung, berikan saran/pilihan.
 - JIKA SUDAH LENGKAP: Buatlah paragraf rangkuman komprehensif dari semua elemen metodologi tersebut.
 - OUTPUT WAJIB FORMAT JSON SEPERTI BERIKUT tanpa tambahan markdown (TIDAK BOLEH ADA \`\`\`json):
 Untuk melanjutkan (belum selesai):
