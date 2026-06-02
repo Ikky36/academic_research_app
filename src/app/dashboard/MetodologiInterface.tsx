@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import styles from './KajianPustakaInterface.module.css'; // Reuse styles
-import { generateMetodologiAction, generateMethodologyQuestionsAction } from './actions';
+import { generateMetodologiAction, continueMethodologyChatAction } from './actions';
+import { ChatMessage } from '@/services/metodologi';
 
 interface MetodologiInterfaceProps {
   projectId: string;
@@ -20,10 +21,12 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
   const [gap, setGap] = useState('');
   const [novelty, setNovelty] = useState('');
   
-  const [wizardQuestions, setWizardQuestions] = useState<string[]>([]);
-  const [userAnswers, setUserAnswers] = useState<string[]>([]);
-  const [wizardStep, setWizardStep] = useState(1); // 1: Initial, 2: Answering, 3: Result
-  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [wizardStep, setWizardStep] = useState(1); // 1: Setup, 2: Chatting, 3: Result
+  const [isAiThinking, setIsAiThinking] = useState(false);
+  const [isChatComplete, setIsChatComplete] = useState(false);
+  const [chatSummary, setChatSummary] = useState('');
   
   const [metodologiResult, setMetodologiResult] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -48,29 +51,54 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
     }
   }, [isActive, projectId]);
 
-  const handleGenerateQuestions = async () => {
+  const startChat = async () => {
     if (!approach || !gap) {
       setError('Pendekatan atau Research Gap belum diisi.');
       return;
     }
 
-    setIsGeneratingQuestions(true);
+    setWizardStep(2);
+    setIsAiThinking(true);
     setError('');
 
     const userKey = localStorage.getItem('user_api_key') || undefined;
-    const res = await generateMethodologyQuestionsAction(approach, gap, userKey, isPaidApi);
+    const res = await continueMethodologyChatAction(approach, gap, [], userKey, isPaidApi);
 
     if (res.error) {
       setError(res.error);
-    } else if (res.questions && res.questions.length > 0) {
-      setWizardQuestions(res.questions);
-      setUserAnswers(new Array(res.questions.length).fill(''));
-      setWizardStep(2);
-    } else {
-      setError('Gagal mendapatkan pertanyaan dari AI.');
+      setIsAiThinking(false);
+      return;
     }
+    
+    setChatHistory([{ role: 'ai', text: res.nextQuestion || 'Halo, mari kita mulai merumuskan metodologi Anda.' }]);
+    setIsAiThinking(false);
+  };
 
-    setIsGeneratingQuestions(false);
+  const sendChatMessage = async () => {
+    if (!chatInput.trim() || isAiThinking) return;
+    
+    const newHistory: ChatMessage[] = [...chatHistory, { role: 'user', text: chatInput }];
+    setChatHistory(newHistory);
+    setChatInput('');
+    setIsAiThinking(true);
+    
+    const userKey = localStorage.getItem('user_api_key') || undefined;
+    const res = await continueMethodologyChatAction(approach, gap, newHistory, userKey, isPaidApi);
+    
+    if (res.error) {
+      setError(res.error);
+      setIsAiThinking(false);
+      return;
+    }
+    
+    if (res.isComplete) {
+      setIsChatComplete(true);
+      setChatSummary(res.summary || '');
+      setChatHistory([...newHistory, { role: 'ai', text: 'Terima kasih, informasi sudah cukup lengkap! Anda sekarang dapat mulai membuat Bab III.' }]);
+    } else {
+      setChatHistory([...newHistory, { role: 'ai', text: res.nextQuestion || 'Mohon jelaskan lebih detail.' }]);
+    }
+    setIsAiThinking(false);
   };
 
   const handleGenerate = async () => {
@@ -82,16 +110,10 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
     setIsGenerating(true);
     setError('');
     
-    // Format answers
-    const formattedAnswers = wizardQuestions.map((q, idx) => ({
-      question: q,
-      answer: userAnswers[idx] || 'Tidak dijawab'
-    }));
-    
     // Get user API key if any
     const userKey = localStorage.getItem('user_api_key') || undefined;
 
-    const res = await generateMetodologiAction(projectId, approach, gap, novelty, formattedAnswers, userKey, isPaidApi);
+    const res = await generateMetodologiAction(projectId, approach, gap, novelty, chatSummary, userKey, isPaidApi);
     
     if (!res.error && res.result) {
       setMetodologiResult(res.result);
@@ -115,8 +137,9 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
     if (confirm('Anda yakin ingin menghapus hasil Metodologi ini dan mengulang dari awal?')) {
       setMetodologiResult('');
       setWizardStep(1);
-      setWizardQuestions([]);
-      setUserAnswers([]);
+      setChatHistory([]);
+      setIsChatComplete(false);
+      setChatSummary('');
       localStorage.removeItem(`metodologi_result_${projectId}`);
     }
   };
@@ -159,11 +182,11 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
             <p><strong>Research Gap:</strong> {gap ? gap.substring(0, 100) + '...' : '-'}</p>
           </div>
           <button 
-            onClick={handleGenerateQuestions} 
-            disabled={isGeneratingQuestions || !approach || !gap}
+            onClick={startChat} 
+            disabled={isAiThinking || !approach || !gap}
             className={styles.generateButton}
           >
-            {isGeneratingQuestions ? '⏳ AI Merumuskan Pertanyaan...' : '✨ Mulai Rancang Metodologi'}
+            {isAiThinking ? '⏳ Menyiapkan AI...' : '✨ Mulai Bimbingan Metodologi'}
           </button>
         </div>
       )}
@@ -171,42 +194,82 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
       {!metodologiResult && wizardStep === 2 && (
         <div className={styles.stepContainer}>
           <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#374151', borderRadius: '8px', borderLeft: '4px solid #3b82f6' }}>
-            <h3 style={{ marginTop: 0, color: '#60a5fa' }}>Panduan Ekstraksi Metodologi</h3>
+            <h3 style={{ marginTop: 0, color: '#60a5fa' }}>Bimbingan Interaktif Metodologi</h3>
             <p style={{ margin: 0, fontSize: '0.9rem', color: '#d1d5db' }}>
-              Jawablah pertanyaan-pertanyaan berikut secara singkat. Jawaban Anda akan digunakan oleh AI untuk memastikan elemen-elemen kunci dalam Bab III (seperti subjek, instrumen, dan analisis) sudah tepat.
+              Jawablah pertanyaan AI satu per satu. Jika Anda bingung, Anda bisa meminta saran kepada AI. Percakapan akan selesai otomatis jika elemen penelitian sudah lengkap.
             </p>
           </div>
           
-          {wizardQuestions.map((q, index) => (
-            <div key={index} style={{ marginBottom: '15px' }}>
-              <p style={{ fontWeight: 'bold', marginBottom: '8px' }}>{index + 1}. {q}</p>
-              <textarea
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '20px', maxHeight: '400px', overflowY: 'auto', padding: '10px', backgroundColor: '#111827', borderRadius: '8px', border: '1px solid #374151' }}>
+            {chatHistory.map((msg, index) => (
+              <div key={index} style={{
+                alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                backgroundColor: msg.role === 'user' ? '#2563eb' : '#374151',
+                color: 'white',
+                padding: '10px 15px',
+                borderRadius: '12px',
+                maxWidth: '80%',
+                borderBottomRightRadius: msg.role === 'user' ? '0' : '12px',
+                borderBottomLeftRadius: msg.role === 'ai' ? '0' : '12px',
+              }}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ p: ({node, ...props}) => <p style={{margin: 0}} {...props} /> }}>
+                  {msg.text}
+                </ReactMarkdown>
+              </div>
+            ))}
+            {isAiThinking && (
+              <div style={{ alignSelf: 'flex-start', backgroundColor: '#374151', color: '#9ca3af', padding: '10px 15px', borderRadius: '12px', maxWidth: '80%', borderBottomLeftRadius: '0' }}>
+                <span className={styles.loadingText}>AI sedang mengetik...</span>
+              </div>
+            )}
+          </div>
+
+          {!isChatComplete ? (
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <input
+                type="text"
                 className={styles.input}
-                style={{ width: '100%', minHeight: '60px', padding: '10px', borderRadius: '6px', border: '1px solid #4b5563', backgroundColor: '#1f2937', color: 'white' }}
-                placeholder="Ketik jawaban Anda di sini..."
-                value={userAnswers[index]}
-                onChange={(e) => {
-                  const newAnswers = [...userAnswers];
-                  newAnswers[index] = e.target.value;
-                  setUserAnswers(newAnswers);
+                style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #4b5563', backgroundColor: '#1f2937', color: 'white' }}
+                placeholder="Ketik jawaban Anda..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') sendChatMessage();
                 }}
+                disabled={isAiThinking}
               />
+              <button 
+                onClick={sendChatMessage} 
+                disabled={isAiThinking || !chatInput.trim()}
+                className={styles.generateButton}
+                style={{ width: 'auto', padding: '0 20px' }}
+              >
+                Kirim
+              </button>
             </div>
-          ))}
+          ) : (
+            <div style={{ padding: '15px', backgroundColor: '#064e3b', borderRadius: '8px', border: '1px solid #059669', marginBottom: '20px' }}>
+              <p style={{ margin: 0, color: '#34d399', fontWeight: 'bold' }}>✅ Wawancara Selesai! Semua elemen sudah terkumpul.</p>
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
             <button 
-              onClick={() => setWizardStep(1)} 
+              onClick={() => {
+                setWizardStep(1);
+                setChatHistory([]);
+                setIsChatComplete(false);
+              }} 
               className={styles.actionButton}
               style={{ flex: 1, backgroundColor: '#4b5563' }}
             >
-              ⬅️ Kembali
+              ⬅️ Kembali ke Awal
             </button>
             <button 
               onClick={handleGenerate} 
-              disabled={isGenerating}
+              disabled={isGenerating || !isChatComplete}
               className={styles.generateButton}
-              style={{ flex: 2 }}
+              style={{ flex: 2, opacity: isChatComplete ? 1 : 0.5, cursor: isChatComplete ? 'pointer' : 'not-allowed' }}
             >
               {isGenerating ? '⏳ Menyusun Bab III...' : '✨ Buat Bab III Sekarang'}
             </button>
@@ -216,7 +279,7 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
             <div className={styles.loadingContainer}>
               <div className={styles.loadingSpinner}></div>
               <p className={styles.loadingText}>Menyusun Bab III (Metodologi)...</p>
-              <p className={styles.loadingSubtext}>Menggunakan referensi buku dan jawaban spesifik Anda...</p>
+              <p className={styles.loadingSubtext}>Menggunakan referensi buku dan rangkuman diskusi Anda...</p>
             </div>
           )}
         </div>

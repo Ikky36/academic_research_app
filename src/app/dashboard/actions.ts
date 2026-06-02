@@ -10,18 +10,18 @@ import { generateSotaChunk, generateLiteratureReview } from '@/services/sota'
 import { searchOpenAlex } from '@/services/openalex'
 import { searchSemanticScholar } from '@/services/semantic-scholar'
 import { generateOutline, generateKajianPustakaChunk, generateDaftarPustaka } from '@/services/kajianPustaka'
-import { generateMetodologiAction as serviceGenerateMetodologiAction, generateMethodologyQuestions } from '@/services/metodologi'
+import { generateMetodologiAction as serviceGenerateMetodologiAction, generateMethodologyQuestions, continueMethodologyChat, ChatMessage } from '@/services/metodologi'
 
 export async function generateMetodologiAction(
   projectId: string,
   pendekatan: string,
   gap: string,
   novelty: string,
-  userAnswers: { question: string, answer: string }[],
+  summary: string,
   userApiKey?: string,
   isPaidApi?: boolean
 ) {
-  return await serviceGenerateMetodologiAction(projectId, pendekatan, gap, novelty, userAnswers, userApiKey, isPaidApi);
+  return await serviceGenerateMetodologiAction(projectId, pendekatan, gap, novelty, summary, userApiKey, isPaidApi);
 }
 
 export async function generateMethodologyQuestionsAction(
@@ -32,6 +32,21 @@ export async function generateMethodologyQuestionsAction(
 ): Promise<{ questions?: string[], error?: string }> {
   try {
     const data = await generateMethodologyQuestions(pendekatan, gap, userApiKey, isPaidApi);
+    return data;
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
+export async function continueMethodologyChatAction(
+  pendekatan: string,
+  gap: string,
+  chatHistory: ChatMessage[],
+  userApiKey?: string,
+  isPaidApi?: boolean
+): Promise<{ isComplete?: boolean, nextQuestion?: string, summary?: string, error?: string }> {
+  try {
+    const data = await continueMethodologyChat(pendekatan, gap, chatHistory, userApiKey, isPaidApi);
     return data;
   } catch (e: any) {
     return { error: e.message };

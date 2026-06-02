@@ -6,7 +6,7 @@ export async function generateMetodologiAction(
   pendekatan: string,
   gap: string,
   novelty: string,
-  userAnswers: { question: string, answer: string }[],
+  summary: string,
   userApiKey?: string,
   isPaidApi?: boolean
 ): Promise<{ result?: string, error?: string }> {
@@ -87,9 +87,10 @@ Informasi Penelitian:
 - Gap: ${gap}
 - Novelty: ${novelty}
 
-${userAnswers && userAnswers.length > 0 ? `Berdasarkan wawancara dengan peneliti, berikut adalah elemen-elemen metodologi yang spesifik akan digunakan:
-${userAnswers.map((a, i) => `${i + 1}. Pertanyaan: ${a.question}\nJawaban: ${a.answer}`).join('\n\n')}
-(Gunakan elemen-elemen spesifik ini secara eksplisit saat Anda menyusun sub-bab Metodologi, jangan dikarang sendiri jika sudah ada di sini.)
+${summary ? `Berdasarkan wawancara terperinci dengan peneliti, berikut adalah elemen-elemen metodologi spesifik yang telah diputuskan:
+${summary}
+
+(Gunakan elemen-elemen spesifik ini secara eksplisit saat Anda menyusun sub-bab Metodologi. Jangan membuat asumsi yang bertentangan dengan rangkuman ini.)
 ` : ''}
 ${hasContext ? contextText : ''}
 
@@ -170,4 +171,80 @@ Format wajib: ["pertanyaan 1", "pertanyaan 2"]`;
     return { error: err.message || 'Gagal merumuskan pertanyaan panduan.' };
   }
 }
+
+export type ChatMessage = {
+  role: 'ai' | 'user';
+  text: string;
+};
+
+export async function continueMethodologyChat(
+  pendekatan: string,
+  gap: string,
+  chatHistory: ChatMessage[],
+  userApiKey?: string,
+  isPaidApi?: boolean
+): Promise<{ isComplete: boolean, nextQuestion?: string, summary?: string, error?: string }> {
+  try {
+    let apiKey = userApiKey;
+    let modelName = 'gemini-2.5-flash';
+
+    if (!apiKey) {
+      if (isPaidApi) {
+        apiKey = process.env.NEXT_PUBLIC_GEMINI_PAID_API_KEY || process.env.GEMINI_PAID_API_KEY;
+        if (!apiKey) throw new Error('System Paid API Key not configured');
+      } else {
+        apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+        modelName = 'gemini-2.5-flash-lite';
+      }
+    }
+
+    if (!apiKey) throw new Error('API Key is missing');
+    
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: modelName });
+
+    const historyText = chatHistory.map(m => `${m.role === 'ai' ? 'Asisten' : 'Mahasiswa'}: ${m.text}`).join('\n');
+
+    const prompt = `Anda adalah dosen pembimbing metodologi penelitian yang ramah dan suportif.
+Tujuan Anda adalah mewawancarai mahasiswa untuk mengumpulkan elemen-elemen metodologi penelitiannya yang spesifik.
+Pendekatan penelitian mahasiswa: "${pendekatan}"
+Fokus masalah (Gap): "${gap}"
+
+Elemen yang perlu dikumpulkan:
+1. Metode Spesifik (misal: eksperimen kuasi, kualitatif fenomenologi)
+2. Populasi dan Sampel / Informan Subjek
+3. Teknik Pengumpulan Data & Instrumen
+4. Teknik Analisis Data
+
+Riwayat percakapan sejauh ini:
+${historyText || '(Belum ada percakapan, silakan mulai dengan pertanyaan pertama)'}
+
+INSTRUKSI:
+- Berdasarkan riwayat di atas, tentukan apakah informasi sudah CUKUP LENGKAP untuk menyusun Bab III.
+- JIKA BELUM: Ajukan SATU pertanyaan lanjutan secara natural. Jika mahasiswa terlihat bingung, berikan saran/pilihan.
+- JIKA SUDAH LENGKAP: Buatlah paragraf rangkuman komprehensif dari semua elemen metodologi tersebut.
+- OUTPUT WAJIB FORMAT JSON SEPERTI BERIKUT tanpa tambahan markdown (TIDAK BOLEH ADA \`\`\`json):
+Untuk melanjutkan (belum selesai):
+{"isComplete": false, "nextQuestion": "Pertanyaan Anda di sini", "summary": ""}
+Untuk selesai:
+{"isComplete": true, "nextQuestion": "", "summary": "Rangkuman hasil diskusi..."}
+`;
+
+    const result = await model.generateContent(prompt);
+    let text = result.response.text().trim();
+    
+    if (text.startsWith('\`\`\`json')) text = text.substring(7);
+    else if (text.startsWith('\`\`\`')) text = text.substring(3);
+    if (text.endsWith('\`\`\`')) text = text.substring(0, text.length - 3);
+    
+    text = text.trim();
+    const parsed = JSON.parse(text);
+    
+    return parsed;
+  } catch (err: any) {
+    console.error('Continue Chat Error:', err);
+    return { isComplete: false, error: err.message || 'Gagal memproses percakapan.' };
+  }
+}
+
 
