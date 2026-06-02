@@ -29,7 +29,7 @@ export async function generateMethodologyQuestionsAction(
   gap: string,
   userApiKey?: string,
   isPaidApi?: boolean
-) {
+): Promise<{ questions?: string[], error?: string }> {
   try {
     const data = await generateMethodologyQuestions(pendekatan, gap, userApiKey, isPaidApi);
     return data;
