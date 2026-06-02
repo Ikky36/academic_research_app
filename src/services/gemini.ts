@@ -16,13 +16,14 @@ ${problem ? `Research Problem: ${problem}` : ''}
 
 Instructions:
 1. Extract the 2 or 3 most critical concepts from the provided topic and/or problem.
-2. WAJIB gunakan sinonim, singkatan, atau terjemahan (Inggris/Indonesia) yang MASUK AKAL dan NATURAL. Hindari pengulangan kata yang aneh (misal: "pembelajaran berbasis masalah berbasis").
+2. WAJIB gunakan sinonim, singkatan, atau terjemahan (Inggris/Indonesia) yang MASUK AKAL dan NATURAL. Hindari pengulangan kata yang aneh.
 3. WAJIB gunakan tanda kutip ganda ("...") untuk frasa yang terdiri dari lebih dari satu kata agar pencarian lebih akurat.
 4. ATURAN KRUSIAL: Sinonim dan terjemahan dari konsep yang sama HARUS berada di dalam SATU tanda kurung menggunakan OR.
-   - Contoh BENAR: ("problem based learning" OR "PBL" OR "pembelajaran berbasis masalah") AND ("arabic language" OR "bahasa arab")
-   - Contoh SALAH: ("problem based learning") AND ("pembelajaran berbasis masalah")
-5. Keep the syntax very strict to avoid API errors.
-6. IMPORTANT: Do NOT output anything else except the final boolean query string. No explanations, no markdown formatting.
+   - Contoh BENAR: ("climate change" OR "perubahan iklim") AND ("carbon emission" OR "emisi karbon")
+   - Contoh SALAH: ("climate change") AND ("perubahan iklim")
+5. SANGAT PENTING: JANGAN SEKALI-KALI memasukkan kata atau topik dari contoh di atas ke dalam query Anda. HANYA gunakan konsep dari Research Topic atau Research Problem yang diberikan.
+6. Keep the syntax very strict to avoid API errors.
+7. IMPORTANT: Do NOT output anything else except the final boolean query string. No explanations, no markdown formatting.
 `;
 
   try {
