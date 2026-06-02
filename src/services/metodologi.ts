@@ -204,6 +204,27 @@ export async function continueMethodologyChat(
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: modelName });
 
+    // 1. Identify specific method category
+    const identifyPrompt = `Berdasarkan Pendekatan "${pendekatan}" dan Gap "${gap}", sebutkan 1 Kategori Metode Penelitian spesifik (misal: "Kualitatif Studi Kasus", "Kuantitatif Eksperimen"). Hanya sebutkan namanya saja tanpa penjelasan.`;
+    const identifyResult = await model.generateContent(identifyPrompt);
+    const methodCategory = identifyResult.response.text().trim();
+
+    // 2. Fetch context from database
+    const supabase = await createClient();
+    const { data: chunks } = await supabase
+      .from('methodology_chunks')
+      .select('content, methodology_books(title)')
+      .ilike('method_category', `%${methodCategory.split(' ')[0]}%`)
+      .limit(5);
+
+    let contextText = '';
+    if (chunks && chunks.length > 0) {
+      contextText = "REFERENSI BUKU METODOLOGI DARI DATABASE:\n";
+      chunks.forEach((chunk: any) => {
+        contextText += `- (Buku: ${chunk.methodology_books?.title}) ${chunk.content}\n`;
+      });
+    }
+
     const historyText = chatHistory.map(m => `${m.role === 'ai' ? 'Asisten' : 'Mahasiswa'}: ${m.text}`).join('\n');
 
     const prompt = `Anda adalah dosen pembimbing metodologi penelitian yang ramah dan suportif.
@@ -220,10 +241,12 @@ Elemen yang perlu dikumpulkan:
 Riwayat percakapan sejauh ini:
 ${historyText || '(Belum ada percakapan, silakan mulai dengan pertanyaan pertama)'}
 
+${contextText ? contextText + '\n' : ''}
 INSTRUKSI WAJIB:
 - SANGAT PENTING: JANGAN gunakan kalimat basa-basi (seperti "Baiklah", "Mari kita lanjutkan", "Bagus sekali", dll) untuk menghemat token. Langsung ajukan pertanyaan atau berikan respons/saran secara *to-the-point* dan ringkas.
+- SANGAT PENTING: Utamakan penggunaan informasi dari "REFERENSI BUKU METODOLOGI DARI DATABASE" di atas saat memberikan saran/jawaban. Jika pertanyaan mahasiswa tidak ada jawabannya di referensi tersebut, barulah Anda boleh menggunakan pengetahuan umum.
 - Berdasarkan riwayat di atas, tentukan apakah informasi sudah CUKUP LENGKAP untuk menyusun Bab III.
-- JIKA BELUM: Ajukan SATU pertanyaan lanjutan secara natural dan langsung pada intinya. Jika mahasiswa terlihat bingung, berikan saran/pilihan.
+- JIKA BELUM: Ajukan SATU pertanyaan lanjutan secara natural dan langsung pada intinya. Jika mahasiswa terlihat bingung, berikan saran/pilihan berdasarkan referensi buku.
 - JIKA SUDAH LENGKAP: Buatlah paragraf rangkuman komprehensif dari semua elemen metodologi tersebut.
 - OUTPUT WAJIB FORMAT JSON SEPERTI BERIKUT tanpa tambahan markdown (TIDAK BOLEH ADA \`\`\`json):
 Untuk melanjutkan (belum selesai):
