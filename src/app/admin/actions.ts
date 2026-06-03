@@ -218,10 +218,28 @@ export async function getSyncedBooksAction() {
       publisher,
       year,
       methodology_chunks (
-        method_category
+        id
       )
     `)
     .order('created_at', { ascending: false });
+
+  if (error) return { error: error.message };
+  return { data };
+}
+
+export async function getBookChunksAction(bookId: string) {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { error: 'Unauthorized' };
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+  if (profile?.role !== 'admin') return { error: 'Forbidden' };
+
+  const { data, error } = await supabase
+    .from('methodology_chunks')
+    .select('method_category, content, page_number')
+    .eq('book_id', bookId)
+    .order('page_number', { ascending: true });
 
   if (error) return { error: error.message };
   return { data };

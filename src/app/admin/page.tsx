@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction, getSyncedBooksAction } from './actions';
+import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction, getSyncedBooksAction, getBookChunksAction } from './actions';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
@@ -24,6 +24,11 @@ export default function AdminDashboard() {
   const [syncProgress, setSyncProgress] = useState('');
   const [syncedBooks, setSyncedBooks] = useState<any[]>([]);
   
+  // Book Chunks Viewer state
+  const [viewingChunksFor, setViewingChunksFor] = useState<string | null>(null);
+  const [bookChunks, setBookChunks] = useState<any[]>([]);
+  const [isLoadingChunks, setIsLoadingChunks] = useState(false);
+
   // Create user form state
   const [newEmail, setNewEmail] = useState('');
   const [newRole, setNewRole] = useState('free');
@@ -128,6 +133,26 @@ export default function AdminDashboard() {
       setError(res.error || 'Gagal membuat akun.');
     }
     setIsCreating(false);
+  };
+
+  const handleViewChunks = async (bookId: string) => {
+    if (viewingChunksFor === bookId) {
+      setViewingChunksFor(null);
+      setBookChunks([]);
+      return;
+    }
+    
+    setViewingChunksFor(bookId);
+    setIsLoadingChunks(true);
+    setBookChunks([]);
+    
+    const res = await getBookChunksAction(bookId);
+    if (res.data) {
+      setBookChunks(res.data);
+    } else {
+      setError(res.error || 'Gagal memuat isi buku.');
+    }
+    setIsLoadingChunks(false);
   };
 
   const handleDeleteUser = async (userId: string, email: string) => {
@@ -524,31 +549,64 @@ export default function AdminDashboard() {
                     <thead>
                       <tr>
                         <th>Judul Buku</th>
-                        <th>Penulis</th>
-                        <th>Kategori Metode</th>
+                        <th>Detail Buku & Aksi</th>
                       </tr>
                     </thead>
                     <tbody>
                       {syncedBooks.length === 0 ? (
-                        <tr><td colSpan={3} style={{textAlign: 'center', padding: '20px'}}>Belum ada buku metodologi yang tersinkronisasi</td></tr>
+                        <tr><td colSpan={2} style={{textAlign: 'center', padding: '20px'}}>Belum ada buku metodologi yang tersinkronisasi</td></tr>
                       ) : (
                         syncedBooks.map((book: any) => (
                           <tr key={book.id}>
                             <td style={{verticalAlign: 'top', padding: '15px 10px'}}>
-                              <strong>{book.title}</strong><br/>
-                              <span style={{fontSize: '12px', color: '#9ca3af'}}>{book.publisher} ({book.year})</span>
+                              <h4 style={{ margin: '0 0 5px 0' }}>{book.title}</h4>
+                              <div style={{ fontSize: '14px', color: '#9ca3af' }}>
+                                {book.author} ({book.year}) • {book.publisher}
+                              </div>
+                              <div style={{ fontSize: '12px', marginTop: '5px', color: '#6b7280' }}>
+                                Total Diekstrak: {book.methodology_chunks?.length || 0} chunks metode
+                              </div>
                             </td>
-                            <td style={{verticalAlign: 'top', padding: '15px 10px'}}>{book.author}</td>
                             <td style={{verticalAlign: 'top', padding: '15px 10px'}}>
-                              <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                                {book.methodology_chunks && book.methodology_chunks.length > 0 ? (
-                                  book.methodology_chunks.map((chunk: any, i: number) => (
-                                    <li key={i} style={{ marginBottom: '5px' }}>{chunk.method_category}</li>
-                                  ))
-                                ) : (
-                                  <li style={{ color: '#ef4444' }}>Tidak ada metode terdeteksi</li>
-                                )}
-                              </ul>
+                              <button 
+                                onClick={() => handleViewChunks(book.id)}
+                                style={{
+                                  background: viewingChunksFor === book.id ? '#4b5563' : '#3b82f6',
+                                  color: 'white',
+                                  border: 'none',
+                                  padding: '6px 12px',
+                                  borderRadius: '4px',
+                                  cursor: 'pointer',
+                                  fontSize: '12px'
+                                }}
+                              >
+                                {viewingChunksFor === book.id ? 'Tutup Isi Buku' : 'Lihat Isi Buku'}
+                              </button>
+                              
+                              {viewingChunksFor === book.id && (
+                                <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #374151' }}>
+                                  <h5 style={{ margin: '0 0 10px 0', color: '#10b981' }}>Isi Ekstraksi (Chunks)</h5>
+                                  {isLoadingChunks ? (
+                                    <div style={{ fontSize: '14px', color: '#9ca3af' }}>Memuat isi buku...</div>
+                                  ) : bookChunks.length === 0 ? (
+                                    <div style={{ fontSize: '14px', color: '#ef4444' }}>Buku ini belum memiliki chunk ekstraksi teks.</div>
+                                  ) : (
+                                    <div style={{ display: 'grid', gap: '10px', maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
+                                      {bookChunks.map((chunk, idx) => (
+                                        <div key={idx} style={{ background: '#111827', padding: '10px', borderRadius: '6px', fontSize: '13px' }}>
+                                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#3b82f6', fontWeight: 'bold' }}>
+                                            <span>Kategori: {chunk.method_category || 'Umum'}</span>
+                                            <span>Hal. {chunk.page_number}</span>
+                                          </div>
+                                          <div style={{ lineHeight: '1.5', color: '#d1d5db' }}>
+                                            {chunk.content}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </td>
                           </tr>
                         ))
