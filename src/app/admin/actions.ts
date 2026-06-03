@@ -237,9 +237,9 @@ export async function getBookChunksAction(bookId: string) {
 
   const { data, error } = await supabase
     .from('methodology_chunks')
-    .select('method_category, content, page_number')
+    .select('method_category, content, page_start, page_end')
     .eq('book_id', bookId)
-    .order('page_number', { ascending: true });
+    .order('page_start', { ascending: true });
 
   if (error) return { error: error.message };
   return { data };

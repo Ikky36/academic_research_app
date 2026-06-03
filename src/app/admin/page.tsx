@@ -596,9 +596,9 @@ export default function AdminDashboard() {
                                         <div key={idx} style={{ background: '#111827', padding: '10px', borderRadius: '6px', fontSize: '13px' }}>
                                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#3b82f6', fontWeight: 'bold' }}>
                                             <span>Kategori: {chunk.method_category || 'Umum'}</span>
-                                            <span>Hal. {chunk.page_number}</span>
+                                            <span>Hal. {chunk.page_start} - {chunk.page_end}</span>
                                           </div>
-                                          <div style={{ lineHeight: '1.5', color: '#d1d5db' }}>
+                                          <div style={{ lineHeight: '1.5', color: '#d1d5db', whiteSpace: 'pre-wrap' }}>
                                             {chunk.content}
                                           </div>
                                         </div>
