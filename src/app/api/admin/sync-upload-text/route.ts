@@ -61,12 +61,15 @@ export async function POST(req: NextRequest) {
 Anda adalah asisten peneliti ahli. Saya memberikan Anda teks dari bab-bab metodologi sebuah buku referensi.
 Tugas Anda adalah:
 1. Identifikasi BERBAGAI METODE PENELITIAN yang dibahas secara mendetail dalam teks ini (misal: Kualitatif Studi Kasus, Kuantitatif Eksperimen, Mix Method, dsb).
-2. Ekstrak bagian teks yang berisi penjelasan mendalam untuk setiap metode, yang mencakup:
+2. Ekstrak bagian teks yang berisi penjelasan mendalam untuk setiap metode, dengan SANGAT TERINCI tanpa menghilangkan poin-poin krusial. Mencakup:
    - DEFINISI & KONSEP DASAR metode tersebut.
    - SUBJEK & DATA PENELITIAN (populasi, sampel, sumber data, variabel).
-   - INSTRUMEN PENELITIAN (teknik pembuatan instrumen, validitas/reliabilitas).
+   - INSTRUMEN PENELITIAN (teknik pembuatan instrumen, validitas/reliabilitas). WAJIB MENCANTUMKAN semua "Rule of Thumb" (aturan baku), nilai ambang batas (threshold) seperti outer loadings, cronbach's alpha, AVE, dsb, beserta pengecualian/kondisi khusus jika ada di dalam buku.
    - TEKNIK ANALISIS DATA (jenis teknik, tahapan, kriteria, syarat).
    - RINCIAN TAHAPAN (prosedur operasional pelaksanaannya).
+   
+PENTING: Jangan terlalu menyingkat informasi (oversummarize). Jika ada angka kriteria kelayakan, batasan, toleransi, atau pengecualian metodologis yang dibahas dalam teks, cantumkan secara lengkap.
+
 3. Perkirakan rentang halaman (page_start, page_end) untuk setiap metode berdasarkan posisi teks.
 
 Teks Buku:
@@ -78,7 +81,8 @@ Anda adalah asisten peneliti ahli. Saya memberikan Anda teks lengkap dari sebuah
 Tugas Anda adalah:
 1. Identifikasi METADATA BUKU (Judul, Penulis, Tahun, Penerbit) dari teks.
 2. Identifikasi BERBAGAI METODE PENELITIAN yang dibahas secara mendetail dalam buku ini.
-3. Ekstrak bagian teks yang berisi penjelasan mendalam untuk setiap metode, yang mencakup Definisi, Subjek, Instrumen, Analisis, dan Tahapan.
+3. Ekstrak bagian teks yang berisi penjelasan mendalam untuk setiap metode, dengan SANGAT TERINCI. Mencakup Definisi, Subjek, Instrumen, Analisis, dan Tahapan.
+   WAJIB MENCANTUMKAN semua "Rule of Thumb" (aturan baku), nilai ambang batas (threshold), serta pengecualian dan toleransi khusus yang disebutkan di dalam teks buku. Jangan terlalu menyingkat informasi.
 4. Perkirakan rentang halaman (page_start, page_end) untuk setiap metode.
 
 Teks Buku:

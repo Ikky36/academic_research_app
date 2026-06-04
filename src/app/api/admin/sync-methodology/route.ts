@@ -133,12 +133,15 @@ Anda adalah asisten peneliti ahli. Saya memberikan Anda teks lengkap dari sebuah
 Tugas Anda adalah:
 1. Identifikasi METADATA BUKU (Judul, Penulis, Tahun, Penerbit) dari teks (biasanya ada di halaman-halaman awal). Jika tidak ditemukan, gunakan tebakan terbaik atau kosongkan.
 2. Identifikasi BERBAGAI METODE PENELITIAN yang dibahas secara mendetail dalam buku ini (misal: Kualitatif Studi Kasus, Kuantitatif Eksperimen, Research & Development model ADDIE, Mix Method, dsb).
-3. Ekstrak bagian teks yang berisi penjelasan mendalam untuk setiap metode, yang mencakup:
+3. Ekstrak bagian teks yang berisi penjelasan mendalam untuk setiap metode, dengan SANGAT TERINCI tanpa menghilangkan poin-poin krusial. Mencakup:
    - DEFINISI & KONSEP DASAR metode tersebut.
    - SUBJEK & DATA PENELITIAN (populasi, sampel, sumber data, jenis-jenis variabel yang terlibat).
-   - INSTRUMEN PENELITIAN (teknik pembuatan instrumen, macam-macam uji instrumen seperti validitas/reliabilitas).
+   - INSTRUMEN PENELITIAN (teknik pembuatan instrumen, macam-macam uji instrumen seperti validitas/reliabilitas). WAJIB MENCANTUMKAN semua "Rule of Thumb" (aturan baku), nilai ambang batas (threshold), beserta pengecualian/kondisi khusus jika ada di dalam buku.
    - TEKNIK ANALISIS DATA (jenis teknik analisis yang digunakan, tahapan-tahapannya, kriteria/penilaian, serta syarat-syarat penggunaannya).
    - RINCIAN TAHAPAN (prosedur operasional/langkah-langkah) pelaksanaan metode tersebut.
+   
+PENTING: Jangan terlalu menyingkat informasi (oversummarize). Jika ada angka kriteria kelayakan, batasan, toleransi, atau pengecualian metodologis yang dibahas dalam teks, cantumkan secara lengkap.
+
 4. Perkirakan rentang halaman (page_start, page_end) untuk setiap metode berdasarkan posisi teks.
 
 Teks Buku:
