@@ -24,6 +24,7 @@ export default function AdminDashboard() {
   const [syncProgress, setSyncProgress] = useState('');
   const [syncedBooks, setSyncedBooks] = useState<any[]>([]);
   const [isPdfJsLoaded, setIsPdfJsLoaded] = useState(false);
+  const [scanPageLimit, setScanPageLimit] = useState<number>(50);
   
   // Book TOC Selection state
   const [bookPages, setBookPages] = useState<string[]>([]);
@@ -483,6 +484,18 @@ export default function AdminDashboard() {
                   }}
                   disabled={!!driveFolderId || !isPdfJsLoaded}
                 />
+                <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <label style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>Batas Halaman Daftar Isi:</label>
+                  <input 
+                    type="number" 
+                    min="10" 
+                    max="150" 
+                    value={scanPageLimit}
+                    onChange={(e) => setScanPageLimit(Number(e.target.value))}
+                    style={{ width: '70px', padding: '5px', borderRadius: '4px', border: '1px solid #4b5563', backgroundColor: '#1f2937', color: 'white' }}
+                  />
+                  <span style={{ fontSize: '12px', color: '#6b7280' }}>(Untuk buku tebal, naikkan angka ini misal ke 50 atau 100)</span>
+                </div>
               </div>
               </div>
 
@@ -576,8 +589,8 @@ export default function AdminDashboard() {
                         });
 
                       } else {
-                        // Tahap 1: Ekstraksi TOC dari 50 halaman pertama
-                        setSyncProgress('Sedang membaca 50 halaman pertama PDF untuk mengenali daftar isi...');
+                        // Tahap 1: Ekstraksi TOC dari N halaman pertama
+                        setSyncProgress(`Sedang membaca ${scanPageLimit} halaman pertama PDF untuk mengenali daftar isi...`);
                         
                         const arrayBuffer = await uploadFile.arrayBuffer();
                         // @ts-ignore
@@ -591,10 +604,10 @@ export default function AdminDashboard() {
                         const pdf = await loadingTask.promise;
                         
                         const pages: string[] = [];
-                        const maxTocPages = Math.min(50, pdf.numPages);
+                        const maxTocPages = Math.min(scanPageLimit, pdf.numPages);
                         let firstPagesText = '';
 
-                        // Baca 50 halaman pertama dulu untuk TOC
+                        // Baca N halaman pertama dulu untuk TOC
                         for (let i = 1; i <= maxTocPages; i++) {
                           setSyncProgress(`Membaca halaman ${i} dari ${maxTocPages} (untuk Daftar Isi)...`);
                           const page = await pdf.getPage(i);
@@ -611,7 +624,8 @@ export default function AdminDashboard() {
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ 
                             text: firstPagesText, 
-                            fileName: uploadFile.name 
+                            fileName: uploadFile.name,
+                            pagesScanned: maxTocPages
                           })
                         });
 
