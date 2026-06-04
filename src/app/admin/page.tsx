@@ -576,8 +576,8 @@ export default function AdminDashboard() {
                         });
 
                       } else {
-                        // Tahap 1: Ekstraksi TOC dari 20 halaman pertama
-                        setSyncProgress('Sedang membaca 20 halaman pertama PDF untuk mengenali daftar isi...');
+                        // Tahap 1: Ekstraksi TOC dari 50 halaman pertama
+                        setSyncProgress('Sedang membaca 50 halaman pertama PDF untuk mengenali daftar isi...');
                         
                         const arrayBuffer = await uploadFile.arrayBuffer();
                         // @ts-ignore
@@ -591,17 +591,17 @@ export default function AdminDashboard() {
                         const pdf = await loadingTask.promise;
                         
                         const pages: string[] = [];
-                        const maxTocPages = Math.min(20, pdf.numPages);
-                        let first20PagesText = '';
+                        const maxTocPages = Math.min(50, pdf.numPages);
+                        let firstPagesText = '';
 
-                        // Baca 20 halaman pertama dulu untuk TOC
+                        // Baca 50 halaman pertama dulu untuk TOC
                         for (let i = 1; i <= maxTocPages; i++) {
                           setSyncProgress(`Membaca halaman ${i} dari ${maxTocPages} (untuk Daftar Isi)...`);
                           const page = await pdf.getPage(i);
                           const textContent = await page.getTextContent();
                           const pageText = textContent.items.map((item: any) => item.str).join(' ');
+                          firstPagesText += pageText + '\n\n';
                           pages.push(pageText);
-                          first20PagesText += pageText + '\n';
                         }
                         
                         setSyncProgress('Menganalisis daftar isi menggunakan AI...');
@@ -610,7 +610,7 @@ export default function AdminDashboard() {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ 
-                            text: first20PagesText, 
+                            text: firstPagesText, 
                             fileName: uploadFile.name 
                           })
                         });

@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     });
 
     const prompt = `
-Anda adalah asisten peneliti ahli. Saya memberikan Anda teks dari **beberapa halaman awal** (sekitar 20 halaman) sebuah buku referensi.
+Anda adalah asisten peneliti ahli. Saya memberikan Anda teks dari **beberapa halaman awal** (sekitar 50 halaman) sebuah buku referensi.
 Tugas Anda adalah:
 1. Identifikasi JENIS SUMBER (Buku atau Artikel Jurnal). Isi field 'source_type' dengan 'book' atau 'journal'.
 2. Identifikasi METADATA (Judul, Penulis, Tahun, Penerbit). Jika ini adalah artikel jurnal, identifikasi juga Nama Jurnal, Volume, Issue, dan DOI jika tersedia. Jika tidak ditemukan, kosongkan atau tebak judul dari nama file (${fileName}).
