@@ -244,3 +244,20 @@ export async function getBookChunksAction(bookId: string) {
   if (error) return { error: error.message };
   return { data };
 }
+
+export async function deleteSyncedBookAction(bookId: string) {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return { error: 'Unauthorized' };
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+  if (profile?.role !== 'admin') return { error: 'Forbidden' };
+
+  const { error } = await supabase
+    .from('methodology_books')
+    .delete()
+    .eq('id', bookId);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}

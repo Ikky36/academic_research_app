@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction, getSyncedBooksAction, getBookChunksAction } from './actions';
+import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction, getSyncedBooksAction, getBookChunksAction, deleteSyncedBookAction } from './actions';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
@@ -143,21 +143,49 @@ export default function AdminDashboard() {
   const handleViewChunks = async (bookId: string) => {
     if (viewingChunksFor === bookId) {
       setViewingChunksFor(null);
-      setBookChunks([]);
       return;
     }
     
     setViewingChunksFor(bookId);
     setIsLoadingChunks(true);
-    setBookChunks([]);
     
-    const res = await getBookChunksAction(bookId);
-    if (res.data) {
-      setBookChunks(res.data);
-    } else {
-      setError(res.error || 'Gagal memuat isi buku.');
+    try {
+      const res = await getBookChunksAction(bookId);
+      if (res.data) {
+        setBookChunks(res.data);
+      } else {
+        setBookChunks([]);
+      }
+    } catch (e) {
+      console.error(e);
+      setBookChunks([]);
+    } finally {
+      setIsLoadingChunks(false);
     }
-    setIsLoadingChunks(false);
+  };
+
+  const handleDeleteBook = async (bookId: string, bookTitle: string) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus buku "${bookTitle}" beserta semua data ekstraksinya? Tindakan ini tidak dapat dibatalkan.`)) {
+      return;
+    }
+
+    try {
+      const res = await deleteSyncedBookAction(bookId);
+      if (res.success) {
+        setSuccess(`Buku "${bookTitle}" berhasil dihapus.`);
+        // Reload books
+        const booksRes = await getSyncedBooksAction();
+        if (booksRes.data) setSyncedBooks(booksRes.data);
+        if (viewingChunksFor === bookId) {
+          setViewingChunksFor(null);
+        }
+      } else {
+        setError(res.error || 'Gagal menghapus buku.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError('Terjadi kesalahan saat menghapus buku.');
+    }
   };
 
   const handleDeleteUser = async (userId: string, email: string) => {
@@ -679,20 +707,36 @@ export default function AdminDashboard() {
                               </div>
                             </td>
                             <td style={{verticalAlign: 'top', padding: '15px 10px'}}>
-                              <button 
-                                onClick={() => handleViewChunks(book.id)}
-                                style={{
-                                  background: viewingChunksFor === book.id ? '#4b5563' : '#3b82f6',
-                                  color: 'white',
-                                  border: 'none',
-                                  padding: '6px 12px',
-                                  borderRadius: '4px',
-                                  cursor: 'pointer',
-                                  fontSize: '12px'
-                                }}
-                              >
-                                {viewingChunksFor === book.id ? 'Tutup Isi Buku' : 'Lihat Isi Buku'}
-                              </button>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <button 
+                                  onClick={() => handleViewChunks(book.id)}
+                                  style={{
+                                    background: viewingChunksFor === book.id ? '#4b5563' : '#3b82f6',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '6px 12px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '12px'
+                                  }}
+                                >
+                                  {viewingChunksFor === book.id ? 'Tutup Isi Buku' : 'Lihat Isi Buku'}
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteBook(book.id, book.title)}
+                                  style={{
+                                    background: '#ef4444',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '6px 12px',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '12px'
+                                  }}
+                                >
+                                  Hapus
+                                </button>
+                              </div>
                               
                               {viewingChunksFor === book.id && (
                                 <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #374151' }}>
