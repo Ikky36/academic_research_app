@@ -465,15 +465,10 @@ export default function AdminDashboard() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
                   <label style={{ margin: 0 }}>Unggah File PDF Langsung (Opsi B - Bisa Memilih Bab)</label>
                   <div style={{ display: 'flex', alignItems: 'center', fontSize: '12px' }}>
-                    {isPdfJsLoaded ? (
-                      <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
-                        Sistem PDF Siap
-                      </span>
-                    ) : (
+                    {!isPdfJsLoaded && (
                       <span style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '5px' }}>
                         <span className={styles.pulseDot} style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#fbbf24', display: 'inline-block' }}></span>
-                        Memuat Sistem PDF...
+                        Menyiapkan ekstensi...
                       </span>
                     )}
                   </div>
