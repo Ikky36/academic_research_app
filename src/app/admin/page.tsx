@@ -709,10 +709,25 @@ export default function AdminDashboard() {
                         syncedBooks.map((book: any) => (
                           <tr key={book.id}>
                             <td style={{verticalAlign: 'top', padding: '15px 10px'}}>
-                              <h4 style={{ margin: '0 0 5px 0' }}>{book.title}</h4>
-                              <div style={{ fontSize: '14px', color: '#9ca3af' }}>
-                                {book.author} ({book.year}) • {book.publisher}
+                              <h4 style={{ margin: '0 0 5px 0' }}>
+                                {book.source_type === 'journal' ? '📄 ' : '📘 '}{book.title}
+                              </h4>
+                              <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '4px' }}>
+                                {book.author} ({book.year})
                               </div>
+                              {book.source_type === 'journal' ? (
+                                <div style={{ fontSize: '13px', color: '#60a5fa' }}>
+                                  Jurnal: {book.journal_name || '-'} 
+                                  {book.volume && ` Vol. ${book.volume}`}
+                                  {book.issue && ` No. ${book.issue}`}
+                                  <br/>
+                                  {book.doi && <span style={{color: '#a78bfa'}}>DOI: {book.doi}</span>}
+                                </div>
+                              ) : (
+                                <div style={{ fontSize: '13px', color: '#60a5fa' }}>
+                                  Penerbit: {book.publisher || '-'}
+                                </div>
+                              )}
                               <div style={{ fontSize: '12px', marginTop: '5px', color: '#6b7280' }}>
                                 Total Diekstrak: {book.methodology_chunks?.length || 0} chunks metode
                               </div>

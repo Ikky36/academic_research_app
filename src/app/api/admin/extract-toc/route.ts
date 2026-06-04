@@ -37,6 +37,11 @@ export async function POST(req: NextRequest) {
         author: { type: SchemaType.STRING, description: "Nama Penulis" },
         year: { type: SchemaType.STRING, description: "Tahun Terbit" },
         publisher: { type: SchemaType.STRING, description: "Nama Penerbit" },
+        source_type: { type: SchemaType.STRING, description: "Tipe Sumber ('book' atau 'journal')" },
+        journal_name: { type: SchemaType.STRING, description: "Nama Jurnal (jika sumbernya adalah artikel jurnal)" },
+        volume: { type: SchemaType.STRING, description: "Volume Jurnal (jika ada)" },
+        issue: { type: SchemaType.STRING, description: "Issue/Nomor Jurnal (jika ada)" },
+        doi: { type: SchemaType.STRING, description: "DOI (Digital Object Identifier) (jika ada)" },
         chapters: {
           type: SchemaType.ARRAY,
           items: {
@@ -64,8 +69,9 @@ export async function POST(req: NextRequest) {
     const prompt = `
 Anda adalah asisten peneliti ahli. Saya memberikan Anda teks dari **beberapa halaman awal** (sekitar 20 halaman) sebuah buku referensi.
 Tugas Anda adalah:
-1. Identifikasi METADATA BUKU (Judul, Penulis, Tahun, Penerbit). Jika tidak ditemukan, gunakan tebakan terbaik dari nama file (${fileName}) atau kosongkan.
-2. Identifikasi DAFTAR ISI (Table of Contents) atau BAB-BAB utama buku ini beserta perkiraan rentang halamannya (page_start dan page_end). Jika Daftar Isi eksplisit tidak ada, tebak berdasarkan kemunculan judul-judul bab besar di teks.
+1. Identifikasi JENIS SUMBER (Buku atau Artikel Jurnal). Isi field 'source_type' dengan 'book' atau 'journal'.
+2. Identifikasi METADATA (Judul, Penulis, Tahun, Penerbit). Jika ini adalah artikel jurnal, identifikasi juga Nama Jurnal, Volume, Issue, dan DOI jika tersedia. Jika tidak ditemukan, kosongkan atau tebak judul dari nama file (${fileName}).
+3. Identifikasi DAFTAR ISI (Table of Contents) atau BAB-BAB utama beserta perkiraan rentang halamannya (page_start dan page_end). Jika ini artikel jurnal, babnya biasanya seperti Pendahuluan, Tinjauan Pustaka, Metodologi, Hasil, Kesimpulan. Jika Daftar Isi eksplisit tidak ada, tebak berdasarkan kemunculan judul-judul bab besar di teks.
 
 Penting: "page_start" dan "page_end" merujuk pada nomor absolut halaman di dalam file PDF (biasanya bisa disimpulkan jika di Daftar Isi tertulis halamannya, tambahkan offset jika perlu agar masuk akal, atau tebak semampunya).
 

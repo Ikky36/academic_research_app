@@ -32,6 +32,11 @@ export async function POST(req: NextRequest) {
         author: { type: SchemaType.STRING, description: "Nama Penulis" },
         year: { type: SchemaType.STRING, description: "Tahun Terbit" },
         publisher: { type: SchemaType.STRING, description: "Nama Penerbit" },
+        source_type: { type: SchemaType.STRING, description: "Tipe Sumber ('book' atau 'journal')" },
+        journal_name: { type: SchemaType.STRING, description: "Nama Jurnal (jika sumbernya adalah artikel jurnal)" },
+        volume: { type: SchemaType.STRING, description: "Volume Jurnal (jika ada)" },
+        issue: { type: SchemaType.STRING, description: "Issue/Nomor Jurnal (jika ada)" },
+        doi: { type: SchemaType.STRING, description: "DOI (Digital Object Identifier) (jika ada)" },
         methods: {
           type: SchemaType.ARRAY,
           items: {
@@ -77,10 +82,11 @@ Teks Buku:
 ${text.substring(0, 500000)}
 """
 ` : `
-Anda adalah asisten peneliti ahli. Saya memberikan Anda teks lengkap dari sebuah buku referensi metodologi penelitian.
+Anda adalah asisten peneliti ahli. Saya memberikan Anda teks lengkap dari sebuah dokumen referensi metodologi penelitian.
 Tugas Anda adalah:
-1. Identifikasi METADATA BUKU (Judul, Penulis, Tahun, Penerbit) dari teks.
-2. Identifikasi BERBAGAI METODE PENELITIAN yang dibahas secara mendetail dalam buku ini.
+1. Identifikasi JENIS SUMBER (Buku atau Artikel Jurnal). Isi field 'source_type' dengan 'book' atau 'journal'.
+2. Identifikasi METADATA BUKU/JURNAL (Judul, Penulis, Tahun, Penerbit, Nama Jurnal, Volume, Issue, DOI) dari teks.
+3. Identifikasi BERBAGAI METODE PENELITIAN yang dibahas secara mendetail dalam dokumen ini.
 3. Ekstrak bagian teks yang berisi penjelasan mendalam untuk setiap metode, dengan SANGAT TERINCI. Mencakup Definisi, Subjek, Instrumen, Analisis, dan Tahapan.
    WAJIB MENCANTUMKAN semua "Rule of Thumb" (aturan baku), nilai ambang batas (threshold), serta pengecualian dan toleransi khusus yang disebutkan di dalam teks buku. Jangan terlalu menyingkat informasi.
 4. Perkirakan rentang halaman (page_start, page_end) untuk setiap metode.
@@ -100,6 +106,11 @@ ${text.substring(0, 500000)}
     const finalAuthor = metadata?.author || parsedData.author || 'Unknown';
     const finalYear = metadata?.year || parsedData.year || 'Unknown';
     const finalPublisher = metadata?.publisher || parsedData.publisher || 'Unknown';
+    const finalSourceType = metadata?.source_type || parsedData.source_type || 'book';
+    const finalJournalName = metadata?.journal_name || parsedData.journal_name || null;
+    const finalVolume = metadata?.volume || parsedData.volume || null;
+    const finalIssue = metadata?.issue || parsedData.issue || null;
+    const finalDoi = metadata?.doi || parsedData.doi || null;
 
     const fakeDriveId = 'uploaded_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     const { data: bookRecord, error: bookError } = await supabase
@@ -109,7 +120,12 @@ ${text.substring(0, 500000)}
         title: finalTitle,
         author: finalAuthor,
         year: finalYear,
-        publisher: finalPublisher
+        publisher: finalPublisher,
+        source_type: finalSourceType,
+        journal_name: finalJournalName,
+        volume: finalVolume,
+        issue: finalIssue,
+        doi: finalDoi
       })
       .select()
       .single();
