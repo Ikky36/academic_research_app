@@ -671,21 +671,24 @@ export default function AdminDashboard() {
                           })
                         });
 
-                        if (!tocResponse.ok) {
-                          if (tocResponse.status === 504) throw new Error('[Sistem Analisis]: Waktu pemrosesan habis (Timeout) saat membaca Daftar Isi. Coba kurangi Batas Halaman Daftar Isi.');
-                          if (tocResponse.status === 429) throw new Error('[Sistem Analisis]: Google AI Rate Limit tercapai. Tunggu 1 menit lalu coba unggah lagi.');
-                          throw new Error(`[Sistem Analisis]: Gagal memproses Daftar Isi. Status: ${tocResponse.status}`);
-                        }
-
                         let tocData;
                         try {
                           tocData = await tocResponse.json();
                         } catch (e) {
+                          if (!tocResponse.ok) {
+                            if (tocResponse.status === 504) throw new Error('[Sistem Analisis]: Waktu pemrosesan habis (Timeout) saat membaca Daftar Isi. Coba kurangi Batas Halaman Daftar Isi.');
+                            if (tocResponse.status === 429) throw new Error('[Sistem Analisis]: Google AI Rate Limit tercapai. Tunggu 1 menit lalu coba unggah lagi.');
+                            throw new Error(`[Sistem Analisis]: Gagal memproses Daftar Isi. Status: ${tocResponse.status}`);
+                          }
                           throw new Error('[Sistem Analisis]: Gagal membaca respons dari server (Bukan JSON).');
                         }
 
-                        if (!tocData.success) {
-                          throw new Error(tocData.error || 'Gagal mengekstrak daftar isi.');
+                        if (!tocResponse.ok || !tocData.success) {
+                          const errorMsg = tocData.error || 'Gagal mengekstrak daftar isi.';
+                          if (errorMsg.includes('429') || errorMsg.includes('Quota')) {
+                            throw new Error('[Sistem Analisis]: Google AI Rate Limit tercapai (Quota Exceeded). Tunggu beberapa saat lalu coba lagi.');
+                          }
+                          throw new Error(`[Sistem Analisis]: ${errorMsg}`);
                         }
 
                         // Lanjutkan membaca sisa halaman PDF (halaman 21 sampai selesai) untuk disimpan di memori
