@@ -565,9 +565,9 @@ export default function AdminDashboard() {
                         
                         const arrayBuffer = await uploadFile.arrayBuffer();
                         // @ts-ignore
-                        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+                        const pdfjsLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
                         if (!pdfjsLib) {
-                          throw new Error('Sistem pembaca PDF belum siap, silakan muat ulang halaman.');
+                          throw new Error('Sistem pembaca PDF belum siap, silakan muat ulang halaman atau tunggu beberapa detik.');
                         }
                         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
                         
@@ -776,7 +776,7 @@ export default function AdminDashboard() {
       </main>
       
       {/* Load PDF.js from CDN for client-side PDF text extraction */}
-      <Script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" strategy="lazyOnload" />
+      <Script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" strategy="afterInteractive" />
     </div>
   );
 }
