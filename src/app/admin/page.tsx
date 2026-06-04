@@ -565,7 +565,12 @@ export default function AdminDashboard() {
                               title: extractedToc.title,
                               author: extractedToc.author,
                               year: extractedToc.year,
-                              publisher: extractedToc.publisher
+                              publisher: extractedToc.publisher,
+                              source_type: extractedToc.source_type,
+                              journal_name: extractedToc.journal_name,
+                              volume: extractedToc.volume,
+                              issue: extractedToc.issue,
+                              doi: extractedToc.doi
                             }
                           })
                         });

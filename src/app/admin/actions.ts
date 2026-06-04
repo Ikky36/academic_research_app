@@ -217,6 +217,11 @@ export async function getSyncedBooksAction() {
       author,
       publisher,
       year,
+      source_type,
+      journal_name,
+      volume,
+      issue,
+      doi,
       methodology_chunks (
         id
       )
