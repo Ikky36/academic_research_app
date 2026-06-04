@@ -30,6 +30,8 @@ export default function AdminDashboard() {
   const [bookPages, setBookPages] = useState<string[]>([]);
   const [extractedToc, setExtractedToc] = useState<any>(null);
   const [selectedChapters, setSelectedChapters] = useState<number[]>([]);
+  const [currentBookId, setCurrentBookId] = useState<string | null>(null);
+  const [completedChapters, setCompletedChapters] = useState<number[]>([]);
   
   // Book Chunks Viewer state
   const [viewingChunksFor, setViewingChunksFor] = useState<string | null>(null);
@@ -511,7 +513,7 @@ export default function AdminDashboard() {
                       <label key={idx} style={{ display: 'flex', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid #374151', cursor: 'pointer' }}>
                         <input 
                           type="checkbox" 
-                          checked={selectedChapters.includes(idx)}
+                          checked={selectedChapters.includes(idx) || completedChapters.includes(idx)}
                           onChange={(e) => {
                             if (e.target.checked) {
                               setSelectedChapters([...selectedChapters, idx]);
@@ -519,10 +521,14 @@ export default function AdminDashboard() {
                               setSelectedChapters(selectedChapters.filter(i => i !== idx));
                             }
                           }}
-                          style={{ marginRight: '10px', marginTop: '4px' }}
+                          disabled={completedChapters.includes(idx) || isSyncing}
+                          style={{ marginTop: '4px', marginRight: '10px' }}
                         />
-                        <div>
-                          <div style={{ fontWeight: 'bold' }}>{chap.chapter_title}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 'bold' }}>
+                            {chap.chapter_title || `Bab ${idx+1}`} 
+                            {completedChapters.includes(idx) && <span style={{color: '#10b981', marginLeft: '8px', fontSize: '12px'}}>✓ (Selesai)</span>}
+                          </div>
                           <div style={{ fontSize: '12px', color: '#9ca3af' }}>Halaman: {chap.page_start} - {chap.page_end || '?'}</div>
                         </div>
                       </label>
@@ -533,12 +539,18 @@ export default function AdminDashboard() {
               
               <button 
                 className={styles.saveButton}
-                disabled={isSyncing}
+                disabled={isSyncing || (!uploadFile && !driveFolderId)}
                 onClick={async () => {
                   if (!driveFolderId && !uploadFile) {
                     setError('Pilih salah satu: masukkan Folder ID ATAU unggah File PDF');
                     return;
                   }
+                  
+                  if (extractedToc && selectedChapters.length > 0 && selectedChapters.every(c => completedChapters.includes(c))) {
+                    setError('Semua bab yang dipilih sudah berhasil diekstrak. Silakan pilih bab lain atau upload buku baru.');
+                    return;
+                  }
+
                   setIsSyncing(true);
                   setError('');
                   setSuccess('');
@@ -556,11 +568,14 @@ export default function AdminDashboard() {
                           return;
                         }
 
-                        let currentBookId: string | null = null;
-                        let totalChunksSaved: number = 0;
+                        let bookId: string | null = currentBookId;
+                        let totalChunksSaved: number = completedChapters.length;
 
                         for (let i = 0; i < selectedChapters.length; i++) {
                           const idx = selectedChapters[i];
+                          if (completedChapters.includes(idx)) {
+                            continue; // Skip already extracted chapters
+                          }
                           const chap = extractedToc.chapters[idx];
                           
                           setSyncProgress(`Memproses Bab ${i+1} dari ${selectedChapters.length}: ${chap.title || `Bab ke-${idx+1}`}...`);
@@ -589,7 +604,7 @@ export default function AdminDashboard() {
                                 issue: extractedToc.issue,
                                 doi: extractedToc.doi
                               },
-                              bookId: currentBookId
+                              bookId: bookId
                             })
                           });
 
@@ -599,15 +614,15 @@ export default function AdminDashboard() {
                             throw new Error(`[Sistem Analisis]: Gagal memproses data bab ${chap.title || idx}. Status: ${fetchRes.status}`);
                           }
 
-                          const data = await fetchRes.json();
-                          if (!data.success) {
-                            throw new Error(data.error || `Gagal mengekstrak bab ${chap.title || idx}`);
+                          const resData = await fetchRes.json();
+                          if (!resData.success) {
+                            throw new Error(resData.error || `Gagal mengekstrak bab ${chap.title || idx}`);
                           }
 
-                          if (!currentBookId && data.bookId) {
-                            currentBookId = data.bookId;
-                          }
-                          totalChunksSaved += data.chunksCount;
+                          bookId = resData.bookId;
+                          setCurrentBookId(bookId);
+                          setCompletedChapters(prev => [...prev, idx]);
+                          totalChunksSaved += resData.chunksCount;
 
                           // Jeda 5 detik jika ini bukan bab terakhir, untuk mencegah rate limit 429
                           if (i < selectedChapters.length - 1) {
@@ -620,8 +635,10 @@ export default function AdminDashboard() {
                         setUploadFile(null);
                         setExtractedToc(null);
                         setBookPages([]);
+                        setCurrentBookId(null);
+                        setCompletedChapters([]);
                         
-                        setSuccess(`Berhasil! 1 buku diproses, ${totalChunksSaved} metode tersimpan dari ${selectedChapters.length} bab.`);
+                        setSuccess(`Berhasil! 1 buku diproses, ekstraksi dari ${selectedChapters.length} bab telah tersimpan.`);
                         setSyncProgress('');
                         
                         const booksRes = await getSyncedBooksAction();
@@ -632,6 +649,8 @@ export default function AdminDashboard() {
 
                       } else {
                         // Tahap 1: Ekstraksi TOC dari N halaman pertama
+                        setCurrentBookId(null);
+                        setCompletedChapters([]);
                         setSyncProgress(`Sedang membaca ${scanPageLimit} halaman pertama PDF untuk mengenali daftar isi...`);
                         
                         const arrayBuffer = await uploadFile.arrayBuffer();
