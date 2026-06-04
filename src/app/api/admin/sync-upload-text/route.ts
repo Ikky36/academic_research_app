@@ -8,7 +8,7 @@ export const maxDuration = 300; // 5 minutes max on Vercel Pro
 
 export async function POST(req: NextRequest) {
   try {
-    const { text, fileName } = await req.json();
+    const { text, fileName, metadata } = await req.json();
     
     if (!text) {
       return NextResponse.json({ error: 'Text content is required' }, { status: 400 });
@@ -56,22 +56,34 @@ export async function POST(req: NextRequest) {
     });
 
     // Extract metadata and chunks using Gemini
-    const prompt = `
-Anda adalah asisten peneliti ahli. Saya memberikan Anda teks lengkap dari sebuah buku referensi metodologi penelitian.
+    // Jika metadata sudah disediakan (dari tahap ekstrak TOC), gunakan itu. Jika tidak, minta AI mengekstrak.
+    const prompt = metadata ? `
+Anda adalah asisten peneliti ahli. Saya memberikan Anda teks dari bab-bab metodologi sebuah buku referensi.
 Tugas Anda adalah:
-1. Identifikasi METADATA BUKU (Judul, Penulis, Tahun, Penerbit) dari teks (biasanya ada di halaman-halaman awal). Jika tidak ditemukan, gunakan tebakan terbaik atau kosongkan.
-2. Identifikasi BERBAGAI METODE PENELITIAN yang dibahas secara mendetail dalam buku ini (misal: Kualitatif Studi Kasus, Kuantitatif Eksperimen, Research & Development model ADDIE, Mix Method, dsb).
-3. Ekstrak bagian teks yang berisi penjelasan mendalam untuk setiap metode, yang mencakup:
+1. Identifikasi BERBAGAI METODE PENELITIAN yang dibahas secara mendetail dalam teks ini (misal: Kualitatif Studi Kasus, Kuantitatif Eksperimen, Mix Method, dsb).
+2. Ekstrak bagian teks yang berisi penjelasan mendalam untuk setiap metode, yang mencakup:
    - DEFINISI & KONSEP DASAR metode tersebut.
-   - SUBJEK & DATA PENELITIAN (populasi, sampel, sumber data, jenis-jenis variabel yang terlibat).
-   - INSTRUMEN PENELITIAN (teknik pembuatan instrumen, macam-macam uji instrumen seperti validitas/reliabilitas).
-   - TEKNIK ANALISIS DATA (jenis teknik analisis yang digunakan, tahapan-tahapannya, kriteria/penilaian, serta syarat-syarat penggunaannya).
-   - RINCIAN TAHAPAN (prosedur operasional/langkah-langkah) pelaksanaan metode tersebut.
-4. Perkirakan rentang halaman (page_start, page_end) untuk setiap metode berdasarkan posisi teks.
+   - SUBJEK & DATA PENELITIAN (populasi, sampel, sumber data, variabel).
+   - INSTRUMEN PENELITIAN (teknik pembuatan instrumen, validitas/reliabilitas).
+   - TEKNIK ANALISIS DATA (jenis teknik, tahapan, kriteria, syarat).
+   - RINCIAN TAHAPAN (prosedur operasional pelaksanaannya).
+3. Perkirakan rentang halaman (page_start, page_end) untuk setiap metode berdasarkan posisi teks.
 
 Teks Buku:
 """
-${text.substring(0, 500000)} // Limiting to 500k chars
+${text.substring(0, 500000)}
+"""
+` : `
+Anda adalah asisten peneliti ahli. Saya memberikan Anda teks lengkap dari sebuah buku referensi metodologi penelitian.
+Tugas Anda adalah:
+1. Identifikasi METADATA BUKU (Judul, Penulis, Tahun, Penerbit) dari teks.
+2. Identifikasi BERBAGAI METODE PENELITIAN yang dibahas secara mendetail dalam buku ini.
+3. Ekstrak bagian teks yang berisi penjelasan mendalam untuk setiap metode, yang mencakup Definisi, Subjek, Instrumen, Analisis, dan Tahapan.
+4. Perkirakan rentang halaman (page_start, page_end) untuk setiap metode.
+
+Teks Buku:
+"""
+${text.substring(0, 500000)}
 """
 `;
 
@@ -80,15 +92,20 @@ ${text.substring(0, 500000)} // Limiting to 500k chars
     const parsedData = parseGeminiJSON(responseText);
 
     // Save Book Metadata to Supabase
+    const finalTitle = metadata?.title || parsedData.title || fileName || 'Unknown Book';
+    const finalAuthor = metadata?.author || parsedData.author || 'Unknown';
+    const finalYear = metadata?.year || parsedData.year || 'Unknown';
+    const finalPublisher = metadata?.publisher || parsedData.publisher || 'Unknown';
+
     const fakeDriveId = 'uploaded_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     const { data: bookRecord, error: bookError } = await supabase
       .from('methodology_books')
       .insert({
         drive_file_id: fakeDriveId,
-        title: parsedData.title || fileName || 'Unknown Book',
-        author: parsedData.author || 'Unknown',
-        year: parsedData.year || 'Unknown',
-        publisher: parsedData.publisher || 'Unknown'
+        title: finalTitle,
+        author: finalAuthor,
+        year: finalYear,
+        publisher: finalPublisher
       })
       .select()
       .single();

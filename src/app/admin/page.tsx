@@ -24,6 +24,11 @@ export default function AdminDashboard() {
   const [syncProgress, setSyncProgress] = useState('');
   const [syncedBooks, setSyncedBooks] = useState<any[]>([]);
   
+  // Book TOC Selection state
+  const [bookPages, setBookPages] = useState<string[]>([]);
+  const [extractedToc, setExtractedToc] = useState<any>(null);
+  const [selectedChapters, setSelectedChapters] = useState<number[]>([]);
+  
   // Book Chunks Viewer state
   const [viewingChunksFor, setViewingChunksFor] = useState<string | null>(null);
   const [bookChunks, setBookChunks] = useState<any[]>([]);
@@ -411,13 +416,16 @@ export default function AdminDashboard() {
               
               <div className={styles.formGroup}>
                 <div style={{ marginBottom: '15px' }}>
-                <label>Google Drive Folder ID (Opsi A)</label>
+                <label>Google Drive Folder ID (Opsi A - Proses Otomatis Tanpa Pilihan Bab)</label>
                 <input 
                   type="text" 
                   placeholder="Contoh: 1A2b3C4d5E6f7G8h9I0j..." 
                   className={styles.input} 
                   value={driveFolderId}
-                  onChange={e => setDriveFolderId(e.target.value)}
+                  onChange={e => {
+                    setDriveFolderId(e.target.value);
+                    setExtractedToc(null);
+                  }}
                   disabled={!!uploadFile}
                 />
               </div>
@@ -425,19 +433,55 @@ export default function AdminDashboard() {
               <div style={{ marginBottom: '15px', textAlign: 'center', fontWeight: 'bold' }}>ATAU</div>
 
               <div style={{ marginBottom: '15px' }}>
-                <label>Unggah File PDF Langsung (Opsi B)</label>
+                <label>Unggah File PDF Langsung (Opsi B - Bisa Memilih Bab)</label>
                 <input 
                   type="file" 
                   accept="application/pdf"
                   className={styles.input} 
-                  onChange={e => setUploadFile(e.target.files ? e.target.files[0] : null)}
+                  onChange={e => {
+                    setUploadFile(e.target.files ? e.target.files[0] : null);
+                    setExtractedToc(null);
+                  }}
                   disabled={!!driveFolderId}
                 />
               </div>
               </div>
+
+              {extractedToc && (
+                <div style={{ background: '#1f2937', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
+                  <h3 style={{ color: '#10b981', marginTop: 0 }}>Pilih Bab yang Akan Diekstrak</h3>
+                  <p style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '15px' }}>
+                    Sistem mendeteksi buku <strong>{extractedToc.title}</strong>. Silakan pilih bab-bab yang relevan dengan metode penelitian untuk diekstrak (hilangkan centang pada bab yang tidak perlu).
+                  </p>
+                  
+                  <div style={{ maxHeight: '300px', overflowY: 'auto', background: '#111827', padding: '15px', borderRadius: '6px' }}>
+                    {extractedToc.chapters && extractedToc.chapters.map((chap: any, idx: number) => (
+                      <label key={idx} style={{ display: 'flex', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid #374151', cursor: 'pointer' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedChapters.includes(idx)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedChapters([...selectedChapters, idx]);
+                            } else {
+                              setSelectedChapters(selectedChapters.filter(i => i !== idx));
+                            }
+                          }}
+                          style={{ marginRight: '10px', marginTop: '4px' }}
+                        />
+                        <div>
+                          <div style={{ fontWeight: 'bold' }}>{chap.chapter_title}</div>
+                          <div style={{ fontSize: '12px', color: '#9ca3af' }}>Halaman: {chap.page_start} - {chap.page_end || '?'}</div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <button 
                 className={styles.saveButton}
+                disabled={isSyncing}
                 onClick={async () => {
                   if (!driveFolderId && !uploadFile) {
                     setError('Pilih salah satu: masukkan Folder ID ATAU unggah File PDF');
@@ -452,39 +496,104 @@ export default function AdminDashboard() {
                     let response;
                     
                     if (uploadFile) {
-                      // OPSI B: File Upload - Extract text on client side first to bypass Vercel 4.5MB limit
-                      setSyncProgress('Sedang membaca PDF di perangkat Anda (ini mungkin memakan waktu untuk buku besar)...');
-                      
-                      const arrayBuffer = await uploadFile.arrayBuffer();
-                      // @ts-ignore
-                      const pdfjsLib = window['pdfjs-dist/build/pdf'];
-                      if (!pdfjsLib) {
-                        throw new Error('Sistem pembaca PDF belum siap, silakan muat ulang halaman.');
+                      if (extractedToc) {
+                        // Tahap 2: Ekstraksi hanya bab terpilih
+                        if (selectedChapters.length === 0) {
+                          setError('Pilih minimal satu bab untuk diekstrak.');
+                          setIsSyncing(false);
+                          return;
+                        }
+
+                        setSyncProgress('Mengirim teks bab terpilih ke AI untuk analisis dan klasifikasi metode...');
+                        let selectedText = '';
+                        selectedChapters.forEach(idx => {
+                          const chap = extractedToc.chapters[idx];
+                          // safe index bounds
+                          const startIdx = Math.max(0, chap.page_start - 1);
+                          const endIdx = Math.min(bookPages.length - 1, chap.page_end ? chap.page_end - 1 : bookPages.length - 1);
+                          for (let i = startIdx; i <= endIdx; i++) {
+                            selectedText += bookPages[i] + '\n';
+                          }
+                        });
+
+                        response = await fetch('/api/admin/sync-upload-text', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ 
+                            text: selectedText, 
+                            fileName: uploadFile.name,
+                            metadata: {
+                              title: extractedToc.title,
+                              author: extractedToc.author,
+                              year: extractedToc.year,
+                              publisher: extractedToc.publisher
+                            }
+                          })
+                        });
+
+                      } else {
+                        // Tahap 1: Ekstraksi TOC dari 20 halaman pertama
+                        setSyncProgress('Sedang membaca 20 halaman pertama PDF untuk mengenali daftar isi...');
+                        
+                        const arrayBuffer = await uploadFile.arrayBuffer();
+                        // @ts-ignore
+                        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+                        if (!pdfjsLib) {
+                          throw new Error('Sistem pembaca PDF belum siap, silakan muat ulang halaman.');
+                        }
+                        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                        
+                        const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
+                        const pdf = await loadingTask.promise;
+                        
+                        const pages: string[] = [];
+                        const maxTocPages = Math.min(20, pdf.numPages);
+                        let first20PagesText = '';
+
+                        // Baca 20 halaman pertama dulu untuk TOC
+                        for (let i = 1; i <= maxTocPages; i++) {
+                          setSyncProgress(`Membaca halaman ${i} dari ${maxTocPages} (untuk Daftar Isi)...`);
+                          const page = await pdf.getPage(i);
+                          const textContent = await page.getTextContent();
+                          const pageText = textContent.items.map((item: any) => item.str).join(' ');
+                          pages.push(pageText);
+                          first20PagesText += pageText + '\n';
+                        }
+                        
+                        setSyncProgress('Menganalisis daftar isi menggunakan AI...');
+                        
+                        const tocResponse = await fetch('/api/admin/extract-toc', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ 
+                            text: first20PagesText, 
+                            fileName: uploadFile.name 
+                          })
+                        });
+
+                        const tocData = await tocResponse.json();
+                        if (!tocData.success) {
+                          throw new Error(tocData.error || 'Gagal mengekstrak daftar isi.');
+                        }
+
+                        // Lanjutkan membaca sisa halaman PDF (halaman 21 sampai selesai) untuk disimpan di memori
+                        for (let i = maxTocPages + 1; i <= pdf.numPages; i++) {
+                          setSyncProgress(`Membaca sisa halaman PDF: ${i} dari ${pdf.numPages}...`);
+                          const page = await pdf.getPage(i);
+                          const textContent = await page.getTextContent();
+                          const pageText = textContent.items.map((item: any) => item.str).join(' ');
+                          pages.push(pageText);
+                        }
+
+                        setBookPages(pages);
+                        setExtractedToc(tocData.data);
+                        // Default pilih semua bab
+                        setSelectedChapters(tocData.data.chapters.map((_: any, i: number) => i));
+                        
+                        setIsSyncing(false);
+                        setSyncProgress('');
+                        return; // Berhenti di sini untuk membiarkan admin memilih bab
                       }
-                      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                      
-                      const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
-                      const pdf = await loadingTask.promise;
-                      
-                      let fullText = '';
-                      for (let i = 1; i <= pdf.numPages; i++) {
-                        setSyncProgress(`Membaca halaman ${i} dari ${pdf.numPages}...`);
-                        const page = await pdf.getPage(i);
-                        const textContent = await page.getTextContent();
-                        const pageText = textContent.items.map((item: any) => item.str).join(' ');
-                        fullText += pageText + '\n';
-                      }
-                      
-                      setSyncProgress('Mengirim teks ke AI untuk analisis dan klasifikasi metode (Harap bersabar, bisa memakan waktu hingga 2 menit)...');
-                      
-                      response = await fetch('/api/admin/sync-upload-text', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                          text: fullText, 
-                          fileName: uploadFile.name 
-                        })
-                      });
                     } else {
                       // OPSI A: Google Drive Folder ID
                       const supabase = createClient();
@@ -509,10 +618,14 @@ export default function AdminDashboard() {
                     }
                     
                     if (response.ok) {
-                      setSuccess(`Sinkronisasi berhasil! ${data.booksCount || 0} buku diproses, ${data.chunksCount || 0} pecahan metode tersimpan.`);
+                        // Setelah upload sukses, bersihkan form
+                        setUploadFile(null);
+                        setExtractedToc(null);
+                        setBookPages([]);
+                        
+                        setSuccess(`Berhasil! ${data.booksCount} buku diproses, ${data.chunksCount} chunks tersimpan.`);
                       setSyncProgress('');
                       setDriveFolderId('');
-                      setUploadFile(null);
                       // Reload books table
                       const booksRes = await getSyncedBooksAction();
                       if (booksRes.data) setSyncedBooks(booksRes.data);
@@ -521,16 +634,14 @@ export default function AdminDashboard() {
                       setSyncProgress('');
                     }
                   } catch (err: any) {
-                    setError(err.message || 'Terjadi kesalahan jaringan');
-                    setSyncProgress('');
+                    console.error("Sync error:", err);
+                    setError(err.message || 'Terjadi kesalahan saat memproses data.');
+                  } finally {
+                    setIsSyncing(false);
                   }
-                  
-                  setIsSyncing(false);
                 }}
-                disabled={isSyncing}
-                style={{ marginTop: '10px' }}
               >
-                {isSyncing ? '⏳ Sinkronisasi Berjalan...' : '🔄 Sinkronkan Buku'}
+                {isSyncing ? 'Memproses...' : (extractedToc ? 'Mulai Ekstraksi Metode Terpilih' : 'Mulai Sinkronisasi')}
               </button>
               
               {syncProgress && (
