@@ -23,6 +23,7 @@ export default function AdminDashboard() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState('');
   const [syncedBooks, setSyncedBooks] = useState<any[]>([]);
+  const [isPdfJsLoaded, setIsPdfJsLoaded] = useState(false);
   
   // Book TOC Selection state
   const [bookPages, setBookPages] = useState<string[]>([]);
@@ -461,7 +462,22 @@ export default function AdminDashboard() {
               <div style={{ marginBottom: '15px', textAlign: 'center', fontWeight: 'bold' }}>ATAU</div>
 
               <div style={{ marginBottom: '15px' }}>
-                <label>Unggah File PDF Langsung (Opsi B - Bisa Memilih Bab)</label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
+                  <label style={{ margin: 0 }}>Unggah File PDF Langsung (Opsi B - Bisa Memilih Bab)</label>
+                  <div style={{ display: 'flex', alignItems: 'center', fontSize: '12px' }}>
+                    {isPdfJsLoaded ? (
+                      <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', display: 'inline-block' }}></span>
+                        Sistem PDF Siap
+                      </span>
+                    ) : (
+                      <span style={{ color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <span className={styles.pulseDot} style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#fbbf24', display: 'inline-block' }}></span>
+                        Memuat Sistem PDF...
+                      </span>
+                    )}
+                  </div>
+                </div>
                 <input 
                   type="file" 
                   accept="application/pdf"
@@ -470,7 +486,7 @@ export default function AdminDashboard() {
                     setUploadFile(e.target.files ? e.target.files[0] : null);
                     setExtractedToc(null);
                   }}
-                  disabled={!!driveFolderId}
+                  disabled={!!driveFolderId || !isPdfJsLoaded}
                 />
               </div>
               </div>
@@ -776,7 +792,11 @@ export default function AdminDashboard() {
       </main>
       
       {/* Load PDF.js from CDN for client-side PDF text extraction */}
-      <Script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" strategy="afterInteractive" />
+      <Script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" 
+        strategy="afterInteractive" 
+        onLoad={() => setIsPdfJsLoaded(true)}
+      />
     </div>
   );
 }
