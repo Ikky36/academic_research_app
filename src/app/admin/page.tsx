@@ -671,7 +671,19 @@ export default function AdminDashboard() {
                           })
                         });
 
-                        const tocData = await tocResponse.json();
+                        if (!tocResponse.ok) {
+                          if (tocResponse.status === 504) throw new Error('[Sistem Analisis]: Waktu pemrosesan habis (Timeout) saat membaca Daftar Isi. Coba kurangi Batas Halaman Daftar Isi.');
+                          if (tocResponse.status === 429) throw new Error('[Sistem Analisis]: Google AI Rate Limit tercapai. Tunggu 1 menit lalu coba unggah lagi.');
+                          throw new Error(`[Sistem Analisis]: Gagal memproses Daftar Isi. Status: ${tocResponse.status}`);
+                        }
+
+                        let tocData;
+                        try {
+                          tocData = await tocResponse.json();
+                        } catch (e) {
+                          throw new Error('[Sistem Analisis]: Gagal membaca respons dari server (Bukan JSON).');
+                        }
+
                         if (!tocData.success) {
                           throw new Error(tocData.error || 'Gagal mengekstrak daftar isi.');
                         }
@@ -736,6 +748,7 @@ export default function AdminDashboard() {
                   } catch (err: any) {
                     console.error("Sync error:", err);
                     setError(err.message || 'Terjadi kesalahan saat memproses data.');
+                    setSyncProgress('');
                   } finally {
                     setIsSyncing(false);
                   }
