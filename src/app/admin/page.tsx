@@ -556,37 +556,79 @@ export default function AdminDashboard() {
                           return;
                         }
 
-                        setSyncProgress('Mengirim teks bab terpilih ke AI untuk analisis dan klasifikasi metode...');
-                        let selectedText = '';
-                        selectedChapters.forEach(idx => {
+                        let currentBookId: string | null = null;
+                        let totalChunksSaved: number = 0;
+
+                        for (let i = 0; i < selectedChapters.length; i++) {
+                          const idx = selectedChapters[i];
                           const chap = extractedToc.chapters[idx];
-                          // safe index bounds
+                          
+                          setSyncProgress(`Memproses Bab ${i+1} dari ${selectedChapters.length}: ${chap.title || `Bab ke-${idx+1}`}...`);
+                          
+                          let selectedText = '';
                           const startIdx = Math.max(0, chap.page_start - 1);
                           const endIdx = Math.min(bookPages.length - 1, chap.page_end ? chap.page_end - 1 : bookPages.length - 1);
-                          for (let i = startIdx; i <= endIdx; i++) {
-                            selectedText += bookPages[i] + '\n';
+                          for (let j = startIdx; j <= endIdx; j++) {
+                            selectedText += bookPages[j] + '\n';
                           }
-                        });
 
-                        response = await fetch('/api/admin/sync-upload-text', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ 
-                            text: selectedText, 
-                            fileName: uploadFile.name,
-                            metadata: {
-                              title: extractedToc.title,
-                              author: extractedToc.author,
-                              year: extractedToc.year,
-                              publisher: extractedToc.publisher,
-                              source_type: extractedToc.source_type,
-                              journal_name: extractedToc.journal_name,
-                              volume: extractedToc.volume,
-                              issue: extractedToc.issue,
-                              doi: extractedToc.doi
-                            }
-                          })
-                        });
+                          const fetchRes: Response = await fetch('/api/admin/sync-upload-text', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                              text: selectedText, 
+                              fileName: uploadFile.name,
+                              metadata: {
+                                title: extractedToc.title,
+                                author: extractedToc.author,
+                                year: extractedToc.year,
+                                publisher: extractedToc.publisher,
+                                source_type: extractedToc.source_type,
+                                journal_name: extractedToc.journal_name,
+                                volume: extractedToc.volume,
+                                issue: extractedToc.issue,
+                                doi: extractedToc.doi
+                              },
+                              bookId: currentBookId
+                            })
+                          });
+
+                          if (!fetchRes.ok) {
+                            if (fetchRes.status === 504) throw new Error(`[Sistem Analisis]: Waktu pemrosesan habis (Timeout) pada bab ${chap.title || idx}. Silakan coba proses ulang bab ini saja secara terpisah.`);
+                            if (fetchRes.status === 429) throw new Error(`[Sistem Analisis]: Google AI Rate Limit tercapai pada bab ${chap.title || idx}. Tunggu 1 menit lalu coba lagi.`);
+                            throw new Error(`[Sistem Analisis]: Gagal memproses data bab ${chap.title || idx}. Status: ${fetchRes.status}`);
+                          }
+
+                          const data = await fetchRes.json();
+                          if (!data.success) {
+                            throw new Error(data.error || `Gagal mengekstrak bab ${chap.title || idx}`);
+                          }
+
+                          if (!currentBookId && data.bookId) {
+                            currentBookId = data.bookId;
+                          }
+                          totalChunksSaved += data.chunksCount;
+
+                          // Jeda 5 detik jika ini bukan bab terakhir, untuk mencegah rate limit 429
+                          if (i < selectedChapters.length - 1) {
+                            setSyncProgress(`Menunggu jeda 5 detik untuk mencegah limit AI (Rate Limit 429)...`);
+                            await new Promise(resolve => setTimeout(resolve, 5000));
+                          }
+                        }
+
+                        // Semua bab berhasil diproses
+                        setUploadFile(null);
+                        setExtractedToc(null);
+                        setBookPages([]);
+                        
+                        setSuccess(`Berhasil! 1 buku diproses, ${totalChunksSaved} metode tersimpan dari ${selectedChapters.length} bab.`);
+                        setSyncProgress('');
+                        
+                        const booksRes = await getSyncedBooksAction();
+                        if (booksRes.data) setSyncedBooks(booksRes.data);
+                        
+                        setIsSyncing(false);
+                        return; // Berhenti di sini karena proses Tahap 2 selesai
 
                       } else {
                         // Tahap 1: Ekstraksi TOC dari N halaman pertama

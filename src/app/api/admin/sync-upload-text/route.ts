@@ -8,7 +8,7 @@ export const maxDuration = 300; // 5 minutes max on Vercel Pro
 
 export async function POST(req: NextRequest) {
   try {
-    const { text, fileName, metadata } = await req.json();
+    const { text, fileName, metadata, bookId } = await req.json();
     
     if (!text) {
       return NextResponse.json({ error: 'Text content is required' }, { status: 400 });
@@ -101,37 +101,42 @@ ${text.substring(0, 500000)}
     const responseText = result.response.text();
     const parsedData = parseGeminiJSON(responseText);
 
-    // Save Book Metadata to Supabase
-    const finalTitle = metadata?.title || parsedData.title || fileName || 'Unknown Book';
-    const finalAuthor = metadata?.author || parsedData.author || 'Unknown';
-    const finalYear = metadata?.year || parsedData.year || 'Unknown';
-    const finalPublisher = metadata?.publisher || parsedData.publisher || 'Unknown';
-    const finalSourceType = metadata?.source_type || parsedData.source_type || 'book';
-    const finalJournalName = metadata?.journal_name || parsedData.journal_name || null;
-    const finalVolume = metadata?.volume || parsedData.volume || null;
-    const finalIssue = metadata?.issue || parsedData.issue || null;
-    const finalDoi = metadata?.doi || parsedData.doi || null;
+    let finalBookId = bookId;
 
-    const fakeDriveId = 'uploaded_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    const { data: bookRecord, error: bookError } = await supabase
-      .from('methodology_books')
-      .insert({
-        drive_file_id: fakeDriveId,
-        title: finalTitle,
-        author: finalAuthor,
-        year: finalYear,
-        publisher: finalPublisher,
-        source_type: finalSourceType,
-        journal_name: finalJournalName,
-        volume: finalVolume,
-        issue: finalIssue,
-        doi: finalDoi
-      })
-      .select()
-      .single();
+    if (!finalBookId) {
+      // Save Book Metadata to Supabase ONLY if bookId is not provided
+      const finalTitle = metadata?.title || parsedData.title || fileName || 'Unknown Book';
+      const finalAuthor = metadata?.author || parsedData.author || 'Unknown';
+      const finalYear = metadata?.year || parsedData.year || 'Unknown';
+      const finalPublisher = metadata?.publisher || parsedData.publisher || 'Unknown';
+      const finalSourceType = metadata?.source_type || parsedData.source_type || 'book';
+      const finalJournalName = metadata?.journal_name || parsedData.journal_name || null;
+      const finalVolume = metadata?.volume || parsedData.volume || null;
+      const finalIssue = metadata?.issue || parsedData.issue || null;
+      const finalDoi = metadata?.doi || parsedData.doi || null;
 
-    if (bookError) {
-      throw new Error(`Error inserting book: ${bookError.message}`);
+      const fakeDriveId = 'uploaded_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      const { data: bookRecord, error: bookError } = await supabase
+        .from('methodology_books')
+        .insert({
+          drive_file_id: fakeDriveId,
+          title: finalTitle,
+          author: finalAuthor,
+          year: finalYear,
+          publisher: finalPublisher,
+          source_type: finalSourceType,
+          journal_name: finalJournalName,
+          volume: finalVolume,
+          issue: finalIssue,
+          doi: finalDoi
+        })
+        .select()
+        .single();
+
+      if (bookError) {
+        throw new Error(`Error inserting book: ${bookError.message}`);
+      }
+      finalBookId = bookRecord.id;
     }
 
     let totalChunksSaved = 0;
@@ -142,7 +147,7 @@ ${text.substring(0, 500000)}
       const { error: chunkError } = await supabase
         .from('methodology_chunks')
         .insert({
-          book_id: bookRecord.id,
+          book_id: finalBookId,
           method_category: method.method_category,
           content: method.content,
           page_start: method.page_start || null,
@@ -156,8 +161,9 @@ ${text.substring(0, 500000)}
 
     return NextResponse.json({ 
       success: true, 
-      booksCount: 1, 
-      chunksCount: totalChunksSaved 
+      booksCount: bookId ? 0 : 1, 
+      chunksCount: totalChunksSaved,
+      bookId: finalBookId
     });
 
   } catch (error: any) {
