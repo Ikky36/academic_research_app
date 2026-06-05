@@ -609,9 +609,16 @@ export default function AdminDashboard() {
                           });
 
                           if (!fetchRes.ok) {
+                            let serverErrorMsg = '';
+                            try {
+                              const errData = await fetchRes.json();
+                              serverErrorMsg = errData.error || '';
+                            } catch(e) {}
+                            
                             if (fetchRes.status === 504) throw new Error(`[Sistem Analisis]: Waktu pemrosesan habis (Timeout) pada bab ${chap.title || idx}. Silakan coba proses ulang bab ini saja secara terpisah.`);
-                            if (fetchRes.status === 429) throw new Error(`[Sistem Analisis]: Google AI Rate Limit tercapai pada bab ${chap.title || idx}. Tunggu 1 menit lalu coba lagi.`);
-                            throw new Error(`[Sistem Analisis]: Gagal memproses data bab ${chap.title || idx}. Status: ${fetchRes.status}`);
+                            if (fetchRes.status === 429 || serverErrorMsg.includes('Quota')) throw new Error(`[Sistem Analisis]: Google AI Rate Limit tercapai pada bab ${chap.title || idx}. Tunggu beberapa saat lalu coba lagi.`);
+                            
+                            throw new Error(`[Sistem Analisis]: Gagal memproses data bab ${chap.title || idx}. Status: ${fetchRes.status}. Detail: ${serverErrorMsg}`);
                           }
 
                           const resData = await fetchRes.json();
