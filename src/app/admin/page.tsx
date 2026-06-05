@@ -46,6 +46,11 @@ export default function AdminDashboard() {
 
   // Load persisted state on mount
   useEffect(() => {
+    const savedTab = localStorage.getItem('adminActiveTab');
+    if (savedTab) {
+      setActiveTab(savedTab as 'users' | 'limits' | 'methodology');
+    }
+
     get('academic_sync_state').then((val) => {
       if (val) {
         if (val.uploadFile) setUploadFile(val.uploadFile);
@@ -73,6 +78,11 @@ export default function AdminDashboard() {
       }).catch(console.error);
     }
   }, [uploadFile, bookPages, extractedToc, selectedChapters, currentBookId, completedChapters, scanPageLimit]);
+
+  // Persist active tab
+  useEffect(() => {
+    localStorage.setItem('adminActiveTab', activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     loadData();
