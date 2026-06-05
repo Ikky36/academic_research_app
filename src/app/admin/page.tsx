@@ -6,6 +6,7 @@ import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLi
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
+import { get, set, del } from 'idb-keyval';
 import styles from './page.module.css';
 
 export default function AdminDashboard() {
@@ -42,6 +43,36 @@ export default function AdminDashboard() {
   const [newEmail, setNewEmail] = useState('');
   const [newRole, setNewRole] = useState('free');
   const [isCreating, setIsCreating] = useState(false);
+
+  // Load persisted state on mount
+  useEffect(() => {
+    get('academic_sync_state').then((val) => {
+      if (val) {
+        if (val.uploadFile) setUploadFile(val.uploadFile);
+        if (val.bookPages) setBookPages(val.bookPages);
+        if (val.extractedToc) setExtractedToc(val.extractedToc);
+        if (val.selectedChapters) setSelectedChapters(val.selectedChapters);
+        if (val.currentBookId) setCurrentBookId(val.currentBookId);
+        if (val.completedChapters) setCompletedChapters(val.completedChapters);
+        if (val.scanPageLimit) setScanPageLimit(val.scanPageLimit);
+      }
+    }).catch(console.error);
+  }, []);
+
+  // Save state whenever it changes
+  useEffect(() => {
+    if (uploadFile || bookPages.length > 0 || extractedToc) {
+      set('academic_sync_state', {
+        uploadFile,
+        bookPages,
+        extractedToc,
+        selectedChapters,
+        currentBookId,
+        completedChapters,
+        scanPageLimit
+      }).catch(console.error);
+    }
+  }, [uploadFile, bookPages, extractedToc, selectedChapters, currentBookId, completedChapters, scanPageLimit]);
 
   useEffect(() => {
     loadData();
@@ -476,16 +507,45 @@ export default function AdminDashboard() {
                     )}
                   </div>
                 </div>
-                <input 
-                  type="file" 
-                  accept="application/pdf"
-                  className={styles.input} 
-                  onChange={e => {
-                    setUploadFile(e.target.files ? e.target.files[0] : null);
-                    setExtractedToc(null);
-                  }}
-                  disabled={!!driveFolderId || !isPdfJsLoaded}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input 
+                    type="file" 
+                    accept="application/pdf"
+                    className={styles.input} 
+                    onChange={e => {
+                      setUploadFile(e.target.files ? e.target.files[0] : null);
+                      setExtractedToc(null);
+                      setBookPages([]);
+                      setCurrentBookId(null);
+                      setCompletedChapters([]);
+                    }}
+                    disabled={!!driveFolderId || !isPdfJsLoaded || isSyncing}
+                    style={{ flex: 1 }}
+                  />
+                  {uploadFile && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setUploadFile(null);
+                        setExtractedToc(null);
+                        setBookPages([]);
+                        setCurrentBookId(null);
+                        setCompletedChapters([]);
+                        await del('academic_sync_state');
+                      }}
+                      style={{ padding: '10px 15px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                      title="Hapus file dan mulai dari awal"
+                    >
+                      Hapus File
+                    </button>
+                  )}
+                </div>
+                {uploadFile && (
+                  <p style={{ fontSize: '13px', color: '#10b981', marginTop: '8px' }}>
+                    File aktif: <strong>{uploadFile.name}</strong> 
+                    {bookPages.length > 0 ? ` (Tersimpan di sesi)` : ''}
+                  </p>
+                )}
                 <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <label style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>Batas Halaman Daftar Isi:</label>
                   <input 
@@ -661,6 +721,7 @@ export default function AdminDashboard() {
                         setBookPages([]);
                         setCurrentBookId(null);
                         setCompletedChapters([]);
+                        await del('academic_sync_state');
                         
                         setSuccess(`Berhasil! 1 buku diproses, ekstraksi dari ${selectedChapters.length} bab telah tersimpan.`);
                         setSyncProgress('');
