@@ -503,10 +503,27 @@ export default function AdminDashboard() {
 
               {extractedToc && (
                 <div style={{ background: '#1f2937', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-                  <h3 style={{ color: '#10b981', marginTop: 0 }}>Pilih Bab yang Akan Diekstrak</h3>
-                  <p style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '15px' }}>
-                    Sistem mendeteksi buku <strong>{extractedToc.title}</strong>. Silakan pilih bab-bab yang relevan dengan metode penelitian untuk diekstrak (hilangkan centang pada bab yang tidak perlu).
-                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <div>
+                      <h3 style={{ color: '#10b981', marginTop: 0, marginBottom: '5px' }}>Pilih Bab yang Akan Diekstrak</h3>
+                      <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>
+                        Sistem mendeteksi buku <strong>{extractedToc.title}</strong>. Silakan pilih bab-bab yang relevan dengan metode penelitian untuk diekstrak (hilangkan centang pada bab yang tidak perlu).
+                      </p>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setExtractedToc(null);
+                        setCurrentBookId(null);
+                        setCompletedChapters([]);
+                        setSuccess('');
+                        setError('');
+                      }}
+                      style={{ padding: '8px 12px', background: '#374151', color: 'white', border: '1px solid #4b5563', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+                    >
+                      ↻ Deteksi Ulang Daftar Isi
+                    </button>
+                  </div>
                   
                   <div style={{ maxHeight: '300px', overflowY: 'auto', background: '#111827', padding: '15px', borderRadius: '6px' }}>
                     {extractedToc.chapters && extractedToc.chapters.map((chap: any, idx: number) => (
@@ -660,29 +677,38 @@ export default function AdminDashboard() {
                         setCompletedChapters([]);
                         setSyncProgress(`Sedang membaca ${scanPageLimit} halaman pertama PDF untuk mengenali daftar isi...`);
                         
-                        const arrayBuffer = await uploadFile.arrayBuffer();
-                        // @ts-ignore
-                        const pdfjsLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
-                        if (!pdfjsLib) {
-                          throw new Error('Sistem pembaca PDF belum siap, silakan muat ulang halaman atau tunggu beberapa detik.');
-                        }
-                        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                        
-                        const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
-                        const pdf = await loadingTask.promise;
-                        
-                        const pages: string[] = [];
-                        const maxTocPages = Math.min(scanPageLimit, pdf.numPages);
+                        let maxTocPages = scanPageLimit;
                         let firstPagesText = '';
+                        const pages: string[] = bookPages.length > 0 ? [...bookPages] : [];
+                        let pdf: any = null;
 
-                        // Baca N halaman pertama dulu untuk TOC
-                        for (let i = 1; i <= maxTocPages; i++) {
-                          setSyncProgress(`Membaca halaman ${i} dari ${maxTocPages} (untuk Daftar Isi)...`);
-                          const page = await pdf.getPage(i);
-                          const textContent = await page.getTextContent();
-                          const pageText = textContent.items.map((item: any) => item.str).join(' ');
-                          firstPagesText += pageText + '\n\n';
-                          pages.push(pageText);
+                        if (bookPages.length > 0) {
+                          maxTocPages = Math.min(scanPageLimit, bookPages.length);
+                          firstPagesText = bookPages.slice(0, maxTocPages).join('\n\n');
+                          setSyncProgress(`Menggunakan data PDF yang sudah dimuat (${maxTocPages} halaman) untuk daftar isi...`);
+                        } else {
+                          const arrayBuffer = await uploadFile.arrayBuffer();
+                          // @ts-ignore
+                          const pdfjsLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
+                          if (!pdfjsLib) {
+                            throw new Error('Sistem pembaca PDF belum siap, silakan muat ulang halaman atau tunggu beberapa detik.');
+                          }
+                          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                          
+                          const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
+                          pdf = await loadingTask.promise;
+                          
+                          maxTocPages = Math.min(scanPageLimit, pdf.numPages);
+
+                          // Baca N halaman pertama dulu untuk TOC
+                          for (let i = 1; i <= maxTocPages; i++) {
+                            setSyncProgress(`Membaca halaman ${i} dari ${maxTocPages} (untuk Daftar Isi)...`);
+                            const page = await pdf.getPage(i);
+                            const textContent = await page.getTextContent();
+                            const pageText = textContent.items.map((item: any) => item.str).join(' ');
+                            firstPagesText += pageText + '\n\n';
+                            pages.push(pageText);
+                          }
                         }
                         
                         setSyncProgress('Menganalisis daftar isi menggunakan AI...');
@@ -718,15 +744,16 @@ export default function AdminDashboard() {
                         }
 
                         // Lanjutkan membaca sisa halaman PDF (halaman 21 sampai selesai) untuk disimpan di memori
-                        for (let i = maxTocPages + 1; i <= pdf.numPages; i++) {
-                          setSyncProgress(`Membaca sisa halaman PDF: ${i} dari ${pdf.numPages}...`);
-                          const page = await pdf.getPage(i);
-                          const textContent = await page.getTextContent();
-                          const pageText = textContent.items.map((item: any) => item.str).join(' ');
-                          pages.push(pageText);
+                        if (!bookPages.length && pdf) {
+                          for (let i = maxTocPages + 1; i <= pdf.numPages; i++) {
+                            setSyncProgress(`Membaca sisa halaman PDF: ${i} dari ${pdf.numPages}...`);
+                            const page = await pdf.getPage(i);
+                            const textContent = await page.getTextContent();
+                            const pageText = textContent.items.map((item: any) => item.str).join(' ');
+                            pages.push(pageText);
+                          }
+                          setBookPages(pages);
                         }
-
-                        setBookPages(pages);
                         setExtractedToc(tocData.data);
                         // Default pilih semua bab
                         setSelectedChapters(tocData.data.chapters.map((_: any, i: number) => i));
