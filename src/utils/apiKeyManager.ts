@@ -17,15 +17,19 @@ export function getGeminiApiKey(role: string, userApiKey?: string): { key: strin
 
   // 2. Jika user adalah Pro atau Admin, gunakan Paid Key
   if (role === 'pro' || role === 'admin') {
-    const paidKey = process.env.GEMINI_PAID_API_KEY;
-    if (paidKey) {
-      return {
-        key: paidKey,
-        modelName: 'gemini-2.5-flash'
-      };
+    const paidKeysEnv = process.env.GEMINI_PAID_API_KEYS;
+    if (paidKeysEnv) {
+      const paidKeys = paidKeysEnv.split(',').map(k => k.trim()).filter(Boolean);
+      if (paidKeys.length > 0) {
+        const randomPaidKey = paidKeys[Math.floor(Math.random() * paidKeys.length)];
+        return {
+          key: randomPaidKey,
+          modelName: 'gemini-2.5-flash'
+        };
+      }
     }
     // Jika tidak ada Paid Key, fallback ke Free Key (Log peringatan di server)
-    console.warn('GEMINI_PAID_API_KEY is not configured. Falling back to free tier keys.');
+    console.warn('GEMINI_PAID_API_KEYS is not configured. Falling back to free tier keys.');
   }
 
   // 3. Untuk user Free (atau fallback), gunakan Free Keys dengan rotasi
