@@ -18,20 +18,12 @@ export async function generateMetodologiAction(
     if (!user) throw new Error('User not authenticated');
 
     // 1. Setup Gemini AI
-    let apiKey = userApiKey;
-    let modelName = 'gemini-2.5-flash';
-
-    if (!apiKey) {
-      if (isPaidApi) {
-        apiKey = process.env.NEXT_PUBLIC_GEMINI_PAID_API_KEY || process.env.GEMINI_PAID_API_KEY;
-        if (!apiKey) throw new Error('System Paid API Key not configured');
-      } else {
-        apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-        modelName = 'gemini-2.5-flash-lite'; // Use Lite for free tier fallback
-      }
-    }
-
-    if (!apiKey) throw new Error('API Key is missing');
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    const role = profile?.role || 'free';
+    
+    // We import dynamically to avoid issues if the file is imported in an edge environment, though it's server action
+    const { getGeminiApiKey } = await import('@/utils/apiKeyManager');
+    const { key: apiKey, modelName } = getGeminiApiKey(role, userApiKey);
     
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: modelName });

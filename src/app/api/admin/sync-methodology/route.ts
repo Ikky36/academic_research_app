@@ -62,8 +62,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No PDF files found in the specified folder' }, { status: 404 });
     }
 
-    const geminiKey = process.env.GEMINI_API_KEY;
-    if (!geminiKey) throw new Error('GEMINI_API_KEY is not configured');
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+    const role = profile?.role || 'free';
+    
+    // Admin only endpoint
+    if (role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const { key: geminiKey, modelName } = await import('@/utils/apiKeyManager').then(m => m.getGeminiApiKey(role));
     const genAI = new GoogleGenerativeAI(geminiKey);
     
     const responseSchema: Schema = {
@@ -90,7 +97,7 @@ export async function POST(req: NextRequest) {
 
     // Use Flash for high speed and large context window
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.5-flash', 
+      model: modelName, 
       generationConfig: { 
         responseMimeType: "application/json",
         responseSchema: responseSchema

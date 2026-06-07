@@ -28,10 +28,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const geminiKey = process.env.GEMINI_API_KEY;
-    if (!geminiKey) throw new Error('GEMINI_API_KEY is not configured');
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+    const role = profile?.role || 'free';
+
+    const { key: geminiKey, modelName } = await import('@/utils/apiKeyManager').then(m => m.getGeminiApiKey(role));
     const genAI = new GoogleGenerativeAI(geminiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', generationConfig: { responseMimeType: "application/json" } });
+    const model = genAI.getGenerativeModel({ model: modelName, generationConfig: { responseMimeType: "application/json" } });
 
     // Read the file into a buffer
     const arrayBuffer = await file.arrayBuffer();

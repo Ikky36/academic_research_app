@@ -20,21 +20,10 @@ function getEnvFallback(key: string): string | undefined {
 }
 
 export async function generateSotaChunk(referencesChunk: any[], startIndex: number, userApiKey?: string, isPaidApi?: boolean, attempt = 1): Promise<string> {
-  // Setup Gemini AI
-  const paidKey = getEnvFallback('GEMINI_PAID_API_KEY');
-  const freeKey = getEnvFallback('GEMINI_API_KEY');
-  console.log('--- DEBUG SOTA CHUNK ---');
-  console.log('isPaidApi:', isPaidApi);
-  console.log('paidKey exists:', !!paidKey);
-  console.log('freeKey exists:', !!freeKey);
-  console.log('userApiKey:', userApiKey);
-  
-  const apiKey = userApiKey || (isPaidApi ? paidKey : freeKey);
-  if (!apiKey) {
-    throw new Error('Gemini API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
-  }
+  const { getGeminiApiKey } = await import('@/utils/apiKeyManager');
+  const role = isPaidApi ? 'pro' : 'free'; // Simulate role based on flag since we are deep in service layer
+  const { key: apiKey, modelName } = getGeminiApiKey(role, userApiKey);
 
-  const modelName = isPaidApi ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: modelName });
 
@@ -129,15 +118,13 @@ async function fetchWithRetry(model: any, prompt: string, attempt = 1): Promise<
 }
 
 export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic: string, userApiKey?: string, gapType?: string, educationLevel: string = 'Sarjana', isPaidApi?: boolean): Promise<string> {
-  const paidKey = getEnvFallback('GEMINI_PAID_API_KEY');
-  const gapKey = getEnvFallback('GEMINI_GAP_API_KEY');
-  const freeKey = getEnvFallback('GEMINI_API_KEY');
-  const apiKey = userApiKey || (isPaidApi ? paidKey : (gapKey || freeKey));
-  if (!apiKey) {
-    throw new Error('Gemini API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
-  }
-
-  const modelName = isPaidApi ? 'gemini-2.5-flash-lite' : 'gemini-2.0-flash';
+  const { getGeminiApiKey } = await import('@/utils/apiKeyManager');
+  const role = isPaidApi ? 'pro' : 'free';
+  const { key: apiKey, modelName: defaultModelName } = getGeminiApiKey(role, userApiKey);
+  
+  // Use gemini-2.0-flash specifically for Gap generation if free tier, otherwise use whatever the manager returns
+  const modelName = isPaidApi ? defaultModelName : 'gemini-2.0-flash';
+  
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: modelName });
 
@@ -251,14 +238,11 @@ ATURAN SANGAT PENTING:
 
 
 export async function generateLiteratureReview(sotaMarkdown: string, topic: string, gapText: string, paragraphs: number, citationStyle: string, rawMetadata: string, userApiKey?: string, isPaidApi?: boolean) {
-  const paidKey = getEnvFallback('GEMINI_PAID_API_KEY');
-  const freeKey = getEnvFallback('GEMINI_API_KEY');
-  const apiKey = userApiKey || (isPaidApi ? paidKey : freeKey);
-  if (!apiKey) {
-    throw new Error('Gemini API Key is missing.');
-  }
+  const { getGeminiApiKey } = await import('@/utils/apiKeyManager');
+  const role = isPaidApi ? 'pro' : 'free';
+  const { key: apiKey, modelName: defaultModelName } = getGeminiApiKey(role, userApiKey);
 
-  const modelName = isPaidApi ? 'gemini-2.5-flash-lite' : 'gemini-2.0-flash';
+  const modelName = isPaidApi ? defaultModelName : 'gemini-2.0-flash';
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ model: modelName });
 

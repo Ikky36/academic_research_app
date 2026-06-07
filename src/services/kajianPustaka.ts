@@ -19,9 +19,6 @@ function getEnvFallback(key: string): string | undefined {
 }
 
 const groqKey = getEnvFallback('GROQ_API_KEY');
-const freeGeminiKey = getEnvFallback('GEMINI_API_KEY');
-const paidGeminiKey = getEnvFallback('GEMINI_PAID_API_KEY');
-
 const groq = groqKey ? new Groq({ apiKey: groqKey }) : null;
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -117,13 +114,12 @@ export async function generateOutline(
       throw new Error("Sistem mewajibkan penggunaan API Key pribadi (BYOK). Harap masukkan API Key Anda di menu Pengaturan.");
     }
     
-    const keyToUse = isPaidApi ? paidGeminiKey : freeGeminiKey;
-    if (!keyToUse) {
-      throw new Error("Gemini API Key is missing. Please check your environment variables.");
-    }
+    const { getGeminiApiKey } = await import('@/utils/apiKeyManager');
+    const role = isPaidApi ? 'pro' : 'free';
+    const { key: keyToUse, modelName } = getGeminiApiKey(role, userApiKey);
     
     const genAI = new GoogleGenerativeAI(keyToUse);
-    aiModel = genAI.getGenerativeModel({ model: isPaidApi ? "gemini-2.5-flash-lite" : "gemini-2.0-flash" });
+    aiModel = genAI.getGenerativeModel({ model: modelName });
   }
 
   let structureGuide = "";
@@ -208,14 +204,12 @@ export async function generateKajianPustakaChunk(
       throw new Error("Sistem mewajibkan penggunaan API Key pribadi (BYOK). Harap masukkan API Key Anda di menu Pengaturan.");
     }
     
-    const keyToUse = isPaidApi ? paidGeminiKey : freeGeminiKey;
-    if (!keyToUse) {
-      throw new Error("Gemini API Key is missing. Please check your environment variables.");
-    }
+    const { getGeminiApiKey } = await import('@/utils/apiKeyManager');
+    const role = isPaidApi ? 'pro' : 'free';
+    const { key: keyToUse, modelName } = getGeminiApiKey(role, userApiKey);
     
     const genAI = new GoogleGenerativeAI(keyToUse);
-    // Use stable models to avoid 503 high demand errors from 2.5-flash
-    aiModel = genAI.getGenerativeModel({ model: isPaidApi ? "gemini-2.5-flash-lite" : "gemini-2.0-flash" });
+    aiModel = genAI.getGenerativeModel({ model: modelName });
   }
 
   const prompt = `Anda adalah seorang Profesor dan Peneliti Akademik terkemuka. Tugas Anda adalah menulis bagian spesifik dari BAB II (Kajian Pustaka) berdasarkan parameter berikut:
@@ -281,10 +275,12 @@ export async function generateDaftarPustaka(
     if (globalSettings?.can_use_byok) {
       throw new Error('Sistem mewajibkan penggunaan API Key pribadi (BYOK).');
     }
-    const keyToUse = isPaidApi ? paidGeminiKey : freeGeminiKey;
-    if (!keyToUse) throw new Error('Gemini API Key is missing.');
+    const { getGeminiApiKey } = await import('@/utils/apiKeyManager');
+    const role = isPaidApi ? 'pro' : 'free';
+    const { key: keyToUse, modelName } = getGeminiApiKey(role, userApiKey);
+    
     const genAI = new GoogleGenerativeAI(keyToUse);
-    aiModel = genAI.getGenerativeModel({ model: isPaidApi ? 'gemini-2.5-flash-lite' : 'gemini-2.0-flash' });
+    aiModel = genAI.getGenerativeModel({ model: modelName });
   }
 
   // Map user friendly style to crossref style

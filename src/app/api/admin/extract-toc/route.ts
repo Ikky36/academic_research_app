@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { GoogleGenerativeAI, SchemaType, Schema } from '@google/generative-ai';
 import { sanitizeError, parseGeminiJSON } from '@/utils/error-handler';
+import { getGeminiApiKey } from '@/utils/apiKeyManager';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300; 
@@ -22,12 +23,12 @@ export async function POST(req: Request) {
     }
 
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
-    if (profile?.role !== 'admin') {
+    const role = profile?.role || 'free';
+    if (role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const geminiKey = process.env.GEMINI_API_KEY;
-    if (!geminiKey) throw new Error('GEMINI_API_KEY is not configured');
+    const { key: geminiKey, modelName } = getGeminiApiKey(role);
     const genAI = new GoogleGenerativeAI(geminiKey);
     
     const responseSchema: Schema = {
