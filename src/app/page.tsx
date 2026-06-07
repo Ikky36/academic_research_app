@@ -69,8 +69,8 @@ export default function Home() {
             </div>
             <div className={styles.largeContent}>
               <h3>Kecerdasan Buatan (AI) Terintegrasi</h3>
-              <p>Ditenagai oleh integrasi <strong>Google Gemini</strong> untuk penyusunan SOTA super cerdas dan <strong>Groq (Llama 3)</strong> untuk analisis Query yang secepat kilat. Sistem juga mendukung *Bring Your Own Key* (BYOK).</p>
-              <p className={styles.en}>Powered by Google Gemini for intelligent SOTA generation and Groq (Llama 3) for lightning-fast query analysis. BYOK supported.</p>
+              <p>Ditenagai oleh integrasi <strong>Google Gemini</strong> untuk penyusunan teks akademis super cerdas dan <strong>Groq (Llama 3)</strong> untuk analisis kueri yang secepat kilat. Sistem juga mendukung *Bring Your Own Key* (BYOK) multi-API untuk mem-bypass batasan kuota.</p>
+              <p className={styles.en}>Powered by Google Gemini for intelligent academic generation and Groq for lightning-fast query analysis. BYOK multi-API supported to bypass quota limits.</p>
             </div>
           </div>
 
@@ -78,45 +78,45 @@ export default function Home() {
             <div className={styles.iconWrapper}>
               <Search size={32} />
             </div>
-            <h3>Pencarian Terpadu</h3>
-            <p>Telusuri database raksasa dari <strong>Scopus</strong> dan <strong>Crossref</strong> secara bersamaan dalam satu pintu.</p>
-            <p className={styles.en}>Search through giant databases from Scopus and Crossref simultaneously.</p>
+            <h3>Pencarian Terpadu Terpusat</h3>
+            <p>Telusuri database jurnal raksasa dari <strong>Scopus</strong> dan <strong>Crossref</strong> secara bersamaan dalam satu pintu tanpa perlu berpindah-pindah tab.</p>
+            <p className={styles.en}>Search through giant journal databases from Scopus and Crossref simultaneously in one place.</p>
           </div>
 
           <div className={styles.bentoCard}>
             <div className={styles.iconWrapper}>
               <Table size={32} />
             </div>
-            <h3>SOTA Generator</h3>
-            <p>Ekstrak metode, hasil, dan kesimpulan menjadi matriks perbandingan tabel SOTA secara instan.</p>
-            <p className={styles.en}>Extract methods and results into a comparative SOTA table instantly.</p>
+            <h3>Tabel SOTA & Analisis</h3>
+            <p>Sistem secara otomatis mengekstrak metode, hasil, dan kesimpulan untuk membangun matriks perbandingan State-of-the-Art (SOTA) secara instan.</p>
+            <p className={styles.en}>Automatically extract methods and results to build comparative State-of-the-Art (SOTA) matrices instantly.</p>
           </div>
 
           <div className={styles.bentoCard}>
             <div className={styles.iconWrapper}>
-              <Download size={32} />
+              <Sparkles size={32} />
             </div>
-            <h3>Unduh PDF Otomatis</h3>
-            <p>Sistem akan mencari tautan PDF gratis (Open Access) dan menyimpannya langsung ke penyimpanan Anda.</p>
-            <p className={styles.en}>The system finds free Open Access PDF links and saves them directly.</p>
+            <h3>Research GAP & Novelty</h3>
+            <p>AI akan menganalisis jurnal-jurnal SOTA Anda dan merumuskan celah penelitian (Research GAP) serta kebaruan (Novelty) untuk penelitian Anda.</p>
+            <p className={styles.en}>AI analyzes your SOTA journals to formulate Research GAP and Novelty for your study.</p>
           </div>
 
           <div className={styles.bentoCard}>
             <div className={styles.iconWrapper}>
-              <ShieldCheck size={32} />
+              <FileText size={32} />
             </div>
-            <h3>Sistem Multi-Tier</h3>
-            <p>Manajemen pengguna dengan tingkatan akun (Free, Pro, Admin) yang fleksibel dengan pengaturan kuota aman.</p>
-            <p className={styles.en}>Flexible user management with account tiers and safe quota configuration.</p>
+            <h3>Draft Bab II & Bab III Otomatis</h3>
+            <p>Hasilkan paragraf <strong>Kajian Pustaka (Bab II)</strong>, <strong>Literature Review</strong>, hingga <strong>Metodologi (Bab III)</strong> dari PDF buku metodologi Anda secara terstruktur.</p>
+            <p className={styles.en}>Generate structured Literature Review (Chapter II) and Methodology (Chapter III) drafts from your methodology books.</p>
           </div>
           
           <div className={styles.bentoCard}>
             <div className={styles.iconWrapper}>
-              <Key size={32} />
+              <ShieldCheck size={32} />
             </div>
-            <h3>Rotasi API Otomatis</h3>
-            <p>Dukung kelancaran ekstrak PDF tebal dengan memasukkan banyak API Key, jika kuota habis, otomatis beralih.</p>
-            <p className={styles.en}>Support massive PDF extraction with automatic API key rotation to prevent quota limit.</p>
+            <h3>Sistem Multi-Tier & Admin</h3>
+            <p>Manajemen pengguna dengan tingkatan akun (Free, Pro, Admin), fitur manajemen kuota, dan sinkronisasi PDF eksternal via Google Drive untuk peladen.</p>
+            <p className={styles.en}>User management with account tiers, quota features, and external PDF sync via Google Drive for server processing.</p>
           </div>
 
         </div>
