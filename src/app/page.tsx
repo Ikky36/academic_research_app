@@ -13,8 +13,8 @@ export default function Home() {
         </div>
         <h1 className={styles.title}>Revolusi Riset Akademik Anda</h1>
         <p className={styles.subtitle}>
-          Asisten AI cerdas untuk menelusuri ribuan jurnal, mengekstrak intisari, dan membangun matriks State-of-the-Art (SOTA) secara otomatis dalam hitungan detik.
-          <span>Smart AI assistant to search thousands of journals, extract insights, and build State-of-the-Art (SOTA) matrices in seconds.</span>
+          Ubah cara Anda meneliti. Asisten AI cerdas untuk menemukan referensi, menganalisis literatur, dan menyusun kerangka penelitian Anda dengan kecepatan luar biasa.
+          <span>Transform the way you research. A smart AI assistant to find references, analyze literature, and draft your research with incredible speed.</span>
         </p>
         <div className={styles.ctaGroup}>
           <Link href="/login" className={styles.primaryButton}>
