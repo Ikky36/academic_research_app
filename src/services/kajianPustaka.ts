@@ -362,7 +362,7 @@ export async function generateDaftarPustaka(
   citationStyle: string,
   sota: string,
   booksData: string,
-  dois: string[],
+  rawReferences: any[],
   userApiKey?: string,
   isPaidApi?: boolean
 ): Promise<string> {
@@ -396,23 +396,30 @@ export async function generateDaftarPustaka(
   else if (citationStyle.toLowerCase().includes('harvard')) styleParam = 'harvard3';
   else if (citationStyle.toLowerCase().includes('chicago')) styleParam = 'chicago-author-date';
 
-  const uniqueDois = [...new Set(dois)];
-
   let fetchedCitations = '';
-  if (uniqueDois.length > 0) {
-    const fetchPromises = uniqueDois.map(async (doi) => {
-      try {
-        const res = await fetch(`https://doi.org/${doi}`, {
-          headers: { 'Accept': `text/x-bibliography; style=${styleParam}` }
-        });
-        if (res.ok) {
-          const citation = await res.text();
-          return citation.trim();
+  const validReferences = rawReferences.filter(r => r && typeof r === 'object');
+  
+  if (validReferences.length > 0) {
+    const fetchPromises = validReferences.map(async (ref) => {
+      let citation = '';
+      if (ref.doi) {
+        try {
+          const res = await fetch(`https://doi.org/${ref.doi}`, {
+            headers: { 'Accept': `text/x-bibliography; style=${styleParam}` }
+          });
+          if (res.ok) {
+            citation = await res.text();
+            citation = citation.trim();
+          }
+        } catch (e) {
+          // ignore error
         }
-      } catch (e) {
-        return '';
       }
-      return '';
+      
+      if (!citation) {
+         citation = `Judul: ${ref.title}\nPenulis: ${ref.authors || 'Tidak diketahui'}\nDOI: ${ref.doi || 'Tidak ada'}\nSumber: ${ref.source || 'Tidak diketahui'}`;
+      }
+      return citation;
     });
     
     const citations = await Promise.all(fetchPromises);

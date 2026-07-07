@@ -345,12 +345,10 @@ export async function generateDaftarPustakaAction(
     const supabase = await createClient();
     const { data: references } = await supabase
       .from('extracted_data')
-      .select('doi')
-      .eq('project_id', projectId)
-      .not('doi', 'is', null);
+      .select('id, title, authors, doi, source')
+      .eq('project_id', projectId);
       
-    const dois = (references || []).map(r => r.doi).filter(Boolean);
-    const data = await generateDaftarPustaka(citationStyle, sota, booksData, dois, userApiKey, isPaidApi);
+    const data = await generateDaftarPustaka(citationStyle, sota, booksData, references || [], userApiKey, isPaidApi);
     return { data };
   } catch (e: any) {
     return { error: e.message };
