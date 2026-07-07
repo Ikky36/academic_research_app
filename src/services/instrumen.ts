@@ -475,8 +475,8 @@ KEMBALIKAN OUTPUT HANYA DALAM BENTUK JSON ARRAY OBJECTS DENGAN STRUKTUR BERIKUT:
 
     let rawBlueprintText: string;
     if (provider === 'deepseek' && isPaidApi) {
-      console.log('[Instrumen] Using DeepSeek (think-max) for blueprint generation');
-      rawBlueprintText = await callDeepSeekWithRetry(prompt, 'Anda adalah Ahli Psikometri/Evaluasi Pendidikan yang merancang blueprint instrumen.', 'think-max', true);
+      console.log('[Instrumen] Using DeepSeek (think-medium) for blueprint generation');
+      rawBlueprintText = await callDeepSeekWithRetry(prompt, 'Anda adalah Ahli Psikometri/Evaluasi Pendidikan yang merancang blueprint instrumen.', 'think-medium', true);
     } else {
       const result = await jsonModel.generateContent(prompt);
       rawBlueprintText = result.response.text().trim();

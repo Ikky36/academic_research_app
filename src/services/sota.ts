@@ -174,8 +174,8 @@ Berikan hanya teks evaluasi Anda dalam format Markdown yang rapi (paragraf/list)
     try {
       let evalRes: string;
       if (provider === 'deepseek' && isPaidApi) {
-        console.log('[GAP] Using DeepSeek (think-max) for evaluation');
-        evalRes = await callDeepSeekWithRetry(evalPrompt, 'Anda adalah pakar penelitian akademik.', 'think-max');
+        console.log('[GAP] Using DeepSeek (think-medium) for evaluation');
+        evalRes = await callDeepSeekWithRetry(evalPrompt, 'Anda adalah pakar penelitian akademik.', 'think-medium');
       } else {
         evalRes = await fetchWithRetry(geminiModel, evalPrompt);
       }
@@ -220,8 +220,8 @@ ATURAN SANGAT PENTING:
       try {
         let text: string;
         if (provider === 'deepseek' && isPaidApi) {
-          console.log('[GAP] Using DeepSeek (think-max) for gap generation');
-          text = await callDeepSeekWithRetry(prompt, 'Anda adalah pakar penelitian akademik yang ahli menemukan Research Gap dan Novelty.', 'think-max');
+          console.log('[GAP] Using DeepSeek (think-medium) for gap generation');
+          text = await callDeepSeekWithRetry(prompt, 'Anda adalah pakar penelitian akademik yang ahli menemukan Research Gap dan Novelty.', 'think-medium');
         } else {
           text = await fetchWithRetry(geminiModel, prompt);
         }

@@ -1187,7 +1187,6 @@ export default function AdminDashboard() {
                     Model reasoning tingkat tinggi. Menggunakan <strong>Chain-of-Thought</strong> adaptif untuk fitur analitik akademis yang kompleks.
                   </p>
                   <div style={{ marginTop: '12px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    <span style={{ background: 'rgba(249,115,22,0.15)', color: '#f97316', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>Think Max</span>
                     <span style={{ background: 'rgba(249,115,22,0.15)', color: '#f97316', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>Think Medium</span>
                     <span style={{ background: 'rgba(249,115,22,0.15)', color: '#f97316', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>1M Context</span>
                   </div>
@@ -1207,8 +1206,8 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody>
                       {[
-                        { fitur: 'Research GAP & Novelty', mode: 'Think Max 🔴', color: '#ef4444' },
-                        { fitur: 'Konfigurasi Blueprint (Aspek → Indikator)', mode: 'Think Max 🔴', color: '#ef4444' },
+                        { fitur: 'Research GAP & Novelty', mode: 'Think Medium 🟡', color: '#eab308' },
+                        { fitur: 'Konfigurasi Blueprint (Aspek → Indikator)', mode: 'Think Medium 🟡', color: '#eab308' },
                         { fitur: 'Kajian Pustaka (penulisan narasi)', mode: 'Think Medium 🟡', color: '#eab308' },
                         { fitur: 'Sintesis Konsep Variabel Laten', mode: 'Think Medium 🟡', color: '#eab308' },
                         { fitur: 'Pembuatan Aitem Skala', mode: 'Think Medium 🟡', color: '#eab308' },
