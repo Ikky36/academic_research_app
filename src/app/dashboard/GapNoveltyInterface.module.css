@@ -67,23 +67,23 @@
 
 .markdownWrapper {
   font-family: 'Inter', system-ui, sans-serif;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--on-surface);
   line-height: 1.7;
   font-size: 1.05rem;
 }
 
 .markdownWrapper h1 {
   font-size: 2.2rem;
-  color: #fff;
+  color: var(--on-surface);
   margin-top: 1rem;
   margin-bottom: 1.5rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid rgba(99, 102, 241, 0.3);
+  border-bottom: 2px solid var(--border);
 }
 
 .markdownWrapper h2 {
   font-size: 1.6rem;
-  color: #a855f7;
+  color: var(--primary);
   margin-top: 2.5rem;
   margin-bottom: 1rem;
   font-weight: 700;
@@ -111,11 +111,11 @@
 }
 
 .markdownWrapper li strong {
-  color: #fff;
+  color: var(--on-surface);
 }
 
 .markdownWrapper strong {
-  color: #fff;
+  color: var(--on-surface);
   font-weight: 600;
 }
 
@@ -136,13 +136,13 @@
 }
 
 .markdownWrapper th {
-  background: rgba(99, 102, 241, 0.1);
-  color: #fff;
+  background: var(--surface-container);
+  color: var(--on-surface);
   font-weight: 600;
 }
 
 .markdownWrapper tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--surface-variant);
 }
 
 .referenceList {
@@ -260,29 +260,29 @@
   opacity: 1;
   transform: scale(1.1);
 }
-.topicInput { width: 100%; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(255, 255, 255, 0.05); color: var(--foreground); font-size: 1rem; margin-bottom: 1rem; } .topicInput:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
+.topicInput { width: 100%; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--on-surface); font-size: 1rem; margin-bottom: 1rem; } .topicInput:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
 
 .topicInput {
   width: 100%;
   padding: 1rem;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--foreground);
+  background: var(--surface);
+  color: var(--on-surface);
   font-size: 1rem;
   margin-bottom: 1rem;
 }
 .topicInput:focus {
   outline: none;
-  border-color: #6366f1;
+  border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
 
-.modernH2 { display: flex; align-items: center; gap: 0.8rem; background: rgba(99, 102, 241, 0.1); padding: 1rem 1.5rem; border-left: 4px solid #818cf8; border-radius: 0 8px 8px 0; margin-top: 3rem; margin-bottom: 1.5rem; font-size: 1.5rem !important; color: #fff !important; }
-.modernH3 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem !important; color: #a855f7 !important; margin-top: 2rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px dashed rgba(168, 85, 247, 0.3); }
+.modernH2 { display: flex; align-items: center; gap: 0.8rem; background: var(--surface-container); padding: 1rem 1.5rem; border-left: 4px solid var(--primary); border-radius: 0 8px 8px 0; margin-top: 3rem; margin-bottom: 1.5rem; font-size: 1.5rem !important; color: var(--on-surface) !important; }
+.modernH3 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem !important; color: var(--primary) !important; margin-top: 2rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px dashed var(--border); }
 .badge { display: inline-block; padding: 0.2rem 0.8rem; border-radius: 9999px; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 0.5rem; }
 .badgeS1 { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
 .badgeS2 { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
 .badgeS3 { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-.modernStrong { color: #f8fafc; font-weight: 600; }
-.gapBlockquote { border-left: 4px solid #6366f1; background: rgba(99, 102, 241, 0.05); padding: 1rem 1.5rem; border-radius: 0 8px 8px 0; margin: 1.5rem 0; font-style: italic; color: rgba(255, 255, 255, 0.9); }
+.modernStrong { color: var(--on-surface); font-weight: 600; }
+.gapBlockquote { border-left: 4px solid var(--primary); background: var(--surface-container); padding: 1rem 1.5rem; border-radius: 0 8px 8px 0; margin: 1.5rem 0; font-style: italic; color: var(--on-surface-variant); }

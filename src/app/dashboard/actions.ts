@@ -11,6 +11,17 @@ import { searchOpenAlex } from '@/services/openalex'
 import { searchSemanticScholar } from '@/services/semantic-scholar'
 import { generateOutline, generateKajianPustakaChunk, generateDaftarPustaka } from '@/services/kajianPustaka'
 import { generateMetodologiAction as serviceGenerateMetodologiAction, generateMethodologyQuestions, continueMethodologyChat, ChatMessage } from '@/services/metodologi'
+import { logErrorToAdmin } from '@/utils/logger'
+
+export async function logClientErrorAction(feature: string, errorMessage: string) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    await logErrorToAdmin(feature, errorMessage, user?.id);
+  } catch (e) {
+    console.error('Failed to log client error:', e);
+  }
+}
 
 export async function generateMetodologiAction(
   projectId: string,
@@ -228,6 +239,21 @@ export async function deleteReferenceAction(referenceId: string) {
   }
 }
 
+export async function deleteReferencesBulkAction(referenceIds: string[]) {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('extracted_data')
+      .delete()
+      .in('id', referenceIds);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
 export async function generateLiteratureReviewAction(
   projectId: string,
   sotaMarkdown: string,
@@ -279,8 +305,8 @@ export async function generateKajianPustakaChunkAction(
   topic: string,
   sota: string,
   gap: string,
-  outline: string[],
-  subChapterTitle: string,
+  outline: any[],
+  subChapter: any,
   subChapterIndex: number,
   booksData: string,
   userApiKey?: string,
@@ -295,7 +321,7 @@ export async function generateKajianPustakaChunkAction(
       sota,
       gap,
       outline,
-      subChapterTitle,
+      subChapter,
       subChapterIndex,
       booksData,
       userApiKey,
@@ -325,6 +351,86 @@ export async function generateDaftarPustakaAction(
       
     const dois = (references || []).map(r => r.doi).filter(Boolean);
     const data = await generateDaftarPustaka(citationStyle, sota, booksData, dois, userApiKey, isPaidApi);
+    return { data };
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
+export async function getAdditionalReferencesAction(projectId: string) {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('additional_references')
+      .select('*, additional_reference_chunks(count)')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return { data };
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
+export async function getAdditionalReferenceChunksAction(referenceId: string) {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('additional_reference_chunks')
+      .select('*')
+      .eq('reference_id', referenceId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return { data };
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
+export async function deleteAdditionalReferenceAction(referenceId: string) {
+  try {
+    const supabase = await createClient();
+    
+    // First verify ownership
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Unauthorized');
+
+    const { data: ref } = await supabase
+      .from('additional_references')
+      .select('project_id, projects!inner(user_id)')
+      .eq('id', referenceId)
+      .single();
+
+    // @ts-ignore
+    if (!ref || ref.projects?.user_id !== session.user.id) {
+      throw new Error('Forbidden');
+    }
+
+    const { error } = await supabase
+      .from('additional_references')
+      .delete()
+      .eq('id', referenceId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
+export async function getAllAdditionalReferenceChunksAction(projectId: string) {
+  try {
+    const supabase = await createClient();
+    
+    // Join with additional_references to filter by projectId
+    const { data, error } = await supabase
+      .from('additional_reference_chunks')
+      .select('*, additional_references!inner(*)')
+      .eq('additional_references.project_id', projectId);
+
+    if (error) throw error;
     return { data };
   } catch (e: any) {
     return { error: e.message };

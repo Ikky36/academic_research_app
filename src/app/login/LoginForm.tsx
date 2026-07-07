@@ -19,6 +19,7 @@ export default function LoginForm({ message }: { message?: string }) {
           id="email"
           name="email"
           type="email"
+          autoComplete="username"
           placeholder="scholar@university.edu"
           required
         />
@@ -34,6 +35,7 @@ export default function LoginForm({ message }: { message?: string }) {
             id="password"
             name="password"
             type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
             placeholder="••••••••"
             required
           />

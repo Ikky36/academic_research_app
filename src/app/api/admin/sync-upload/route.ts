@@ -35,9 +35,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { key: geminiKey, modelName } = await import('@/utils/apiKeyManager').then(m => m.getGeminiApiKey(role));
-    const genAI = new GoogleGenerativeAI(geminiKey);
-    const model = genAI.getGenerativeModel({ model: modelName, generationConfig: { responseMimeType: "application/json" } });
+    // API Key manager and model initialization moved to the retry loop below
 
     // Read the file into a buffer
     const arrayBuffer = await file.arrayBuffer();
@@ -78,9 +76,33 @@ Keluarkan respons dalam format JSON dengan struktur yang tepat seperti berikut H
 }
 `;
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    const parsedData = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, ''));
+    let parsedData: any;
+    let lastError: any;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        const { key: geminiKey, modelName } = await import('@/utils/apiKeyManager').then(m => m.getGeminiApiKey(role));
+        const genAI = new GoogleGenerativeAI(geminiKey);
+        const model = genAI.getGenerativeModel({ model: modelName, generationConfig: { responseMimeType: "application/json" } });
+
+        const result = await model.generateContent(prompt);
+        const responseText = result.response.text();
+        parsedData = JSON.parse(responseText.replace(/```json/g, '').replace(/```/g, ''));
+        break; // Successfully parsed, break out of retry loop
+      } catch (err: any) {
+        lastError = err;
+        const errMsg = err.message || String(err);
+        if (errMsg.includes('429') || errMsg.includes('Quota') || errMsg.includes('Resource Exhausted') || err.status === 429) {
+          console.warn(`Sync Upload Rate Limit on attempt ${attempt + 1}. Retrying...`);
+          await new Promise(r => setTimeout(r, 2000 * (attempt + 1))); // Exponential backoff
+          continue;
+        }
+        throw err; // Throw immediately if not a rate limit error
+      }
+    }
+    
+    if (!parsedData) {
+      throw lastError || new Error("Failed to extract methodology data after retries");
+    }
 
     // Save Book Metadata to Supabase
     // Since it's a direct upload, we don't have a drive_file_id

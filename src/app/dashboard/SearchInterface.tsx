@@ -82,10 +82,11 @@ const ExpandableAbstract = ({ text, terms }: { text: string, terms: string[] }) 
   );
 };
 
-const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uploadedDois, failedDois, handleSave, handleUploadDrive, onUpdate, handleDelete }: any) => {
+const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uploadedDois, failedDois, handleSave, handleUploadDrive, onUpdate, handleDelete, isSelected, onToggleSelect }: any) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editAuthors, setEditAuthors] = useState(res.authors || '');
   const [editAbstract, setEditAbstract] = useState(res.abstract || '');
+  const [expanded, setExpanded] = useState(false);
 
   const handleSaveEdit = () => {
     onUpdate({
@@ -99,9 +100,17 @@ const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uplo
   return (
     <div className={styles.resultCard}>
       <div className={styles.cardHeader}>
-        <h3 className={styles.paperTitle}>
-          <HighlightText text={res.title} terms={highlightTerms} />
-        </h3>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+          <input 
+            type="checkbox" 
+            checked={isSelected}
+            onChange={() => onToggleSelect(index)}
+            style={{ marginTop: '5px', transform: 'scale(1.2)', cursor: 'pointer' }}
+          />
+          <h3 className={styles.paperTitle} style={{ margin: 0 }}>
+            <HighlightText text={res.title} terms={highlightTerms} />
+          </h3>
+        </div>
         <span className={styles.yearBadge}>{res.year || 'N/A'}</span>
       </div>
       
@@ -112,7 +121,7 @@ const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uplo
             type="text" 
             value={editAuthors} 
             onChange={(e) => setEditAuthors(e.target.value)}
-            style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #4B5563', background: '#1F2937', color: 'white', marginBottom: '10px' }}
+            style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--on-surface)', marginBottom: '10px' }}
           />
           
           <label style={{ display: 'block', fontSize: '12px', color: '#9CA3AF', marginBottom: '4px' }}>Abstrak:</label>
@@ -120,27 +129,43 @@ const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uplo
             value={editAbstract} 
             onChange={(e) => setEditAbstract(e.target.value)}
             rows={5}
-            style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid #4B5563', background: '#1F2937', color: 'white' }}
+            style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--on-surface)' }}
           />
           
           <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
             <button onClick={handleSaveEdit} style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>Simpan Editan</button>
-            <button onClick={() => setIsEditing(false)} style={{ background: '#4B5563', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>Batal</button>
+            <button onClick={() => setIsEditing(false)} style={{ background: 'var(--surface-variant)', color: 'var(--on-surface)', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>Batal</button>
           </div>
         </div>
       ) : (
         <>
           <p className={styles.authors}>
             {res.authors}
-            <button onClick={() => { setIsEditing(true); setEditAuthors(res.authors); setEditAbstract(res.abstract); }} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', marginLeft: '8px', fontSize: '12px' }}>✏️ Edit Info</button>
+            <button onClick={() => { setIsEditing(true); setEditAuthors(res.authors); setEditAbstract(res.abstract); }} style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', marginLeft: '8px', fontSize: '12px' }}>Edit Info</button>
           </p>
-          {res.doi && <p className={styles.doi}>DOI: <a href={`https://doi.org/${res.doi}`} target="_blank" rel="noreferrer">{res.doi}</a></p>}
-          
           <div className={styles.abstract}>
-            <ExpandableAbstract 
-              text={res.abstract} 
-              terms={highlightTerms} 
-            />
+            <span style={{ fontStyle: (!res.abstract || res.abstract === 'Abstrak tidak tersedia di metadata.') ? 'italic' : 'normal', color: (!res.abstract || res.abstract === 'Abstrak tidak tersedia di metadata.') ? '#9ca3af' : 'inherit' }}>
+              <HighlightText 
+                text={!res.abstract || res.abstract === 'Abstrak tidak tersedia di metadata.' ? (res.abstract || 'Abstrak tidak tersedia di metadata.') : (expanded || res.abstract.length <= 250 ? res.abstract : res.abstract.substring(0, 250) + '...')} 
+                terms={highlightTerms} 
+              />
+            </span>
+            {res.abstract && res.abstract !== 'Abstrak tidak tersedia di metadata.' && res.abstract.length > 250 && (
+              <div style={{ marginTop: '4px' }}>
+                <button 
+                  type="button"
+                  onClick={() => setExpanded(!expanded)} 
+                  style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', padding: '0', fontSize: '0.9em', fontWeight: 'bold', textDecoration: 'underline' }}
+                >
+                  {expanded ? 'Lebih sedikit' : 'Selengkapnya'}
+                </button>
+              </div>
+            )}
+          </div>
+          <div style={{ marginTop: '8px', paddingBottom: '8px', borderBottom: '1px dashed var(--border)' }}>
+            <p className={styles.doi} style={{ margin: 0 }}>
+              DOI: {res.doi ? <a href={`https://doi.org/${res.doi}`} target="_blank" rel="noreferrer">{res.doi}</a> : <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Tidak tersedia di metadata sumber</span>}
+            </p>
           </div>
         </>
       )}
@@ -151,7 +176,7 @@ const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uplo
           disabled={savedDois.has(res.doi) || !res.doi}
           className={savedDois.has(res.doi) ? styles.savedButton : styles.saveButton}
         >
-          {savedDois.has(res.doi) ? 'Tersimpan ✓' : 'Simpan ke Proyek'}
+          {savedDois.has(res.doi) ? 'Tersimpan' : 'Simpan ke Proyek'}
         </button>
         
         { (res.pdfLink || res.doi) && (
@@ -164,9 +189,9 @@ const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uplo
               styles.driveButton
             }
           >
-            {failedDois.has(res.doi) ? 'Gagal Unduh ❌' :
+            {failedDois.has(res.doi) ? 'Gagal Unduh' :
              uploadingDois.has(res.doi) ? 'Mencari & Mengunggah...' : 
-             (uploadedDois.has(res.doi) ? 'Tersimpan di Drive ✓' : '📥 Cari & Simpan PDF ke Drive')
+             (uploadedDois.has(res.doi) ? 'Tersimpan di Drive' : 'Cari & Simpan PDF ke Drive')
             }
           </button>
         )}
@@ -179,12 +204,12 @@ const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uplo
 
         <button 
           onClick={() => handleDelete(index)}
-          style={{ background: 'none', border: '1px solid #ef4444', color: '#ef4444', cursor: 'pointer', marginLeft: 'auto', fontWeight: 'bold', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}
+          style={{ background: 'none', border: '1px solid #ef4444', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}
           title="Hapus baris ini dari hasil pencarian"
           onMouseEnter={(e) => { e.currentTarget.style.background = '#ef4444'; e.currentTarget.style.color = 'white'; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#ef4444'; }}
         >
-          ❌ Hapus Baris
+          Hapus Baris
         </button>
       </div>
     </div>
@@ -241,6 +266,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
   const [isBulkUploading, setIsBulkUploading] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ total: 0, done: 0, success: 0, fail: 0 });
   const [isBulkSaving, setIsBulkSaving] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
 
   const handleGenerateAI = async () => {
     if (!topic && !problem) {
@@ -257,20 +283,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
       } else if (res.query) {
         setBooleanQuery(res.query);
         
-        // Save to local storage history
-        try {
-          const history = JSON.parse(localStorage.getItem('search_history') || '[]');
-          history.unshift({
-            topic,
-            problem,
-            query: res.query,
-            timestamp: new Date().toISOString()
-          });
-          // Keep only last 50
-          localStorage.setItem('search_history', JSON.stringify(history.slice(0, 50)));
-        } catch (err) {
-          console.error('Gagal menyimpan riwayat', err);
-        }
+        // Riwayat pencarian telah dihapus sesuai permintaan user
       }
     } catch (e: any) {
       setError(e.message || 'Terjadi kesalahan saat menghubungi AI.');
@@ -290,6 +303,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
     setUploadedDois(new Set());
     setFailedDois(new Set());
     setBulkProgress({ total: 0, done: 0, success: 0, fail: 0 });
+    setSelectedRows(new Set());
     
     try {
       const res: any = await searchPapers(booleanQuery, source, currentLimit, currentPage);
@@ -417,6 +431,32 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
     }
   };
 
+  const handleToggleSelect = (index: number) => {
+    setSelectedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) newSet.delete(index);
+      else newSet.add(index);
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedRows(new Set(results.map((_, i) => i)));
+    } else {
+      setSelectedRows(new Set());
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedRows.size === 0) return;
+    if (!confirm(`Hapus ${selectedRows.size} baris yang dipilih?`)) return;
+    
+    const newResults = results.filter((_, i) => !selectedRows.has(i));
+    setResults(newResults);
+    setSelectedRows(new Set());
+  };
+
   const totalPages = Math.ceil(totalResults / limit);
 
   const handleCopyQuery = () => {
@@ -459,7 +499,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
             disabled={generatingAI || (!topic && !problem)} 
             className={styles.aiButton}
           >
-            {generatingAI ? '✨ Meracik Query...' : '✨ Generate Query dengan AI'}
+            {generatingAI ? 'Meracik Query...' : 'Generate Query dengan AI'}
           </button>
         </div>
 
@@ -480,7 +520,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
                 onClick={handleCopyQuery}
                 title="Salin ke Clipboard"
               >
-                📋 Salin
+                Salin
               </button>
             )}
           </div>
@@ -532,6 +572,26 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
                   {(!limits || limits.max_search_results >= 100) && <option value={100}>100</option>}
                 </select>
               </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '16px', paddingLeft: '16px', borderLeft: '1px solid var(--border)' }}>
+                <input 
+                  type="checkbox" 
+                  checked={results.length > 0 && selectedRows.size === results.length}
+                  onChange={handleSelectAll}
+                  id="selectAll"
+                  style={{ transform: 'scale(1.2)', cursor: 'pointer' }}
+                />
+                <label htmlFor="selectAll" style={{ cursor: 'pointer', fontSize: '13px' }}>Pilih Semua</label>
+                
+                {selectedRows.size > 0 && (
+                  <button 
+                    onClick={handleBulkDelete}
+                    style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', marginLeft: '8px' }}
+                  >
+                    Hapus ({selectedRows.size})
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className={styles.headerRight}>
@@ -540,12 +600,12 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
                 disabled={isBulkSaving || results.length === 0}
                 className={styles.bulkSaveButton}
               >
-                {isBulkSaving ? 'Menyimpan...' : '💾 Simpan Semua Referensi ke Proyek'}
+                {isBulkSaving ? 'Menyimpan...' : 'Simpan Semua Referensi ke Proyek'}
               </button>
 
               {isBulkUploading ? (
                 <div className={styles.bulkProgressText}>
-                  Memproses {bulkProgress.done}/{bulkProgress.total}... (✅ {bulkProgress.success} | ❌ {bulkProgress.fail})
+                  Memproses {bulkProgress.done}/{bulkProgress.total}... (Berhasil {bulkProgress.success} | Gagal {bulkProgress.fail})
                 </div>
               ) : (
                 results.some(r => r.doi || r.pdfLink) && (
@@ -554,7 +614,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
                     className={styles.bulkUploadButton}
                     style={{ opacity: limits?.can_bulk_download_gdrive ? 1 : 0.6 }}
                   >
-                    📥 Simpan Semua PDF {limits && !limits.can_bulk_download_gdrive && ' (PRO)'}
+                    Simpan Semua PDF {limits && !limits.can_bulk_download_gdrive && ' (PRO)'}
                   </button>
                 )
               )}
@@ -574,6 +634,8 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
             failedDois={failedDois}
             handleSave={handleSave}
             handleUploadDrive={handleUploadDrive}
+            isSelected={selectedRows.has(i)}
+            onToggleSelect={handleToggleSelect}
             onUpdate={(updatedRes: any) => {
               const newResults = [...results];
               newResults[i] = updatedRes;

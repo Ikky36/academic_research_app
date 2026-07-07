@@ -123,8 +123,9 @@ export async function updateTierLimitAction(role: string, limits: any) {
         max_projects: parseInt(limits.max_projects),
         max_search_results: parseInt(limits.max_search_results),
         max_sota_rows: parseInt(limits.max_sota_rows),
-        can_bulk_download_gdrive: limits.can_bulk_download_gdrive === 'true' || limits.can_bulk_download_gdrive === true,
-        can_use_paid_api: limits.can_use_paid_api === 'true' || limits.can_use_paid_api === true
+        max_kajian_tambahan: parseInt(limits.max_kajian_tambahan || 5),
+        max_instrumen_referensi: parseInt(limits.max_instrumen_referensi || 2),
+        can_bulk_download_gdrive: limits.can_bulk_download_gdrive === 'true' || limits.can_bulk_download_gdrive === true
       })
       .eq('role', role);
 
@@ -135,6 +136,7 @@ export async function updateTierLimitAction(role: string, limits: any) {
     return { error: err.message };
   }
 }
+
 
 export async function createAccountAction(email: string, role: string) {
   try {
@@ -265,4 +267,92 @@ export async function deleteSyncedBookAction(bookId: string) {
 
   if (error) return { error: error.message };
   return { success: true };
+}
+
+export async function getErrorLogsAction() {
+  try {
+    const supabase = await requireAdmin();
+    const { data, error } = await supabase
+      .from('error_logs')
+      .select(`
+        id,
+        user_id,
+        feature,
+        error_message,
+        created_at
+      `)
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error) return { error: error.message };
+
+    // Fetch emails from auth.users
+    const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    let mergedData = data || [];
+    if (!authError && authUsers?.users) {
+      mergedData = mergedData.map(log => {
+        const authUser = authUsers.users.find((u: any) => u.id === log.user_id);
+        return {
+          ...log,
+          profiles: { email: authUser?.email || 'Unknown User' }
+        };
+      });
+    }
+
+    return { data: mergedData };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}
+
+export async function deleteErrorLogAction(logId: string) {
+  try {
+    const supabase = await requireAdmin();
+    const { error } = await supabase
+      .from('error_logs')
+      .delete()
+      .eq('id', logId);
+
+    if (error) return { error: error.message };
+    revalidatePath('/admin');
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}
+
+export async function getAiProviderAction(): Promise<{ data?: string; error?: string }> {
+  try {
+    const supabase = await requireAdmin();
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'ai_provider')
+      .single();
+
+    if (error) {
+      // Jika tabel belum ada, kembalikan default
+      return { data: 'gemini' };
+    }
+    return { data: data?.value || 'gemini' };
+  } catch (err: any) {
+    return { data: 'gemini' };
+  }
+}
+
+export async function setAiProviderAction(provider: 'gemini' | 'deepseek'): Promise<{ success?: boolean; error?: string }> {
+  try {
+    const supabase = await requireAdmin();
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert({ key: 'ai_provider', value: provider, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+
+    if (error) return { error: error.message };
+    revalidatePath('/admin');
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message };
+  }
 }

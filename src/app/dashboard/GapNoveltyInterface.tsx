@@ -191,7 +191,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2>💡 Analisis Research GAP & Novelty</h2>
+        <h2>Analisis Research GAP & Novelty</h2>
         <p>Temukan celah penelitian dari literatur yang ada dan validasi kebaruan topik Anda.</p>
         
         <textarea 
@@ -203,11 +203,11 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
         />
 
         <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#9CA3AF' }}>Tingkat Pendidikan:</label>
+          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: 'var(--on-surface-variant)' }}>Tingkat Pendidikan:</label>
           <select 
             value={educationLevel}
             onChange={handleLevelChange}
-            style={{ padding: '10px', borderRadius: '8px', border: '1px solid #4B5563', background: '#1F2937', color: '#fff', width: '100%', fontSize: '15px' }}
+            style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--on-surface)', width: '100%', fontSize: '15px' }}
           >
             <option value="Sarjana">S1 (Sarjana)</option>
             <option value="Magister">S2 (Magister)</option>
@@ -221,7 +221,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
             onClick={() => handleGenerate(false)}
             disabled={isGenerating || !researchTopic.trim()}
           >
-            {isGenerating ? 'Menganalisis dengan AI... ⏳' : '✨ Analisis GAP & Novelty'}
+            {isGenerating ? 'Menganalisis dengan AI...' : 'Analisis GAP & Novelty'}
           </button>
 
           {gapMarkdown && gapMarkdown.includes('*Error') && !isGenerating && (
@@ -230,7 +230,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
               style={{ background: '#f59e0b' }}
               onClick={() => handleGenerate(true)}
             >
-              🔄 Ulangi yang Error
+              Ulangi yang Error
             </button>
           )}
           
@@ -240,7 +240,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
               style={{ background: '#ef4444' }}
               onClick={handleReset}
             >
-              🗑️ Reset
+              Reset
             </button>
           )}
         </div>
@@ -262,7 +262,6 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
               components={{
                 h2: ({node, ...props}) => (
                   <h2 {...props} className={styles.modernH2}>
-                    <span style={{ fontSize: '1.2em' }}>💡</span> 
                     <span>{props.children}</span>
                   </h2>
                 ),
@@ -329,9 +328,9 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
                         <button 
                           onClick={() => handleSelectGap(gapText)}
                           style={{
-                            background: isSelected ? '#10b981' : '#374151',
-                            color: 'white',
-                            border: 'none',
+                            background: isSelected ? 'var(--primary)' : 'var(--surface-container-high)',
+                            color: 'var(--on-surface)',
+                            border: '1px solid var(--border)',
                             padding: '8px 12px',
                             borderRadius: '6px',
                             cursor: 'pointer',
@@ -341,7 +340,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
                             boxShadow: isSelected ? '0 0 10px rgba(16, 185, 129, 0.3)' : 'none'
                           }}
                         >
-                          {isSelected ? '✅ Terpilih' : 'Pilih Ini'}
+                          {isSelected ? 'Terpilih' : 'Pilih Ini'}
                         </button>
                       </td>
                     </tr>

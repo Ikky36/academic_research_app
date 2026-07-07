@@ -1,0 +1,922 @@
+'use client'
+
+import React, { useState, useEffect, useRef } from 'react'
+import { createClient } from '@/utils/supabase/client'
+import styles from './InstrumenInterface.module.css'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import remarkBreaks from 'remark-breaks'
+import { generateInstrumentQuestionsAction, continueInstrumentChatAction, generateFinalInstrumentAction, generateBlueprintAction, generateLatentVariableDefinitionAction } from './instrumenActions'
+import { ChatMessage } from '@/services/instrumen'
+
+interface InstrumenInterfaceProps {
+  projectId: string;
+  isActive: boolean;
+  limits: any;
+  role: string;
+  isPaidApi?: boolean;
+}
+
+const INSTRUMENT_TYPES = [
+  'Wawancara', 'Kuesioner / Angket', 'Observasi', 'Dokumentasi', 'Tes', 'Tes Prestasi', 'Skala'
+];
+
+export default function InstrumenInterface({ projectId, isActive, limits, role, isPaidApi }: InstrumenInterfaceProps) {
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [activeInstrument, setActiveInstrument] = useState<string | null>(null);
+  
+  // Data from previous tabs
+  const [pendekatan, setPendekatan] = useState('');
+  const [variables, setVariables] = useState('');
+  const [gap, setGap] = useState('');
+
+  // Upload Reference
+  const [files, setFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);
+
+  // Chat State
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isChatting, setIsChatting] = useState(false);
+  const [isChatComplete, setIsChatComplete] = useState(false);
+  const [chatSummary, setChatSummary] = useState('');
+  const [isGeneratingFinal, setIsGeneratingFinal] = useState(false);
+  const [finalResult, setFinalResult] = useState('');
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  // Blueprint State
+  const [selectedDomains, setSelectedDomains] = useState<string[]>([]);
+  const [blueprintData, setBlueprintData] = useState<any[] | null>(null);
+  const [isGeneratingBlueprint, setIsGeneratingBlueprint] = useState(false);
+  const [blueprintCopySuccess, setBlueprintCopySuccess] = useState(false);
+  const [manualTopics, setManualTopics] = useState('');
+  const [subject, setSubject] = useState('');
+  const [subjectDescription, setSubjectDescription] = useState('');
+
+  // Skala Latent Variable State
+  const [skalaLatentVarName, setSkalaLatentVarName] = useState('');
+  const [skalaConcepts, setSkalaConcepts] = useState<{name: string, definition: string}[]>([{ name: '', definition: '' }]);
+  const [skalaSynthesizedDef, setSkalaSynthesizedDef] = useState('');
+  const [isGeneratingLatentDef, setIsGeneratingLatentDef] = useState(false);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Status mapping
+  const [instrumentStatus, setInstrumentStatus] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (isActive) {
+      loadProjectData();
+      loadInstruments();
+    }
+  }, [isActive, projectId]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory, isChatting]);
+
+  const loadProjectData = async () => {
+    const supabase = createClient();
+    // Get pendekatan & variables from methodology if it exists, otherwise prompt user
+    const { data: metData } = await supabase.from('sota_results').select('markdown_result').eq('project_id', projectId).order('created_at', { ascending: false }).limit(1);
+    // In a real scenario we might have a dedicated project settings table. 
+    // Let's assume we can fetch gap from project search history
+    const { data: searches } = await supabase.from('search_history').select('gap').eq('project_id', projectId).not('gap', 'is', null).order('created_at', { ascending: false }).limit(1);
+    
+    if (searches && searches.length > 0) {
+      setGap(searches[0].gap || '');
+    }
+    // Set some defaults
+    setPendekatan('Kuantitatif / Kualitatif (Campuran)');
+    setVariables('Variabel Utama');
+  };
+
+  const loadInstruments = async () => {
+    const supabase = createClient();
+    const { data } = await supabase.from('project_instruments').select('*').eq('project_id', projectId);
+    if (data) {
+      const types = data.map((d: any) => d.instrument_type);
+      setSelectedTypes(types);
+      const statusObj: Record<string, string> = {};
+      data.forEach((d: any) => {
+        statusObj[d.instrument_type] = d.status;
+      });
+      setInstrumentStatus(statusObj);
+      
+      // Load uploaded files
+      const { data: filesData } = await supabase.from('instrument_reference_chunks').select('id, instrument_type, filename').eq('project_id', projectId);
+      if (filesData) setUploadedFiles(filesData);
+    }
+  };
+
+  const handleTypeToggle = async (type: string) => {
+    const supabase = createClient();
+    if (selectedTypes.includes(type)) {
+      if (confirm(`Yakin ingin menghapus instrumen ${type}? Data chat akan hilang.`)) {
+        await supabase.from('project_instruments').delete().eq('project_id', projectId).eq('instrument_type', type);
+        setSelectedTypes(selectedTypes.filter(t => t !== type));
+        if (activeInstrument === type) setActiveInstrument(null);
+        loadInstruments();
+      }
+    } else {
+      await supabase.from('project_instruments').insert({
+        project_id: projectId,
+        instrument_type: type,
+        status: 'pending'
+      });
+      setSelectedTypes([...selectedTypes, type]);
+      loadInstruments();
+    }
+  };
+
+  const handleStartInstrument = async (type: string) => {
+    setActiveInstrument(type);
+    const supabase = createClient();
+    const { data } = await supabase.from('project_instruments').select('*').eq('project_id', projectId).eq('instrument_type', type).single();
+    
+    if (data) {
+      setChatHistory(data.chat_history || []);
+      
+      // Load blueprint data if it's a Tes Prestasi or Skala
+      if ((type === 'Tes Prestasi' || type === 'Skala') && data.chat_history) {
+         try {
+           const bpData = data.chat_history.find((m: any) => m.role === 'blueprint_data');
+           if (bpData && bpData.text) setBlueprintData(JSON.parse(bpData.text));
+           const domData = data.chat_history.find((m: any) => m.role === 'blueprint_domains');
+           if (domData && domData.text) setSelectedDomains(JSON.parse(domData.text));
+
+           const latentVarData = data.chat_history.find((m: any) => m.role === 'latent_var_name');
+           if (latentVarData && latentVarData.text) setSkalaLatentVarName(latentVarData.text);
+           
+           const conceptsData = data.chat_history.find((m: any) => m.role === 'skala_concepts');
+           if (conceptsData && conceptsData.text) setSkalaConcepts(JSON.parse(conceptsData.text));
+           
+           const synthesizedDefData = data.chat_history.find((m: any) => m.role === 'synthesized_def');
+           if (synthesizedDefData && synthesizedDefData.text) setSkalaSynthesizedDef(synthesizedDefData.text);
+         } catch(e) {}
+      }
+
+      if (data.status === 'completed' && data.final_result) {
+        setFinalResult(data.final_result);
+        setIsChatComplete(true);
+      } else {
+        setFinalResult('');
+        setIsChatComplete(false);
+        // If no chat history, initialize chat (only if not Tes Prestasi and not Skala)
+        if (type !== 'Tes Prestasi' && type !== 'Skala' && (!data.chat_history || data.chat_history.length === 0)) {
+          initChat(type);
+        }
+      }
+    }
+  };
+
+  const initChat = async (type: string) => {
+    setIsChatting(true);
+    const res = await generateInstrumentQuestionsAction(projectId, type, pendekatan, variables, gap, '', isPaidApi);
+    if (res.questions && res.questions.length > 0) {
+      const firstMsg = `Mari kita susun instrumen **${type}**. Untuk memulainya, saya perlu beberapa informasi:\n\n` + res.questions.map((q, i) => `${i+1}. ${q}`).join('\n');
+      const newHistory: ChatMessage[] = [{ role: 'ai', text: firstMsg }];
+      setChatHistory(newHistory);
+      saveState(type, newHistory, 'in_progress');
+    } else {
+      const newHistory: ChatMessage[] = [{ role: 'ai', text: 'Mari kita susun instrumen ini. Ceritakan secara singkat fokus yang ingin Anda ukur/tanyakan.' }];
+      setChatHistory(newHistory);
+      saveState(type, newHistory, 'in_progress');
+    }
+    setIsChatting(false);
+  };
+
+  const handleAddConcept = () => setSkalaConcepts([...skalaConcepts, { name: '', definition: '' }]);
+  const handleUpdateConcept = (index: number, field: string, value: string) => {
+    const newConcepts = [...skalaConcepts];
+    newConcepts[index] = { ...newConcepts[index], [field]: value };
+    setSkalaConcepts(newConcepts);
+  };
+  const handleRemoveConcept = (index: number) => {
+    setSkalaConcepts(skalaConcepts.filter((_, i) => i !== index));
+  };
+  
+  const generateLatentDef = async () => {
+    if (!skalaLatentVarName.trim()) return alert('Isi Nama Variabel Laten!');
+    if (skalaConcepts.some(c => !c.name.trim() || !c.definition.trim())) return alert('Lengkapi semua nama dan definisi konsep!');
+    setIsGeneratingLatentDef(true);
+    const res = await generateLatentVariableDefinitionAction(skalaLatentVarName, skalaConcepts, undefined, isPaidApi);
+    setIsGeneratingLatentDef(false);
+    if (res.result) {
+      setSkalaSynthesizedDef(res.result);
+      const newHistory = [
+        { role: 'latent_var_name', text: skalaLatentVarName },
+        { role: 'skala_concepts', text: JSON.stringify(skalaConcepts) },
+        { role: 'synthesized_def', text: res.result },
+        ...(blueprintData ? [{ role: 'blueprint_data', text: JSON.stringify(blueprintData) }] : [])
+      ];
+      saveState('Skala', newHistory as ChatMessage[], 'in_progress');
+    } else {
+      alert(res.error || 'Gagal mensintesis definisi');
+    }
+  };
+
+  const saveState = async (type: string, history: ChatMessage[], status: string, finalStr: string = '') => {
+    const supabase = createClient();
+    await supabase.from('project_instruments').update({
+      chat_history: history,
+      status: status,
+      final_result: finalStr,
+      updated_at: new Date().toISOString()
+    }).eq('project_id', projectId).eq('instrument_type', type);
+    
+    setInstrumentStatus(prev => ({ ...prev, [type]: status }));
+  };
+
+  const sendMessage = async () => {
+    if (!inputMessage.trim() || !activeInstrument) return;
+
+    const newHistory: ChatMessage[] = [...chatHistory, { role: 'user', text: inputMessage }];
+    setChatHistory(newHistory);
+    setInputMessage('');
+    setIsChatting(true);
+    
+    await saveState(activeInstrument, newHistory, 'in_progress');
+
+    const res = await continueInstrumentChatAction(projectId, activeInstrument, pendekatan, variables, newHistory, '', isPaidApi);
+    
+    setIsChatting(false);
+    if (res.error) {
+      alert(res.error);
+      return;
+    }
+
+    if (res.isComplete) {
+      setIsChatComplete(true);
+      setChatSummary(res.summary || '');
+      const aiResponse = `**Baik, informasi sudah lengkap!**\n\nBerikut rangkuman kesepakatan instrumen kita:\n${res.summary}\n\nSilakan klik tombol **"Buat Draf Final Instrumen"** di bawah untuk menyusun format lengkapnya.`;
+      const finalHistory: ChatMessage[] = [...newHistory, { role: 'ai', text: aiResponse }];
+      setChatHistory(finalHistory);
+      await saveState(activeInstrument, finalHistory, 'in_progress');
+    } else {
+      const aiResponse = res.nextQuestion || 'Ada lagi yang perlu ditambahkan?';
+      const finalHistory: ChatMessage[] = [...newHistory, { role: 'ai', text: aiResponse }];
+      setChatHistory(finalHistory);
+      await saveState(activeInstrument, finalHistory, 'in_progress');
+    }
+  };
+
+  const generateFinal = async () => {
+    if (!activeInstrument) return;
+    setIsGeneratingFinal(true);
+    
+    let contextData = chatSummary;
+    if (activeInstrument === 'Tes Prestasi' && blueprintData) {
+      contextData = JSON.stringify(blueprintData);
+    }
+    
+    const res = await generateFinalInstrumentAction(activeInstrument, variables, contextData, subject, subjectDescription, undefined, isPaidApi);
+    setIsGeneratingFinal(false);
+    
+    if (res.result) {
+      setFinalResult(res.result);
+      await saveState(activeInstrument, chatHistory, 'completed', res.result);
+    } else {
+      alert(res.error || 'Gagal generate instrumen');
+    }
+  };
+
+  const handleFileUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (files.length === 0 || !activeInstrument) return;
+
+    const currentFiles = uploadedFiles.filter(f => f.instrument_type === activeInstrument).length;
+    const maxRefs = limits.max_instrumen_referensi || 2;
+
+    if (currentFiles + files.length > maxRefs) {
+      alert(`Limit tercapai! Akun ${role.toUpperCase()} maksimal ${maxRefs} referensi PDF per instrumen. Sisa kuota Anda ${maxRefs - currentFiles} file.`);
+      return;
+    }
+
+    setIsUploading(true);
+    let successCount = 0;
+
+    try {
+      const pdfjsLib = await import('pdfjs-dist');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
+      for (const f of files) {
+        try {
+          const arrayBuffer = await f.arrayBuffer();
+          const dataArray = new Uint8Array(arrayBuffer);
+          const pdf = await pdfjsLib.getDocument({ data: dataArray }).promise;
+          const numPages = pdf.numPages;
+          let textContent = '';
+          
+          for (let i = 1; i <= Math.min(10, numPages); i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const pageText = content.items.map((item: any) => item.str).join(' ');
+            textContent += pageText + ' ';
+          }
+
+          const res = await fetch('/api/dashboard/instrumen/upload-reference', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              text: textContent,
+              fileName: f.name,
+              projectId: projectId,
+              instrumentType: activeInstrument
+            })
+          });
+          const data = await res.json();
+          
+          if (res.ok) {
+            successCount++;
+          } else {
+            alert(`Gagal mengunggah ${f.name} ke server: ${data.error}`);
+          }
+        } catch (err: any) {
+          console.error("PDF read error:", err);
+          alert(`Gagal memproses file PDF ${f.name}. Detail galat: ${err.message || err}`);
+        }
+      }
+    } catch (err: any) {
+      console.error("PDFJS load error:", err);
+      alert(`Gagal memuat pustaka PDF (pdfjs-dist): ${err.message || err}`);
+    }
+
+    setFiles([]);
+    setIsUploading(false);
+    
+    if (successCount > 0) {
+      loadInstruments(); // Reload to fetch newly uploaded files
+    }
+  };
+
+  const deleteFile = async (id: string) => {
+    const supabase = createClient();
+    await supabase.from('instrument_reference_chunks').delete().eq('id', id);
+    loadInstruments();
+  };
+
+  const copyToClipboard = () => {
+    if (finalResult) {
+      navigator.clipboard.writeText(finalResult);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    }
+  };
+
+  const copyBlueprintTable = () => {
+    if (!blueprintData) return;
+    let markdownTable = "";
+    if (activeInstrument === 'Tes Prestasi') {
+      markdownTable = "| Topik Konten | Domain Kognitif/Psikomotorik/Afektif | Target Pembelajaran Spesifik | Bobot/Proporsi |\n| --- | --- | --- | --- |\n";
+      blueprintData.forEach((row: any) => {
+        markdownTable += `| ${row.topic} | ${row.domain} | ${row.target} | ${row.weight} |\n`;
+      });
+    } else {
+      markdownTable = "| Aspek | Indikator | Aitem Favorable |\n| --- | --- | --- |\n";
+      blueprintData.forEach((row: any) => {
+        markdownTable += `| ${row.aspek} | ${row.indikator} | ${row.aitem} |\n`;
+      });
+    }
+    navigator.clipboard.writeText(markdownTable);
+    setBlueprintCopySuccess(true);
+    setTimeout(() => setBlueprintCopySuccess(false), 2000);
+  };
+
+  const toggleDomain = (dom: string) => {
+    if (selectedDomains.includes(dom)) {
+      setSelectedDomains(selectedDomains.filter(d => d !== dom));
+    } else {
+      setSelectedDomains([...selectedDomains, dom]);
+    }
+  };
+
+  const generateBlueprint = async () => {
+    if (activeInstrument === 'Tes Prestasi' && selectedDomains.length === 0) return alert('Pilih minimal satu domain!');
+    setIsGeneratingBlueprint(true);
+    const res = await generateBlueprintAction(projectId, activeInstrument || '', selectedDomains, variables, gap, manualTopics, subject, subjectDescription, isPaidApi);
+    setIsGeneratingBlueprint(false);
+    
+    if (res.blueprint) {
+      setBlueprintData(res.blueprint);
+      
+      // Save state to project_instruments via chat_history field
+      const newHistory = activeInstrument === 'Tes Prestasi' ? [
+        { role: 'blueprint_domains', text: JSON.stringify(selectedDomains) },
+        { role: 'blueprint_data', text: JSON.stringify(res.blueprint) }
+      ] : [
+        { role: 'latent_var_name', text: skalaLatentVarName },
+        { role: 'skala_concepts', text: JSON.stringify(skalaConcepts) },
+        { role: 'synthesized_def', text: skalaSynthesizedDef },
+        { role: 'blueprint_data', text: JSON.stringify(res.blueprint) }
+      ];
+      await saveState(activeInstrument || '', newHistory as ChatMessage[], 'in_progress');
+    } else {
+      alert(res.error || 'Gagal generate blueprint');
+    }
+  };
+
+  const updateBlueprintRow = (index: number, field: string, value: string) => {
+    if (!blueprintData) return;
+    const newData = [...blueprintData];
+    newData[index][field] = value;
+    setBlueprintData(newData);
+    
+    const newHistory = activeInstrument === 'Tes Prestasi' ? [
+        { role: 'blueprint_domains', text: JSON.stringify(selectedDomains) },
+        { role: 'blueprint_data', text: JSON.stringify(newData) }
+    ] : [
+        { role: 'latent_var_name', text: skalaLatentVarName },
+        { role: 'skala_concepts', text: JSON.stringify(skalaConcepts) },
+        { role: 'synthesized_def', text: skalaSynthesizedDef },
+        { role: 'blueprint_data', text: JSON.stringify(newData) }
+    ];
+    saveState(activeInstrument || '', newHistory as ChatMessage[], 'in_progress');
+  };
+
+  if (!activeInstrument) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Instrumen Penelitian</h2>
+          <p className={styles.subtitle}>Pilih dan rancang instrumen penelitian Anda (Kuesioner, Pedoman Wawancara, dll) dipandu oleh AI.</p>
+        </div>
+
+        <div className={styles.content}>
+          <div className={styles.formGroup}>
+            <label>Pilih Instrumen yang Dibutuhkan</label>
+            <div className={styles.checkboxGrid}>
+              {INSTRUMENT_TYPES.map(type => (
+                <label key={type} className={styles.checkboxLabel}>
+                  <input 
+                    type="checkbox" 
+                    checked={selectedTypes.includes(type)}
+                    onChange={() => handleTypeToggle(type)}
+                  />
+                  {type}
+                </label>
+              ))}
+            </div>
+            <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '12px' }}>
+              *Anda dapat memilih lebih dari satu instrumen jika menggunakan Mixed Methods atau butuh triangulasi.
+            </p>
+          </div>
+
+          {selectedTypes.length > 0 && (
+            <div className={styles.instrumentList}>
+              <h3 style={{ marginBottom: '8px' }}>Instrumen Proyek Ini</h3>
+              {selectedTypes.map(type => (
+                <div key={type} className={styles.instrumentCard}>
+                  <div>
+                    <h3>{type}</h3>
+                    <span className={`${styles.statusBadge} ${instrumentStatus[type] === 'completed' ? styles.statusCompleted : instrumentStatus[type] === 'in_progress' ? styles.statusInProgress : styles.statusPending}`}>
+                      {instrumentStatus[type] === 'completed' ? 'Selesai' : instrumentStatus[type] === 'in_progress' ? 'Sedang Dikerjakan' : 'Belum Dimulai'}
+                    </span>
+                  </div>
+                  <button className={styles.btnPrimary} onClick={() => handleStartInstrument(type)}>
+                    {instrumentStatus[type] === 'completed' ? 'Lihat Hasil' : instrumentStatus[type] === 'in_progress' ? 'Lanjutkan' : 'Mulai Rancang'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.header} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <button className={styles.btnSecondary} onClick={() => setActiveInstrument(null)} style={{ marginBottom: '12px', padding: '6px 12px', fontSize: '14px' }}>
+            ← Kembali ke Daftar Instrumen
+          </button>
+          <h2 className={styles.title}>Merancang {activeInstrument}</h2>
+        </div>
+      </div>
+
+      <div className={styles.content} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+        
+        {/* Left Col: Setup & Chat */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
+          {!isChatComplete && activeInstrument !== 'Skala' && (
+            <div className={styles.formGroup} style={{ margin: 0 }}>
+              <label>{activeInstrument === 'Tes Prestasi' ? 'Materi Ajar (Opsional)' : 'Referensi Teori (Opsional)'}</label>
+              <p style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '12px' }}>
+                {activeInstrument === 'Tes Prestasi' 
+                  ? `Upload PDF materi ajar agar AI mengekstrak Topik Konten secara otomatis (Max ${limits.max_instrumen_referensi || 2} PDF). Jika tidak ada PDF, Anda dapat menulis daftar Topik Konten secara manual di bawah.`
+                  : `Jika tidak diunggah, AI akan otomatis menggunakan referensi dari tab Kajian Pustaka. Upload PDF teori instrumen spesifik (Max ${limits.max_instrumen_referensi || 2} PDF).`
+                }
+              </p>
+              
+              <div style={{ marginBottom: '16px' }}>
+                {uploadedFiles.filter(f => f.instrument_type === activeInstrument).map(f => (
+                  <div key={f.id} className={styles.uploadedFile}>
+                    <span style={{ fontSize: '13px' }}>📄 {f.filename}</span>
+                    <button onClick={() => deleteFile(f.id)} className={styles.deleteBtn}>×</button>
+                  </div>
+                ))}
+              </div>
+
+              {uploadedFiles.filter(f => f.instrument_type === activeInstrument).length < (limits.max_instrumen_referensi || 2) && (
+                <form onSubmit={handleFileUpload} className={styles.uploadArea}>
+                  <input type="file" accept="application/pdf" multiple onChange={e => setFiles(Array.from(e.target.files || []))} id="file-upload" className={styles.fileInput} />
+                  <label htmlFor="file-upload" style={{ cursor: 'pointer', display: 'block' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '8px' }}>📄</div>
+                    <div style={{ color: files.length > 0 ? 'var(--primary)' : 'var(--on-surface)' }}>
+                      {files.length > 0 ? `${files.length} file dipilih` : (activeInstrument === 'Tes Prestasi' ? 'Pilih file PDF' : 'Pilih file PDF Teori/Blueprint')}
+                    </div>
+                  </label>
+                  {files.length > 0 && (
+                    <button type="submit" disabled={isUploading} className={styles.btnPrimary} style={{ width: '100%', marginTop: '12px' }}>
+                      {isUploading ? 'Mengunggah...' : `Unggah ${files.length} PDF`}
+                    </button>
+                  )}
+                </form>
+              )}
+              
+              {activeInstrument === 'Tes Prestasi' && uploadedFiles.filter(f => f.instrument_type === activeInstrument).length === 0 && (
+                <div style={{ marginTop: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>Topik Konten Manual (Jika tidak mengunggah PDF)</label>
+                  <textarea 
+                    className={styles.chatInput} 
+                    style={{ minHeight: '80px', width: '100%' }}
+                    placeholder="Contoh:&#10;1. Sel Hewan dan Tumbuhan&#10;2. Fotosintesis"
+                    value={manualTopics}
+                    onChange={e => setManualTopics(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {(activeInstrument === 'Tes Prestasi' || activeInstrument === 'Skala') ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {activeInstrument === 'Tes Prestasi' && (
+                <div className={styles.formGroup} style={{ margin: 0 }}>
+                  <h3 style={{ marginBottom: '16px' }}>Konteks Instrumen</h3>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>Mata Pelajaran / Subjek</label>
+                    <input 
+                      type="text"
+                      className={styles.chatInput}
+                      style={{ width: '100%', padding: '12px' }}
+                      placeholder="Contoh: Biologi SMA Kelas XI"
+                      value={subject}
+                      onChange={e => setSubject(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>Deskripsi Singkat (Opsional)</label>
+                    <textarea 
+                      className={styles.chatInput}
+                      style={{ minHeight: '80px', width: '100%', padding: '12px' }}
+                      placeholder="Contoh: Fokus pada sistem pencernaan manusia dan enzim yang berperan."
+                      value={subjectDescription}
+                      onChange={e => setSubjectDescription(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {activeInstrument === 'Skala' && (
+                <div className={styles.chatContainer}>
+                  <div className={styles.chatHeader}>
+                    <h3>Konsep Variabel Laten</h3>
+                    {skalaSynthesizedDef && <span className={styles.statusCompleted} style={{ padding: '4px 12px', borderRadius: '12px', fontSize: '12px' }}>Definisi Disintesis</span>}
+                  </div>
+                  <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>Nama Variabel Laten Utama</label>
+                      <input 
+                        type="text"
+                        className={styles.chatInput}
+                        style={{ width: '100%', padding: '12px' }}
+                        placeholder="Contoh: Resiliensi Akademik"
+                        value={skalaLatentVarName}
+                        onChange={e => setSkalaLatentVarName(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div>
+                      <h4 style={{ marginBottom: '8px' }}>Konsep-konsep Penyusun</h4>
+                      <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
+                        Masukkan nama konsep dan definisinya. AI akan mensintesis semua aspek dari konsep-konsep ini menjadi satu definisi variabel laten utuh.
+                      </p>
+                      
+                      {skalaConcepts.map((concept, index) => (
+                        <div key={index} style={{ border: '1px solid var(--border)', padding: '12px', borderRadius: '8px', marginBottom: '12px', background: 'var(--surface-hover)', position: 'relative' }}>
+                          <div style={{ marginBottom: '12px' }}>
+                            <label style={{ display: 'block', fontSize: '13px', marginBottom: '4px' }}>Nama Konsep {index + 1}</label>
+                            <input 
+                              type="text"
+                              className={styles.chatInput}
+                              style={{ width: '100%', padding: '8px' }}
+                              placeholder="Contoh: Resiliensi menurut Connor & Davidson"
+                              value={concept.name}
+                              onChange={e => handleUpdateConcept(index, 'name', e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '13px', marginBottom: '4px' }}>Definisi Konsep</label>
+                            <textarea 
+                              className={styles.chatInput}
+                              style={{ width: '100%', padding: '8px', minHeight: '60px' }}
+                              placeholder="Masukkan definisi konseptual..."
+                              value={concept.definition}
+                              onChange={e => handleUpdateConcept(index, 'definition', e.target.value)}
+                            />
+                          </div>
+                          {skalaConcepts.length > 1 && (
+                            <button onClick={() => handleRemoveConcept(index)} style={{ position: 'absolute', top: '12px', right: '12px', background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold' }}>×</button>
+                          )}
+                        </div>
+                      ))}
+                      
+                      <button className={styles.btnSecondary} onClick={handleAddConcept} style={{ fontSize: '13px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        + Tambah Konsep
+                      </button>
+                    </div>
+
+                    <button className={styles.btnPrimary} onClick={generateLatentDef} disabled={isGeneratingLatentDef || !skalaLatentVarName.trim() || skalaConcepts.some(c => !c.name.trim() || !c.definition.trim())}>
+                      {isGeneratingLatentDef ? 'Mensintesis Definisi...' : 'Generate Definisi Variabel Laten'}
+                    </button>
+
+                    {skalaSynthesizedDef && (
+                      <div style={{ marginTop: '16px' }}>
+                        <h4 style={{ marginBottom: '8px' }}>Hasil Sintesis Definisi (Bisa Diedit)</h4>
+                        <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>Definisi ini akan menjadi landasan AI untuk menyusun Blueprint (Aspek, Indikator, Aitem).</p>
+                        <textarea 
+                          className={styles.chatInput}
+                          style={{ width: '100%', padding: '12px', minHeight: '120px', lineHeight: '1.5' }}
+                          value={skalaSynthesizedDef}
+                          onChange={e => {
+                            setSkalaSynthesizedDef(e.target.value);
+                            // auto save
+                            const newHistory = [
+                              { role: 'latent_var_name', text: skalaLatentVarName },
+                              { role: 'skala_concepts', text: JSON.stringify(skalaConcepts) },
+                              { role: 'synthesized_def', text: e.target.value },
+                              ...(blueprintData ? [{ role: 'blueprint_data', text: JSON.stringify(blueprintData) }] : [])
+                            ];
+                            saveState('Skala', newHistory as ChatMessage[], 'in_progress');
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className={styles.chatContainer}>
+                <div className={styles.chatHeader}>
+                  <h3>Konfigurasi Blueprint</h3>
+                  {blueprintData && <span className={styles.statusCompleted} style={{ padding: '4px 12px', borderRadius: '12px', fontSize: '12px' }}>Blueprint Dibuat</span>}
+                </div>
+                <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
+                  
+                  {activeInstrument === 'Tes Prestasi' && (
+                    <div>
+                      <h4 style={{ marginBottom: '8px' }}>Pilih Domain & Level Taksonomi</h4>
+                      <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>Pilih satu untuk Single Domain, atau beberapa untuk Multi Domain.</p>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                        <div>
+                          <strong style={{ fontSize: '14px', display: 'block', marginBottom: '8px' }}>Kognitif</strong>
+                          {['C1 - Mengingat', 'C2 - Memahami', 'C3 - Menerapkan', 'C4 - Menganalisis', 'C5 - Mengevaluasi', 'C6 - Mencipta'].map(d => (
+                            <label key={d} style={{ display: 'block', fontSize: '13px', marginBottom: '4px' }}>
+                              <input type="checkbox" checked={selectedDomains.includes(d)} onChange={() => toggleDomain(d)} style={{ marginRight: '6px' }} />
+                              {d}
+                            </label>
+                          ))}
+                        </div>
+                        <div>
+                          <strong style={{ fontSize: '14px', display: 'block', marginBottom: '8px' }}>Psikomotorik</strong>
+                          {['P1 - Meniru', 'P2 - Memanipulasi', 'P3 - Presisi', 'P4 - Artikulasi', 'P5 - Naturalisasi'].map(d => (
+                            <label key={d} style={{ display: 'block', fontSize: '13px', marginBottom: '4px' }}>
+                              <input type="checkbox" checked={selectedDomains.includes(d)} onChange={() => toggleDomain(d)} style={{ marginRight: '6px' }} />
+                              {d}
+                            </label>
+                          ))}
+                        </div>
+                        <div>
+                          <strong style={{ fontSize: '14px', display: 'block', marginBottom: '8px' }}>Afektif</strong>
+                          {['A1 - Menerima', 'A2 - Merespons', 'A3 - Menghargai', 'A4 - Mengorganisasikan', 'A5 - Mengkarakterisasi'].map(d => (
+                            <label key={d} style={{ display: 'block', fontSize: '13px', marginBottom: '4px' }}>
+                              <input type="checkbox" checked={selectedDomains.includes(d)} onChange={() => toggleDomain(d)} style={{ marginRight: '6px' }} />
+                              {d}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  
+                  {activeInstrument === 'Skala' ? (
+                    <button className={styles.btnPrimary} onClick={generateBlueprint} disabled={isGeneratingBlueprint || !skalaSynthesizedDef.trim()}>
+                      {isGeneratingBlueprint ? 'Menyusun Blueprint...' : 'Generate Blueprint dari Definisi'}
+                    </button>
+                  ) : (
+                    <button className={styles.btnPrimary} onClick={generateBlueprint} disabled={isGeneratingBlueprint || selectedDomains.length === 0}>
+                      {isGeneratingBlueprint ? 'Menyusun Blueprint...' : 'Generate Blueprint'}
+                    </button>
+                  )}
+
+                {blueprintData && (
+                  <div style={{ marginTop: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <h4 style={{ margin: 0 }}>Tabel Spesifikasi (Blueprint)</h4>
+                      <button className={styles.btnSecondary} onClick={copyBlueprintTable} style={{ fontSize: '12px', padding: '4px 8px' }}>
+                        {blueprintCopySuccess ? 'Tersalin!' : '📋 Salin Tabel'}
+                      </button>
+                    </div>
+                    <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                        <thead>
+                          <tr style={{ background: 'var(--surface-hover)', textAlign: 'left' }}>
+                            {activeInstrument === 'Tes Prestasi' ? (
+                              <>
+                                <th style={{ padding: '8px', borderBottom: '1px solid var(--border)' }}>Topik Konten</th>
+                                <th style={{ padding: '8px', borderBottom: '1px solid var(--border)' }}>Domain</th>
+                                <th style={{ padding: '8px', borderBottom: '1px solid var(--border)' }}>Target Pembelajaran</th>
+                                <th style={{ padding: '8px', borderBottom: '1px solid var(--border)' }}>Bobot</th>
+                              </>
+                            ) : (
+                              <>
+                                <th style={{ padding: '8px', borderBottom: '1px solid var(--border)' }}>Aspek</th>
+                                <th style={{ padding: '8px', borderBottom: '1px solid var(--border)' }}>Indikator</th>
+                                <th style={{ padding: '8px', borderBottom: '1px solid var(--border)' }}>Aitem Favorable</th>
+                              </>
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {blueprintData.map((row: any, i: number) => (
+                            <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
+                              {activeInstrument === 'Tes Prestasi' ? (
+                                <>
+                                  <td style={{ padding: '8px', verticalAlign: 'top' }}>
+                                    <textarea 
+                                      value={row.topic} 
+                                      onChange={e => updateBlueprintRow(i, 'topic', e.target.value)} 
+                                      className={styles.autoResizeTextarea}
+                                      style={{ resize: 'none', overflow: 'hidden' }}
+                                      onInput={e => { e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`; }}
+                                    />
+                                  </td>
+                                  <td style={{ padding: '8px', verticalAlign: 'top', paddingTop: '12px' }}>{row.domain}</td>
+                                  <td style={{ padding: '8px', verticalAlign: 'top' }}>
+                                    <textarea 
+                                      value={row.target} 
+                                      onChange={e => updateBlueprintRow(i, 'target', e.target.value)} 
+                                      className={styles.autoResizeTextarea}
+                                      style={{ resize: 'none', overflow: 'hidden' }}
+                                      onInput={e => { e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`; }}
+                                    />
+                                  </td>
+                                  <td style={{ padding: '8px', whiteSpace: 'nowrap', verticalAlign: 'top' }}>
+                                    <input 
+                                      value={row.weight} 
+                                      onChange={e => updateBlueprintRow(i, 'weight', e.target.value)} 
+                                      style={{ width: '80px', border: 'none', background: 'transparent', outline: 'none', paddingTop: '4px' }} 
+                                    />
+                                  </td>
+                                </>
+                              ) : (
+                                <>
+                                  <td style={{ padding: '8px', verticalAlign: 'top' }}>
+                                    <textarea 
+                                      value={row.aspek} 
+                                      onChange={e => updateBlueprintRow(i, 'aspek', e.target.value)} 
+                                      className={styles.autoResizeTextarea}
+                                      style={{ resize: 'none', overflow: 'hidden' }}
+                                      onInput={e => { e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`; }}
+                                    />
+                                  </td>
+                                  <td style={{ padding: '8px', verticalAlign: 'top' }}>
+                                    <textarea 
+                                      value={row.indikator} 
+                                      onChange={e => updateBlueprintRow(i, 'indikator', e.target.value)} 
+                                      className={styles.autoResizeTextarea}
+                                      style={{ resize: 'none', overflow: 'hidden' }}
+                                      onInput={e => { e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`; }}
+                                    />
+                                  </td>
+                                  <td style={{ padding: '8px', verticalAlign: 'top' }}>
+                                    <textarea 
+                                      value={row.aitem} 
+                                      onChange={e => updateBlueprintRow(i, 'aitem', e.target.value)} 
+                                      className={styles.autoResizeTextarea}
+                                      style={{ resize: 'none', overflow: 'hidden' }}
+                                      onInput={e => { e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`; }}
+                                    />
+                                  </td>
+                                </>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            </div>
+          ) : (
+            !finalResult && (
+              <div className={styles.chatContainer}>
+                <div className={styles.chatHeader}>
+                  <h3>Diskusi AI</h3>
+                  {isChatComplete && <span className={styles.statusCompleted} style={{ padding: '4px 12px', borderRadius: '12px', fontSize: '12px' }}>Siap Digenerate</span>}
+                </div>
+                <div className={styles.chatMessages}>
+                  {chatHistory.map((msg, i) => (
+                    <div key={i} className={`${styles.message} ${msg.role === 'ai' ? styles.aiMessage : styles.userMessage}`}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{msg.text}</ReactMarkdown>
+                    </div>
+                  ))}
+                  {isChatting && (
+                    <div className={`${styles.message} ${styles.aiMessage} ${styles.typingIndicator}`}>
+                      <div className={styles.typingDot}></div>
+                      <div className={styles.typingDot}></div>
+                      <div className={styles.typingDot}></div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+                
+                {!isChatComplete && (
+                  <div className={styles.chatInputContainer}>
+                    <textarea 
+                      className={styles.chatInput}
+                      placeholder="Ketik jawaban atau instruksi Anda..."
+                      value={inputMessage}
+                      onChange={e => setInputMessage(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          sendMessage();
+                        }
+                      }}
+                      rows={2}
+                    />
+                    <button className={styles.btnPrimary} onClick={sendMessage} disabled={!inputMessage.trim() || isChatting}>
+                      Kirim
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          )}
+
+          {((isChatComplete && !finalResult) || (activeInstrument === 'Tes Prestasi' && blueprintData && !finalResult)) && (
+            <button 
+              className={styles.btnPrimary} 
+              onClick={generateFinal} 
+              disabled={isGeneratingFinal}
+              style={{ width: '100%', padding: '16px', fontSize: '16px' }}
+            >
+              {isGeneratingFinal ? 'Menyusun Draf Final...' : 'Buat Draf Final Instrumen Sekarang'}
+            </button>
+          )}
+
+        </div>
+
+        {/* Right Col: Result */}
+        {finalResult && (
+          <div style={{ flex: 1 }}>
+            <div className={styles.resultContainer} style={{ margin: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ margin: 0 }}>Draf Instrumen Final</h3>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={copyToClipboard} className={styles.btnSecondary}>
+                    {copySuccess ? 'Tersalin!' : 'Copy Text'}
+                  </button>
+                  <button onClick={() => {
+                    if(confirm('Yakin ingin merevisi? Draf final ini akan dihapus dan Anda bisa mengedit chat kembali.')){
+                      setFinalResult('');
+                      setIsChatComplete(false);
+                      saveState(activeInstrument, chatHistory, 'in_progress');
+                    }
+                  }} className={styles.btnSecondary} style={{ color: '#ef4444' }}>
+                    Revisi Chat
+                  </button>
+                </div>
+              </div>
+              <div className={styles.markdownContent}>
+                <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                  {finalResult.replace(/^```(markdown)?\s*/gi, '').replace(/```$/g, '').trim()}
+                </ReactMarkdown>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -37,9 +37,10 @@ Instructions:
     // Clean up any accidental markdown or newlines
     generatedText = generatedText.replace(/```/g, '').replace(/\n/g, ' ').trim();
     return generatedText;
-  } catch (err: any) {
-    console.error('Groq API Error (Boolean Query):', err);
-    throw new Error('AI Error: ' + (err.message || 'Gagal menghasilkan query'));
+  } catch (err) {
+    console.error('Gemini API Error:', err);
+    const { logErrorToAdmin, FRIENDLY_ERROR_MESSAGE } = await import('@/utils/logger');
+    await logErrorToAdmin('AI_Boolean_Query', err);
+    throw new Error(FRIENDLY_ERROR_MESSAGE);
   }
 }
-

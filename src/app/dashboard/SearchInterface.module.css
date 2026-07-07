@@ -105,8 +105,8 @@
   padding-right: 6rem; /* space for copy button */
   border-radius: 8px;
   border: 1px solid rgba(99, 102, 241, 0.3);
-  background: rgba(17, 24, 39, 0.5);
-  color: #e5e7eb;
+  background: var(--surface);
+  color: var(--foreground);
   font-family: var(--font-geist-mono), monospace;
   font-size: 0.95rem;
   line-height: 1.5;
@@ -126,18 +126,18 @@
   top: 0.5rem;
   right: 0.5rem;
   padding: 0.4rem 0.8rem;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  color: #d1d5db;
+  color: var(--foreground);
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .copyBtn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
+  background: var(--border);
+  color: var(--foreground);
 }
 
 .booleanBar {
@@ -446,19 +446,20 @@
 
 .bulkSaveButton {
   padding: 0.5rem 1rem;
-  background: var(--foreground);
-  color: var(--background);
-  border: none;
+  background: var(--surface);
+  color: var(--primary);
+  border: 1px solid var(--primary);
   border-radius: 6px;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: all 0.2s ease;
   margin-right: 1rem;
 }
 
 .bulkSaveButton:hover:not(:disabled) {
-  opacity: 0.9;
+  background: var(--primary);
+  color: white;
 }
 
 .bulkSaveButton:disabled {

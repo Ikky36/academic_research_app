@@ -28,8 +28,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { key: geminiKey, modelName } = getGeminiApiKey(role);
-    const genAI = new GoogleGenerativeAI(geminiKey);
+    // We will initialize genAI inside the retry loop so it fetches a new key on retry
     
     const responseSchema: Schema = {
       type: SchemaType.OBJECT,
@@ -59,13 +58,7 @@ export async function POST(req: Request) {
       required: ["title", "chapters"]
     };
 
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.5-flash-lite', 
-      generationConfig: { 
-        responseMimeType: "application/json",
-        responseSchema: responseSchema
-      } 
-    });
+    // Model initialization moved to retry loop
 
     const prompt = `
 Anda adalah asisten peneliti ahli. Saya memberikan Anda teks dari **beberapa halaman awal** (sekitar ${pagesScanned} halaman) sebuah buku referensi.
@@ -82,14 +75,40 @@ ${text.substring(0, 100000)}
 """
 `;
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    const parsedData = parseGeminiJSON(responseText);
+    let lastError: any;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        const { key: geminiKey, modelName } = getGeminiApiKey(role);
+        const genAI = new GoogleGenerativeAI(geminiKey);
+        const model = genAI.getGenerativeModel({ 
+          model: 'gemini-2.5-flash-lite', 
+          generationConfig: { 
+            responseMimeType: "application/json",
+            responseSchema: responseSchema
+          } 
+        });
 
-    return NextResponse.json({ 
-      success: true, 
-      data: parsedData 
-    });
+        const result = await model.generateContent(prompt);
+        const responseText = result.response.text();
+        const parsedData = parseGeminiJSON(responseText);
+
+        return NextResponse.json({ 
+          success: true, 
+          data: parsedData 
+        });
+      } catch (err: any) {
+        lastError = err;
+        const errMsg = err.message || String(err);
+        if (errMsg.includes('429') || errMsg.includes('Quota') || errMsg.includes('Resource Exhausted') || err.status === 429) {
+          console.warn(`Extract TOC Rate Limit on attempt ${attempt + 1}. Retrying...`);
+          await new Promise(r => setTimeout(r, 2000 * (attempt + 1))); // Exponential backoff
+          continue;
+        }
+        break; // Break if not rate limit
+      }
+    }
+    
+    throw lastError;
 
   } catch (error: any) {
     console.error("Extract TOC Error:", error);

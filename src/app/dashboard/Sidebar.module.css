@@ -1,7 +1,7 @@
 .sidebar {
   width: 280px;
-  background: rgba(17, 24, 39, 0.95);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--surface-container);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -10,8 +10,8 @@
 
 .brand {
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-container-low);
 }
 
 .brand h1 {
@@ -27,14 +27,14 @@
 .brand p {
   margin: 0.2rem 0 0;
   font-size: 0.75rem;
-  color: #9ca3af;
+  color: var(--on-surface-variant);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 .section {
   padding: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border);
 }
 
 .sectionHeader {
@@ -43,7 +43,7 @@
 
 .sectionHeader h2 {
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: var(--on-surface-variant);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin: 0;
@@ -67,12 +67,12 @@
 }
 
 .projectItem:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-variant);
 }
 
 .activeProject {
-  background: rgba(96, 165, 250, 0.1);
-  border-color: rgba(96, 165, 250, 0.2);
+  background: var(--primary-container);
+  border-color: var(--primary);
 }
 
 .projectInfo {
@@ -89,14 +89,14 @@
 
 .projectTitle {
   font-size: 0.9rem;
-  color: #e5e7eb;
+  color: var(--on-surface);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .activeProject .projectTitle {
-  color: #60a5fa;
+  color: var(--on-primary-container);
   font-weight: 600;
 }
 
@@ -128,12 +128,12 @@
 
 .input {
   flex: 1;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  color: white;
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline);
+  color: var(--on-surface);
   font-size: 0.85rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
 }
 
 .createBtn {
@@ -168,7 +168,7 @@
 
 .sectionHeaderHistory h2 {
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: var(--on-surface-variant);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin: 0;
@@ -203,7 +203,7 @@
 }
 
 .historyItem {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--surface-container-low);
   padding: 0.75rem;
   border-radius: 8px;
   border-left: 2px solid #c084fc;
@@ -220,6 +220,6 @@
 
 .historyTopic {
   font-size: 0.8rem;
-  color: #d1d5db;
+  color: var(--on-surface);
   line-height: 1.3;
 }

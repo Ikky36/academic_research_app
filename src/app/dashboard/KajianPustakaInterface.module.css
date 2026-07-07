@@ -1,11 +1,12 @@
 .container {
   padding: 24px;
-  background: rgba(17, 24, 39, 0.7);
+  background: var(--surface-container);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  color: white;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  color: var(--on-surface);
   animation: fadeIn 0.5s ease-out;
   min-height: 500px;
 }
@@ -17,7 +18,7 @@
 
 .header {
   margin-bottom: 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border);
   padding-bottom: 16px;
 }
 
@@ -31,7 +32,7 @@
 }
 
 .header p {
-  color: #9ca3af;
+  color: var(--on-surface-variant);
   margin: 0;
   font-size: 14px;
 }
@@ -50,7 +51,7 @@
   left: 30px;
   right: 30px;
   height: 2px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border);
   z-index: 0;
 }
 
@@ -67,8 +68,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #1f2937;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: var(--surface-container-high);
+  border: 2px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -90,21 +91,31 @@
 
 .stepLabel {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--on-surface-variant);
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
 .stepIndicator.active .stepLabel,
 .stepIndicator.completed .stepLabel {
-  color: white;
+  color: var(--on-surface);
+}
+
+.stepIndicator.current .stepNumber {
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.15), 0 0 20px rgba(59, 130, 246, 0.5);
+  transform: scale(1.15);
+}
+
+.stepIndicator.current .stepLabel {
+  color: #60a5fa;
+  font-weight: 700;
 }
 
 .stepContent {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--surface-container-lowest);
   padding: 24px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
   animation: fadeIn 0.4s ease-out;
 }
 
@@ -117,16 +128,16 @@
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 8px;
-  color: #d1d5db;
+  color: var(--on-surface);
 }
 
 .input, .select {
   width: 100%;
   padding: 12px 16px;
-  background: rgba(17, 24, 39, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface);
+  border: 1px solid var(--outline);
   border-radius: 8px;
-  color: white;
+  color: var(--on-surface);
   font-size: 14px;
   transition: border-color 0.2s;
 }
@@ -138,8 +149,8 @@
 }
 
 .select option {
-  background: #1f2937;
-  color: white;
+  background: var(--surface-container-high);
+  color: var(--on-surface);
 }
 
 .buttonGroup {
@@ -178,13 +189,13 @@
 
 .btnSecondary {
   background: transparent;
-  color: #d1d5db;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--on-surface);
+  border: 1px solid var(--border);
 }
 
 .btnSecondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.05);
-  color: white;
+  background: var(--surface-variant);
+  color: var(--on-surface);
 }
 
 .btnSecondary:disabled {
@@ -203,16 +214,16 @@
 .outlineItem {
   display: flex;
   align-items: center;
-  background: rgba(31, 41, 55, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-container-low);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px 16px;
   transition: all 0.2s;
 }
 
 .outlineItem:hover {
-  background: rgba(31, 41, 55, 0.8);
-  border-color: rgba(59, 130, 246, 0.3);
+  background: var(--surface-variant);
+  border-color: var(--primary);
 }
 
 .outlineNumber {
@@ -231,9 +242,9 @@
   flex-grow: 1;
   background: transparent;
   border: none;
-  color: white;
+  color: var(--on-surface);
   font-size: 14px;
-  border-bottom: 1px solid #3b82f6;
+  border-bottom: 1px solid var(--primary);
   padding: 4px 0;
   outline: none;
 }
@@ -247,7 +258,7 @@
 .iconBtn {
   background: transparent;
   border: none;
-  color: #9ca3af;
+  color: var(--on-surface-variant);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -258,8 +269,8 @@
 }
 
 .iconBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--surface-variant);
+  color: var(--on-surface);
 }
 
 .iconBtn.delete:hover {
@@ -271,9 +282,9 @@
   width: 100%;
   padding: 12px;
   background: transparent;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border: 1px dashed var(--outline);
   border-radius: 8px;
-  color: #9ca3af;
+  color: var(--on-surface-variant);
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
@@ -284,9 +295,9 @@
 }
 
 .addOutlineBtn:hover {
-  border-color: #60a5fa;
-  color: #60a5fa;
-  background: rgba(59, 130, 246, 0.05);
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--surface-variant);
 }
 
 /* Alert Styling */
@@ -311,10 +322,53 @@
   color: #fcd34d;
 }
 
+/* Result Header & Buttons */
+.resultHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.resultHeader h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--primary);
+}
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+}
+
+.actionButton {
+  padding: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--on-surface);
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.actionButton:hover {
+  background: var(--surface-variant);
+}
+
+.actionButton.dangerButton {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.actionButton.dangerButton:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
 /* Markdown output */
 .resultContent {
-  background: rgba(17, 24, 39, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-container-high);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 24px;
   margin-top: 24px;
@@ -323,11 +377,11 @@
 .markdownContainer {
   font-size: 15px;
   line-height: 1.7;
-  color: #d1d5db;
+  color: var(--on-surface);
 }
 
 .markdownContainer h1, .markdownContainer h2, .markdownContainer h3 {
-  color: white;
+  color: var(--on-surface);
   margin-top: 1.5em;
   margin-bottom: 0.5em;
 }
@@ -372,7 +426,7 @@
 .loadingState {
   text-align: center;
   padding: 40px 0;
-  color: #9ca3af;
+  color: var(--on-surface-variant);
 }
 
 /* Skeleton loader for text */

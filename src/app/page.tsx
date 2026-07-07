@@ -44,7 +44,7 @@ export default function Home() {
             <div className={styles.stepNumber}>2</div>
             <BrainCircuit className={styles.stepIcon} size={48} strokeWidth={1.5} />
             <h3>Ekstraksi Otomatis</h3>
-            <p>Kecerdasan Buatan (Google Gemini) akan membaca, memahami, dan mengekstrak metodologi serta temuan penting secara otomatis.</p>
+            <p>Kecerdasan Buatan akan membaca, memahami, dan mengekstrak metodologi serta temuan penting secara otomatis.</p>
           </div>
           
           <div className={styles.stepCard}>
@@ -69,8 +69,8 @@ export default function Home() {
             </div>
             <div className={styles.largeContent}>
               <h3>Kecerdasan Buatan (AI) Terintegrasi</h3>
-              <p>Ditenagai oleh integrasi <strong>Google Gemini</strong> untuk penyusunan teks akademis super cerdas dan <strong>Groq (Llama 3)</strong> untuk analisis kueri yang secepat kilat. Sistem juga mendukung *Bring Your Own Key* (BYOK) multi-API untuk mem-bypass batasan kuota.</p>
-              <p className={styles.en}>Powered by Google Gemini for intelligent academic generation and Groq for lightning-fast query analysis. BYOK multi-API supported to bypass quota limits.</p>
+              <p>Ditenagai oleh integrasi kecerdasan buatan (AI) mutakhir untuk penyusunan teks akademis super cerdas dan analisis kueri yang secepat kilat.</p>
+              <p className={styles.en}>Powered by cutting-edge AI for intelligent academic generation and lightning-fast query analysis.</p>
             </div>
           </div>
 
@@ -105,8 +105,8 @@ export default function Home() {
             <div className={styles.iconWrapper}>
               <FileText size={32} />
             </div>
-            <h3>Draft Bab II & Bab III Otomatis</h3>
-            <p>Hasilkan paragraf <strong>Kajian Pustaka (Bab II)</strong>, <strong>Literature Review</strong>, hingga <strong>Metodologi (Bab III)</strong> dari PDF buku metodologi Anda secara terstruktur.</p>
+            <h3>Draft Kajian Pustaka & Metodologi Otomatis</h3>
+            <p>Hasilkan paragraf <strong>Kajian Pustaka</strong>, <strong>Literature Review</strong>, hingga <strong>Metodologi</strong> dari PDF buku metodologi Anda secara terstruktur.</p>
             <p className={styles.en}>Generate structured Literature Review (Chapter II) and Methodology (Chapter III) drafts from your methodology books.</p>
           </div>
           

@@ -123,7 +123,7 @@ export default function LitReviewInterface({ projectId, isActive, limits, role, 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2>📚 Tinjauan Pustaka (Literature Review)</h2>
+        <h2>Tinjauan Pustaka (Literature Review)</h2>
         <p>Sintesis narasi Tinjauan Pustaka berdasarkan literatur SOTA dan Research Gap yang Anda pilih.</p>
         
         {!selectedGap ? (
@@ -131,19 +131,19 @@ export default function LitReviewInterface({ projectId, isActive, limits, role, 
             ⚠️ <strong>Perhatian:</strong> Anda belum memilih Research Gap. Silakan kembali ke tab <strong>💡 Research GAP & Novelty</strong> lalu klik tombol <strong>"Pilih Ini"</strong> pada gap yang Anda inginkan.
           </div>
         ) : (
-          <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', borderLeft: '4px solid #10b981', padding: '15px', borderRadius: '4px', marginBottom: '20px' }}>
-            <strong style={{ color: '#10b981' }}>Gap yang Dipilih:</strong>
-            <p style={{ marginTop: '8px', fontSize: '14px', lineHeight: '1.5' }}>{selectedGap}</p>
+          <div style={{ backgroundColor: 'var(--surface-container-low)', borderLeft: '4px solid var(--primary)', padding: '15px', borderRadius: '4px', marginBottom: '20px' }}>
+            <strong style={{ color: 'var(--primary)' }}>Gap yang Dipilih:</strong>
+            <p style={{ marginTop: '8px', fontSize: '14px', lineHeight: '1.5', color: 'var(--on-surface)' }}>{selectedGap}</p>
           </div>
         )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#9CA3AF' }}>Jumlah Paragraf:</label>
+            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: 'var(--on-surface-variant)' }}>Jumlah Paragraf:</label>
             <select 
               value={paragraphs}
               onChange={handleParagraphsChange}
-              style={{ padding: '10px', borderRadius: '8px', border: '1px solid #4B5563', background: '#1F2937', color: '#fff', width: '100%', fontSize: '15px' }}
+              style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--on-surface)', width: '100%', fontSize: '15px' }}
             >
               <option value="3">3 Paragraf (Pendek)</option>
               <option value="4">4 Paragraf (Sedang)</option>
@@ -152,11 +152,11 @@ export default function LitReviewInterface({ projectId, isActive, limits, role, 
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: '#9CA3AF' }}>Style Kutipan (Citation):</label>
+            <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', color: 'var(--on-surface-variant)' }}>Style Kutipan (Citation):</label>
             <select 
               value={citationStyle}
               onChange={handleStyleChange}
-              style={{ padding: '10px', borderRadius: '8px', border: '1px solid #4B5563', background: '#1F2937', color: '#fff', width: '100%', fontSize: '15px' }}
+              style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--on-surface)', width: '100%', fontSize: '15px' }}
             >
               <option value="APA 7th Edition">APA 7th Edition</option>
               <option value="IEEE">IEEE</option>
@@ -173,7 +173,7 @@ export default function LitReviewInterface({ projectId, isActive, limits, role, 
             onClick={handleGenerate}
             disabled={isGenerating || !selectedGap}
           >
-            {isGenerating ? 'Menulis Literature Review... ⏳' : '✍️ Buat Literature Review'}
+            {isGenerating ? 'Menulis Literature Review...' : 'Buat Literature Review'}
           </button>
           
           {litReview && (
@@ -183,14 +183,14 @@ export default function LitReviewInterface({ projectId, isActive, limits, role, 
                 style={{ background: '#3b82f6' }}
                 onClick={copyToClipboard}
               >
-                {copySuccess ? '✅ Berhasil Disalin!' : '📋 Copy Text'}
+                {copySuccess ? 'Berhasil Disalin!' : 'Copy Text'}
               </button>
               <button 
                 className={styles.generateButton} 
                 style={{ background: '#ef4444' }}
                 onClick={handleReset}
               >
-                🗑️ Reset
+                Reset
               </button>
             </>
           )}
@@ -212,7 +212,7 @@ export default function LitReviewInterface({ projectId, isActive, limits, role, 
               remarkPlugins={[remarkGfm]}
               components={{
                 h3: ({node, ...props}) => (
-                  <h3 {...props} className={styles.modernH3} style={{ marginTop: '2rem', borderBottom: '1px solid #4B5563', paddingBottom: '0.5rem' }}>
+                  <h3 {...props} className={styles.modernH3} style={{ marginTop: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', color: 'var(--on-surface)' }}>
                     <span>{props.children}</span>
                   </h3>
                 ),

@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createProjectAction, deleteProjectAction } from './actions';
 import { createClient } from '@/utils/supabase/client';
+import Link from 'next/link';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar({ projects, currentProjectId, activeTab, limits, role }: { projects: any[], currentProjectId: string, activeTab: string, limits?: any, role?: string }) {
   const router = useRouter();
   const [newTitle, setNewTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [history, setHistory] = useState<any[]>([]);
   const [isLinking, setIsLinking] = useState(false);
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
 
@@ -24,13 +24,6 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
       }
     };
     checkGoogleAuth();
-    // Load search history from local storage
-    const saved = localStorage.getItem('search_history');
-    if (saved) {
-      try {
-        setHistory(JSON.parse(saved));
-      } catch (e) {}
-    }
   }, []);
 
   const handleCreateProject = async (e: React.FormEvent) => {
@@ -70,13 +63,6 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
     }
   };
 
-  const clearHistory = () => {
-    if (confirm('Hapus semua riwayat pencarian?')) {
-      localStorage.removeItem('search_history');
-      setHistory([]);
-    }
-  };
-
   const handleConnectGoogle = async () => {
     setIsLinking(true);
     const supabase = createClient();
@@ -101,14 +87,31 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
     <aside className={styles.sidebar}>
       
       <div className={styles.brand}>
-        <h1>Pusat Riset Akademik</h1>
-        <p>AI Literature Assistant</p>
+        <Link href="/" style={{ textDecoration: 'none', display: 'block' }}>
+          <h1>Pusat Riset Akademik</h1>
+          <p>AI THESIS ASSISTANT</p>
+        </Link>
       </div>
 
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2>Daftar Proyek</h2>
         </div>
+
+        <form onSubmit={handleCreateProject} className={styles.createForm} style={{ marginBottom: '16px' }}>
+          <input 
+            type="text" 
+            placeholder="Proyek baru..." 
+            value={newTitle} 
+            onChange={(e) => setNewTitle(e.target.value)}
+            disabled={isCreating}
+            required
+            className={styles.input}
+          />
+          <button type="submit" disabled={isCreating} className={styles.createBtn}>
+            +
+          </button>
+        </form>
 
         <div className={styles.projectList}>
           {projects.map(p => (
@@ -132,43 +135,6 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
             </div>
           ))}
         </div>
-
-        <form onSubmit={handleCreateProject} className={styles.createForm}>
-          <input 
-            type="text" 
-            placeholder="Proyek baru..." 
-            value={newTitle} 
-            onChange={(e) => setNewTitle(e.target.value)}
-            disabled={isCreating}
-            required
-            className={styles.input}
-          />
-          <button type="submit" disabled={isCreating} className={styles.createBtn}>
-            +
-          </button>
-        </form>
-      </div>
-
-      <div className={styles.historySection}>
-        <div className={styles.sectionHeaderHistory}>
-          <h2>Riwayat Pencarian</h2>
-          {history.length > 0 && (
-            <button onClick={clearHistory} className={styles.clearHistoryBtn} title="Bersihkan Riwayat">Hapus</button>
-          )}
-        </div>
-
-        {history.length === 0 ? (
-          <div className={styles.emptyState}>Belum ada riwayat.</div>
-        ) : (
-          <div className={styles.historyList}>
-            {history.map((h, i) => (
-              <div key={i} className={styles.historyItem}>
-                <div className={styles.historyQuery}>{h.query}</div>
-                <div className={styles.historyTopic}>{h.topic}</div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       <div style={{ marginTop: 'auto', padding: '1rem' }}>
@@ -195,7 +161,7 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
             opacity: (isLinking || isGoogleConnected) ? 0.9 : 1
           }}
         >
-          {isGoogleConnected ? '✅ Terhubung ke Google Drive' : (isLinking ? 'Menghubungkan...' : '🔗 Hubungkan Google Drive')}
+          {isGoogleConnected ? 'Terhubung ke Google Drive' : (isLinking ? 'Menghubungkan...' : 'Hubungkan Google Drive')}
         </button>
 
         {isGoogleConnected && (
@@ -221,7 +187,7 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
               textDecoration: 'none'
             }}
           >
-            📂 Buka Folder Drive
+            Buka Folder Drive
           </a>
         )}
       </div>

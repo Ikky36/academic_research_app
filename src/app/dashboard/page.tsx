@@ -7,10 +7,14 @@ import GapNoveltyInterface from './GapNoveltyInterface'
 import LitReviewInterface from './LitReviewInterface'
 import KajianPustakaInterface from './KajianPustakaInterface'
 import MetodologiInterface from './MetodologiInterface'
+import InstrumenInterface from './InstrumenInterface'
 import Sidebar from './Sidebar'
 import styles from './page.module.css'
 
 import SettingsButton from '@/components/SettingsButton'
+import { ThemeToggle } from '@/components/ThemeToggle'
+
+export const maxDuration = 300; // Allow longer API/server action timeouts for AI generation
 
 export default async function DashboardPage({
   searchParams
@@ -80,12 +84,13 @@ export default async function DashboardPage({
         <header className={styles.header}>
           <div className={styles.headerSpacer}></div>
           <div className={styles.headerRightControls}>
-          {canUseByok && <SettingsButton />}
+            <ThemeToggle />
+            {canUseByok && <SettingsButton />}
           {role === 'admin' && (
             <Link href="/admin" className={styles.adminButton}>Admin Dashboard</Link>
           )}
           <div className={styles.userPill}>
-            <span>👤</span> {user.email}
+            {user.email}
           </div>
           <form action="/auth/signout" method="post">
             <button className={styles.logoutButton}>Sign Out</button>
@@ -99,37 +104,43 @@ export default async function DashboardPage({
             href={`/dashboard?tab=search&project=${activeProject?.id}`} 
             className={activeTab === 'search' ? styles.activeTab : styles.tab}
           >
-            🔍 Cari Jurnal
+            Cari Jurnal
           </Link>
           <Link 
             href={`/dashboard?tab=sota&project=${activeProject?.id}`} 
             className={activeTab === 'sota' ? styles.activeTab : styles.tab}
           >
-            📊 Tabel SOTA & Analisis
+            Tabel SOTA & Analisis
           </Link>
           <Link 
             href={`/dashboard?tab=gap-novelty&project=${activeProject?.id}`} 
             className={activeTab === 'gap-novelty' ? styles.activeTab : styles.tab}
           >
-            💡 Research GAP & Novelty
+            Research GAP & Novelty
           </Link>
           <Link 
             href={`/dashboard?tab=lit-review&project=${activeProject?.id}`} 
             className={activeTab === 'lit-review' ? styles.activeTab : styles.tab}
           >
-            📚 Literature Review
+            Literature Review
           </Link>
           <Link 
             href={`/dashboard?tab=kajian-pustaka&project=${activeProject?.id}`} 
             className={activeTab === 'kajian-pustaka' ? styles.activeTab : styles.tab}
           >
-            🧠 Kajian Pustaka (Bab II)
+            Kajian Pustaka
           </Link>
           <Link 
             href={`/dashboard?tab=metodologi&project=${activeProject?.id}`} 
             className={activeTab === 'metodologi' ? styles.activeTab : styles.tab}
           >
-            📋 Metodologi (Bab III)
+            Metodologi
+          </Link>
+          <Link 
+            href={`/dashboard?tab=instrumen&project=${activeProject?.id}`} 
+            className={activeTab === 'instrumen' ? styles.activeTab : styles.tab}
+          >
+            Instrumen Penelitian
           </Link>
         </div>
 
@@ -154,6 +165,9 @@ export default async function DashboardPage({
               <div style={{ display: activeTab === 'metodologi' ? 'block' : 'none' }}>
                 <MetodologiInterface key={`met-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'metodologi'} limits={limits} role={role} isPaidApi={isPaidApi} />
               </div>
+              <div style={{ display: activeTab === 'instrumen' ? 'block' : 'none' }}>
+                <InstrumenInterface key={`ins-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'instrumen'} limits={limits} role={role} isPaidApi={isPaidApi} />
+              </div>
             </>
           )}
         </main>
@@ -162,3 +176,4 @@ export default async function DashboardPage({
     </div>
   )
 }
+

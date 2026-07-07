@@ -3,6 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import Groq from 'groq-sdk';
 import fs from 'fs';
 import path from 'path';
+import { callDeepSeekWithRetry } from './deepseek';
 
 function getEnvFallback(key: string): string | undefined {
   if (process.env[key]) return process.env[key];
@@ -20,13 +21,6 @@ function getEnvFallback(key: string): string | undefined {
 }
 
 export async function generateSotaChunk(referencesChunk: any[], startIndex: number, userApiKey?: string, isPaidApi?: boolean, attempt = 1): Promise<string> {
-  const { getGeminiApiKey } = await import('@/utils/apiKeyManager');
-  const role = isPaidApi ? 'pro' : 'free'; // Simulate role based on flag since we are deep in service layer
-  const { key: apiKey, modelName } = getGeminiApiKey(role, userApiKey);
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: modelName });
-
   const referencesText = referencesChunk.map((ref, index) => {
     return `
 Artikel ${startIndex + index}:
@@ -57,36 +51,62 @@ ${referencesText}
 Berikan *HANYA* format tabel Markdown sebagai output Anda. Pastikan setiap baris mewakili satu artikel. Jangan tambahkan kalimat pengantar atau penutup apapun selain tabel.
   `;
 
+  // Cek provider
+  const { getActiveAiProvider } = await import('@/utils/apiKeyManager');
+  const provider = await getActiveAiProvider();
+
   try {
-    const result = await model.generateContent(prompt);
-    
-    // Strip out markdown code blocks if the AI accidentally wrapped the table in them
-    let text = result.response.text();
+    let text = '';
+    if (provider === 'deepseek' && isPaidApi) {
+      console.log('[SOTA] Using DeepSeek (non-think) for SOTA table');
+      text = await callDeepSeekWithRetry(prompt, 'Anda adalah asisten riset akademik yang ahli menyusun tabel literature review.', 'non-think');
+    } else {
+      const { getGeminiApiKey } = await import('@/utils/apiKeyManager');
+      const role = isPaidApi ? 'pro' : 'free';
+      const { key: apiKey, modelName } = getGeminiApiKey(role, userApiKey);
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
+      text = result.response.text();
+    }
+
     text = text.replace(/```markdown/gi, '').replace(/```/g, '').trim();
     return text;
   } catch (err: any) {
-    console.error('Gemini API Error:', err);
+    console.error('SOTA API Error:', err);
     const errorMessage = err.message || '';
     
-    // Auto-retry for 503 Service Unavailable or similar server errors
     if ((errorMessage.includes('503') || errorMessage.includes('500') || errorMessage.includes('502')) && attempt < 3) {
-      console.log(`Gemini Server Busy. Retrying chunk ${startIndex} (Attempt ${attempt + 1})...`);
+      console.log(`Server Busy. Retrying chunk ${startIndex} (Attempt ${attempt + 1})...`);
       await new Promise(resolve => setTimeout(resolve, 8000));
       return generateSotaChunk(referencesChunk, startIndex, userApiKey, isPaidApi, attempt + 1);
     }
     
-    // Auto-retry for Rate Limit errors
     if (errorMessage.includes('429') || errorMessage.includes('413') || errorMessage.toLowerCase().includes('rate limit')) {
       if (attempt < 3) {
-        console.log(`Gemini Rate Limit. Retrying chunk ${startIndex} (Attempt ${attempt + 1})...`);
+        console.log(`Rate Limit. Retrying chunk ${startIndex} (Attempt ${attempt + 1})...`);
         await new Promise(resolve => setTimeout(resolve, 15000));
         return generateSotaChunk(referencesChunk, startIndex, userApiKey, isPaidApi, attempt + 1);
       }
       const match = errorMessage.match(/retry in ([\d\.]+)s/);
       const waitTime = match ? Math.ceil(parseFloat(match[1])) : 30;
-      throw new Error(`Batas penggunaan gratis Gemini API tercapai. Harap tunggu sekitar ${waitTime} detik lalu coba lagi.`);
+      if (process.env.NODE_ENV !== 'development') {
+        const { logErrorToAdmin, FRIENDLY_ERROR_MESSAGE } = await import('@/utils/logger');
+        await logErrorToAdmin('SOTA', err);
+      }
+      throw new Error(process.env.NODE_ENV !== 'development' 
+        ? (await import('@/utils/logger')).FRIENDLY_ERROR_MESSAGE
+        : `Sistem AI sedang penuh. Harap tunggu sekitar ${waitTime} detik lalu coba lagi.`
+      );
     }
-    throw new Error('Gagal menghasilkan tabel SOTA dari AI: ' + errorMessage);
+    if (process.env.NODE_ENV !== 'development') {
+      const { logErrorToAdmin, FRIENDLY_ERROR_MESSAGE } = await import('@/utils/logger');
+      await logErrorToAdmin('SOTA', err);
+    }
+    throw new Error(process.env.NODE_ENV !== 'development' 
+      ? (await import('@/utils/logger')).FRIENDLY_ERROR_MESSAGE
+      : 'Terjadi kendala teknis pada sistem. Laporan error telah dikirim ke Admin.'
+    );
   }
 }
 
@@ -106,27 +126,31 @@ async function fetchWithRetry(model: any, prompt: string, attempt = 1): Promise<
       const waitTime = match ? Math.ceil(parseFloat(match[1])) : 15;
 
       if (waitTime > 15 || attempt >= 3) {
-        throw new Error(`Batas penggunaan gratis Gemini API tercapai. Harap tunggu sekitar ${waitTime} detik lalu coba lagi.`);
+        const { logErrorToAdmin, FRIENDLY_ERROR_MESSAGE } = await import('@/utils/logger');
+        await logErrorToAdmin('SOTA_General', err);
+        throw new Error(FRIENDLY_ERROR_MESSAGE);
       }
 
       console.log(`Gemini Rate Limit. Retrying in ${waitTime}s (Attempt ${attempt + 1})...`);
       await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
       return fetchWithRetry(model, prompt, attempt + 1);
     }
-    throw new Error('Gagal dari AI: ' + errorMessage);
+    const { logErrorToAdmin, FRIENDLY_ERROR_MESSAGE } = await import('@/utils/logger');
+    await logErrorToAdmin('SOTA_General', err);
+    throw new Error(FRIENDLY_ERROR_MESSAGE);
   }
 }
 
 export async function generateGapAndNovelty(sotaMarkdown: string, researchTopic: string, userApiKey?: string, gapType?: string, educationLevel: string = 'Sarjana', isPaidApi?: boolean): Promise<string> {
-  const { getGeminiApiKey } = await import('@/utils/apiKeyManager');
+  const { getGeminiApiKey, getActiveAiProvider } = await import('@/utils/apiKeyManager');
   const role = isPaidApi ? 'pro' : 'free';
   const { key: apiKey, modelName: defaultModelName } = getGeminiApiKey(role, userApiKey);
+  const provider = await getActiveAiProvider();
   
-  // Use gemini-2.0-flash specifically for Gap generation if free tier, otherwise use whatever the manager returns
-  const modelName = isPaidApi ? defaultModelName : 'gemini-2.0-flash';
+  const modelName = defaultModelName;
   
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: modelName });
+  const geminiModel = genAI.getGenerativeModel({ model: modelName });
 
   // If EVALUATION is passed, evaluate the topic
   if (gapType === 'EVALUATION') {
@@ -139,14 +163,22 @@ Dan Topik/Judul penelitian yang diajukan:
 
 Tugas Anda:
 Berikan evaluasi khusus mengenai Topik/Judul yang diajukan di atas. Apakah topik ini sudah memiliki Novelty yang kuat dibandingkan literatur di SOTA? 
-Jika belum, berikan saran perbaikan spesifik agar Topik tersebut memiliki Novelty yang kuat dan sesuai untuk tingkat pendidikan **${educationLevel}**.
+Jika belum, berikan saran perbaikan spesifik agar Topik tersebut memiliki Novelty yang kuat dan memenuhi standar akademik untuk tugas akhir tingkat **${educationLevel}**.
+
+PENTING: Tingkat pendidikan "${educationLevel}" di sini BUKAN berarti subjek/objek penelitiannya harus berfokus pada mahasiswa S1/S2/S3. Ini mengacu pada KEDALAMAN ANALISIS, TINGKAT KOMPLEKSITAS, dan KUALITAS KEBARUAN akademik yang dituntut untuk jenjang pendidikan tersebut (misal: Skripsi untuk S1, Tesis untuk S2, Disertasi untuk S3).
 
 Berikan hanya teks evaluasi Anda dalam format Markdown yang rapi (paragraf/list), tanpa tabel apapun.
     `;
     
     let evaluationText = '';
     try {
-      let evalRes = await fetchWithRetry(model, evalPrompt);
+      let evalRes: string;
+      if (provider === 'deepseek' && isPaidApi) {
+        console.log('[GAP] Using DeepSeek (think-max) for evaluation');
+        evalRes = await callDeepSeekWithRetry(evalPrompt, 'Anda adalah pakar penelitian akademik.', 'think-max');
+      } else {
+        evalRes = await fetchWithRetry(geminiModel, evalPrompt);
+      }
       evaluationText = evalRes.replace(/```markdown/gi, '').replace(/```/g, '').trim();
     } catch (err) {
       console.error('Gagal mengevaluasi topik:', err);
@@ -168,7 +200,6 @@ Dan Topik/Judul penelitian yang ingin dituju:
 Tugas Anda:
 Identifikasi **${gapType}** dari literatur-literatur SOTA di atas.
 Anda WAJIB memberikan **TEPAT 2** celah penelitian (Research Gap) yang berbeda untuk tipe ${gapType} ini. 
-Bobot kebaruan (novelty) dan narasi gap yang Anda buat HARUS disesuaikan secara khusus untuk tingkat pendidikan **${educationLevel}**.
 
 Sajikan hasilnya HANYA dalam format tabel Markdown tanpa teks pengantar atau penutup apapun.
 Tabel harus memiliki tepat 2 kolom:
@@ -178,15 +209,22 @@ Tabel harus memiliki tepat 2 kolom:
 ATURAN SANGAT PENTING:
 1. Kolom "JENIS RESEARCH GAP": WAJIB diawali dengan teks "**${gapType}:** " lalu diikuti dengan deskripsi celah penelitiannya. Anda WAJIB menyertakan sitasi APA 7th edition (contoh: Smith et al., 2023). 
 2. Kolom "NOVELTY": TIDAK BOLEH KOSONG! WAJIB diisi dengan paragraf usulan ide kebaruan konkret untuk mengisi celah tersebut. PASTIKAN gagasan ini sangat relevan dan mengarah pada Topik: "${researchTopic}".
-3. Bobot narasi kebaruannya harus sesuai standar tugas akhir **${educationLevel}**.
-4. Anda WAJIB memberikan persis 2 baris isi tabel (artinya ada 2 pernyataan gap yang berbeda).
+3. STANDAR AKADEMIK: Bobot narasi kebaruan dan kedalaman analisis gap Anda HARUS sesuai dengan standar penyusunan tugas akhir tingkat **${educationLevel}** (Skripsi/Tesis/Disertasi). 
+4. PERINGATAN: "${educationLevel}" di sini BUKAN berarti sampel populasi/objek penelitian Anda harus berupa mahasiswa S1/S2/S3! Jangan membelokkan topik ke arah sana. Ini murni tentang TINGKAT KESULITAN TEORITIS DAN METODOLOGIS dari gap/novelty yang Anda usulkan.
+5. Anda WAJIB memberikan persis 2 baris isi tabel (artinya ada 2 pernyataan gap yang berbeda).
     `;
 
     let attempts = 0;
     while (attempts < 3) {
       attempts++;
       try {
-        let text = await fetchWithRetry(model, prompt);
+        let text: string;
+        if (provider === 'deepseek' && isPaidApi) {
+          console.log('[GAP] Using DeepSeek (think-max) for gap generation');
+          text = await callDeepSeekWithRetry(prompt, 'Anda adalah pakar penelitian akademik yang ahli menemukan Research Gap dan Novelty.', 'think-max');
+        } else {
+          text = await fetchWithRetry(geminiModel, prompt);
+        }
         text = text.replace(/```markdown/gi, '').replace(/```/g, '').trim();
         
         const lines = text.split('\n').map(l => l.trim()).filter(l => l.startsWith('|'));
@@ -238,13 +276,14 @@ ATURAN SANGAT PENTING:
 
 
 export async function generateLiteratureReview(sotaMarkdown: string, topic: string, gapText: string, paragraphs: number, citationStyle: string, rawMetadata: string, userApiKey?: string, isPaidApi?: boolean) {
-  const { getGeminiApiKey } = await import('@/utils/apiKeyManager');
+  const { getGeminiApiKey, getActiveAiProvider } = await import('@/utils/apiKeyManager');
   const role = isPaidApi ? 'pro' : 'free';
   const { key: apiKey, modelName: defaultModelName } = getGeminiApiKey(role, userApiKey);
+  const provider = await getActiveAiProvider();
 
-  const modelName = isPaidApi ? defaultModelName : 'gemini-2.0-flash';
+  const modelName = defaultModelName;
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: modelName });
+  const geminiModel = genAI.getGenerativeModel({ model: modelName });
 
   const prompt = `
 Anda adalah akademisi senior dan penulis jurnal internasional yang ahli dalam menyusun Tinjauan Pustaka (Literature Review).
@@ -279,10 +318,18 @@ Berikan hasil akhirnya langsung dalam format Markdown yang rapi (paragraf narati
 `;
 
   try {
-    let result = await fetchWithRetry(model, prompt);
+    let result: string;
+    if (provider === 'deepseek' && isPaidApi) {
+      console.log('[LitReview] Using DeepSeek (think-medium) for Literature Review');
+      result = await callDeepSeekWithRetry(prompt, 'Anda adalah akademisi senior yang ahli dalam menyusun Literature Review.', 'think-medium');
+    } else {
+      result = await fetchWithRetry(geminiModel, prompt);
+    }
     return result.replace(/```markdown/gi, '').replace(/```/g, '').trim();
   } catch (err: any) {
     console.error('Literature Review generation error:', err);
-    throw new Error('Gagal menyusun Literature Review: ' + err.message);
+    const { logErrorToAdmin, FRIENDLY_ERROR_MESSAGE } = await import('@/utils/logger');
+    await logErrorToAdmin('Literature_Review', err);
+    throw new Error(FRIENDLY_ERROR_MESSAGE);
   }
 }

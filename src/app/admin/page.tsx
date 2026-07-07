@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction, getSyncedBooksAction, getBookChunksAction, deleteSyncedBookAction } from './actions';
+import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction, getSyncedBooksAction, getBookChunksAction, deleteSyncedBookAction, getErrorLogsAction, deleteErrorLogAction, getAiProviderAction, setAiProviderAction } from './actions';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
@@ -10,7 +10,7 @@ import { get, set, del } from 'idb-keyval';
 import styles from './page.module.css';
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<'users' | 'limits' | 'methodology'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'limits' | 'methodology' | 'errors' | 'ai-config'>('users');
   
   const [users, setUsers] = useState<any[]>([]);
   const [limits, setLimits] = useState<any[]>([]);
@@ -43,12 +43,19 @@ export default function AdminDashboard() {
   const [newEmail, setNewEmail] = useState('');
   const [newRole, setNewRole] = useState('free');
   const [isCreating, setIsCreating] = useState(false);
+  
+  // Error logs state
+  const [errorLogs, setErrorLogs] = useState<any[]>([]);
+
+  // AI Provider state
+  const [aiProvider, setAiProvider] = useState<'gemini' | 'deepseek'>('gemini');
+  const [aiProviderSaving, setAiProviderSaving] = useState(false);
 
   // Load persisted state on mount
   useEffect(() => {
     const savedTab = localStorage.getItem('adminActiveTab');
     if (savedTab) {
-      setActiveTab(savedTab as 'users' | 'limits' | 'methodology');
+      setActiveTab(savedTab as 'users' | 'limits' | 'methodology' | 'errors' | 'ai-config');
     }
 
     get('academic_sync_state').then((val) => {
@@ -90,19 +97,24 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     setLoading(true);
-    const [usersRes, limitsRes, booksRes] = await Promise.all([
+    const [usersRes, limitsRes, booksRes, logsRes, providerRes] = await Promise.all([
       getUsersAction(),
       getTierLimitsAction(),
-      getSyncedBooksAction()
+      getSyncedBooksAction(),
+      getErrorLogsAction(),
+      getAiProviderAction()
     ]);
     
     if (usersRes.data) setUsers(usersRes.data);
     if (limitsRes.data) setLimits(limitsRes.data);
     if (booksRes.data) setSyncedBooks(booksRes.data);
+    if (logsRes.data) setErrorLogs(logsRes.data);
+    if (providerRes.data) setAiProvider(providerRes.data as 'gemini' | 'deepseek');
     
     if (usersRes.error) setError(usersRes.error);
     if (limitsRes.error) setError(limitsRes.error);
     if (booksRes.error) setError(booksRes.error);
+    if (logsRes.error) setError(logsRes.error);
     
     setLoading(false);
   };
@@ -248,6 +260,16 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteErrorLog = async (logId: string) => {
+    if (!confirm('Hapus log error ini?')) return;
+    const res = await deleteErrorLogAction(logId);
+    if (res.success) {
+      setErrorLogs(errorLogs.filter(l => l.id !== logId));
+    } else {
+      setError(res.error || 'Gagal menghapus log.');
+    }
+  };
+
   return (
     <div className={styles.adminContainer}>
       <header className={styles.header}>
@@ -279,6 +301,18 @@ export default function AdminDashboard() {
             onClick={() => setActiveTab('methodology')}
           >
             📚 Sinkronisasi Metodologi
+          </button>
+          <button 
+            className={activeTab === 'errors' ? styles.activeTab : styles.tab} 
+            onClick={() => setActiveTab('errors')}
+          >
+            📝 Log Error AI
+          </button>
+          <button 
+            className={activeTab === 'ai-config' ? styles.activeTab : styles.tab} 
+            onClick={() => setActiveTab('ai-config')}
+          >
+            🤖 Konfigurasi AI
           </button>
         </div>
 
@@ -320,7 +354,7 @@ export default function AdminDashboard() {
                     {isCreating ? 'Membuat...' : '+ Buat Akun'}
                   </button>
                 </form>
-                <small style={{ color: '#94a3b8', display: 'block', marginTop: '0.5rem' }}>
+                <small style={{ color: 'var(--on-surface-variant)', display: 'block', marginTop: '0.5rem' }}>
                   Membutuhkan <code>SUPABASE_SERVICE_ROLE_KEY</code> di Vercel Environment Variables.
                 </small>
               </div>
@@ -452,6 +486,28 @@ export default function AdminDashboard() {
                     </div>
                     
                     <div className={styles.formGroup}>
+                      <label>Maksimal Referensi Tambahan (Kajian Pustaka)</label>
+                      <input 
+                        type="number" 
+                        min="1"
+                        className={styles.input} 
+                        value={limitObj.max_kajian_tambahan || 5} 
+                        onChange={e => setLimits(limits.map(l => l.role === limitObj.role ? {...l, max_kajian_tambahan: e.target.value} : l))}
+                      />
+                    </div>
+
+                    <div className={styles.formGroup}>
+                      <label>Maksimal Referensi (Instrumen Penelitian)</label>
+                      <input 
+                        type="number" 
+                        min="1"
+                        className={styles.input} 
+                        value={limitObj.max_instrumen_referensi || 2} 
+                        onChange={e => setLimits(limits.map(l => l.role === limitObj.role ? {...l, max_instrumen_referensi: e.target.value} : l))}
+                      />
+                    </div>
+                    
+                    <div className={styles.formGroup}>
                       <label className={styles.checkboxLabel}>
                         <input 
                           type="checkbox" 
@@ -463,18 +519,7 @@ export default function AdminDashboard() {
                       </label>
                     </div>
 
-                    <div className={styles.formGroup}>
-                      <label className={styles.checkboxLabel}>
-                        <input 
-                          type="checkbox" 
-                          className={styles.checkbox}
-                          checked={limitObj.can_use_paid_api || false}
-                          onChange={e => setLimits(limits.map(l => l.role === limitObj.role ? {...l, can_use_paid_api: e.target.checked} : l))}
-                        />
-                        Akses API Berbayar (SOTA 25 Baris, Gap 6 Baris)?
-                      </label>
-                    </div>
-                    
+
                     <button type="submit" className={styles.saveButton}>Simpan Perubahan</button>
                   </form>
                 </div>
@@ -483,7 +528,7 @@ export default function AdminDashboard() {
           ) : activeTab === 'methodology' ? (
             <div className={styles.methodologySection}>
               <h2>Sinkronisasi Buku Metodologi</h2>
-              <p style={{ color: '#9ca3af', marginBottom: '20px' }}>
+              <p style={{ color: 'var(--on-surface-variant)', marginBottom: '20px' }}>
                 Masukkan ID Folder Google Drive Publik yang berisi buku-buku PDF metodologi penelitian. Sistem akan mengunduh, mengekstrak teks, dan memecahnya berdasarkan kategori metode penelitian ke dalam database.
               </p>
               
@@ -541,6 +586,9 @@ export default function AdminDashboard() {
                         setBookPages([]);
                         setCurrentBookId(null);
                         setCompletedChapters([]);
+                        setError('');
+                        setSuccess('');
+                        setSyncProgress('');
                         await del('academic_sync_state');
                       }}
                       style={{ padding: '10px 15px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
@@ -557,26 +605,26 @@ export default function AdminDashboard() {
                   </p>
                 )}
                 <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <label style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>Batas Halaman Daftar Isi:</label>
+                  <label style={{ fontSize: '14px', color: 'var(--on-surface-variant)', margin: 0 }}>Batas Halaman Daftar Isi:</label>
                   <input 
                     type="number" 
                     min="10" 
                     max="150" 
                     value={scanPageLimit}
                     onChange={(e) => setScanPageLimit(Number(e.target.value))}
-                    style={{ width: '70px', padding: '5px', borderRadius: '4px', border: '1px solid #4b5563', backgroundColor: '#1f2937', color: 'white' }}
+                    style={{ width: '70px', padding: '5px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: 'var(--surface-container-high)', color: 'var(--on-surface)' }}
                   />
-                  <span style={{ fontSize: '12px', color: '#6b7280' }}>(Untuk buku tebal, naikkan angka ini misal ke 50 atau 100)</span>
+                  <span style={{ fontSize: '12px', color: 'var(--on-surface-variant)' }}>(Untuk buku tebal, naikkan angka ini misal ke 50 atau 100)</span>
                 </div>
               </div>
               </div>
 
               {extractedToc && (
-                <div style={{ background: '#1f2937', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
+                <div style={{ background: 'var(--surface-container)', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                     <div>
-                      <h3 style={{ color: '#10b981', marginTop: 0, marginBottom: '5px' }}>Pilih Bab yang Akan Diekstrak</h3>
-                      <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>
+                      <h3 style={{ color: 'var(--primary)', marginTop: 0, marginBottom: '5px' }}>Pilih Bab yang Akan Diekstrak</h3>
+                      <p style={{ fontSize: '14px', color: 'var(--on-surface-variant)', margin: 0 }}>
                         Sistem mendeteksi buku <strong>{extractedToc.title}</strong>. Silakan pilih bab-bab yang relevan dengan metode penelitian untuk diekstrak (hilangkan centang pada bab yang tidak perlu).
                       </p>
                     </div>
@@ -589,15 +637,15 @@ export default function AdminDashboard() {
                         setSuccess('');
                         setError('');
                       }}
-                      style={{ padding: '8px 12px', background: '#374151', color: 'white', border: '1px solid #4b5563', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
+                      style={{ padding: '8px 12px', background: 'var(--surface-variant)', color: 'var(--on-surface)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}
                     >
                       ↻ Deteksi Ulang Daftar Isi
                     </button>
                   </div>
                   
-                  <div style={{ maxHeight: '300px', overflowY: 'auto', background: '#111827', padding: '15px', borderRadius: '6px' }}>
+                  <div style={{ maxHeight: '300px', overflowY: 'auto', background: 'var(--surface-container-low)', padding: '15px', borderRadius: '6px' }}>
                     {extractedToc.chapters && extractedToc.chapters.map((chap: any, idx: number) => (
-                      <label key={idx} style={{ display: 'flex', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid #374151', cursor: 'pointer' }}>
+                      <label key={idx} style={{ display: 'flex', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid var(--border)', cursor: 'pointer' }}>
                         <input 
                           type="checkbox" 
                           checked={selectedChapters.includes(idx) || completedChapters.includes(idx)}
@@ -614,9 +662,9 @@ export default function AdminDashboard() {
                         <div style={{ flex: 1 }}>
                           <div style={{ fontWeight: 'bold' }}>
                             {chap.chapter_title || `Bab ${idx+1}`} 
-                            {completedChapters.includes(idx) && <span style={{color: '#10b981', marginLeft: '8px', fontSize: '12px'}}>✓ (Selesai)</span>}
+                            {completedChapters.includes(idx) && <span style={{color: 'var(--primary)', marginLeft: '8px', fontSize: '12px'}}>✓ (Selesai)</span>}
                           </div>
-                          <div style={{ fontSize: '12px', color: '#9ca3af' }}>Halaman: {chap.page_start} - {chap.page_end || '?'}</div>
+                          <div style={{ fontSize: '12px', color: 'var(--on-surface-variant)' }}>Halaman: {chap.page_start} - {chap.page_end || '?'}</div>
                         </div>
                       </label>
                     ))}
@@ -626,7 +674,7 @@ export default function AdminDashboard() {
               
               <button 
                 className={styles.saveButton}
-                disabled={isSyncing || (!uploadFile && !driveFolderId)}
+                disabled={isSyncing || (!uploadFile && !driveFolderId.trim())}
                 onClick={async () => {
                   if (!driveFolderId && !uploadFile) {
                     setError('Pilih salah satu: masukkan Folder ID ATAU unggah File PDF');
@@ -892,7 +940,7 @@ export default function AdminDashboard() {
               
               <div style={{ marginTop: '40px' }}>
                 <h3>Daftar Buku Metodologi Tersinkronisasi</h3>
-                <p style={{ color: '#9ca3af', marginBottom: '15px', fontSize: '14px' }}>
+                <p style={{ color: 'var(--on-surface-variant)', marginBottom: '15px', fontSize: '14px' }}>
                   Berikut adalah daftar buku dan kategori metode yang telah berhasil diekstrak dan tersimpan di database.
                 </p>
                 <div className={styles.tableContainer}>
@@ -913,11 +961,11 @@ export default function AdminDashboard() {
                               <h4 style={{ margin: '0 0 5px 0' }}>
                                 {book.source_type === 'journal' ? '📄 ' : '📘 '}{book.title}
                               </h4>
-                              <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '4px' }}>
+                              <div style={{ fontSize: '14px', color: 'var(--on-surface-variant)', marginBottom: '4px' }}>
                                 {book.author} ({book.year})
                               </div>
                               {book.source_type === 'journal' ? (
-                                <div style={{ fontSize: '13px', color: '#60a5fa' }}>
+                                <div style={{ fontSize: '13px', color: 'var(--primary)' }}>
                                   Jurnal: {book.journal_name || '-'} 
                                   {book.volume && ` Vol. ${book.volume}`}
                                   {book.issue && ` No. ${book.issue}`}
@@ -925,11 +973,11 @@ export default function AdminDashboard() {
                                   {book.doi && <span style={{color: '#a78bfa'}}>DOI: {book.doi}</span>}
                                 </div>
                               ) : (
-                                <div style={{ fontSize: '13px', color: '#60a5fa' }}>
+                                <div style={{ fontSize: '13px', color: 'var(--primary)' }}>
                                   Penerbit: {book.publisher || '-'}
                                 </div>
                               )}
-                              <div style={{ fontSize: '12px', marginTop: '5px', color: '#6b7280' }}>
+                              <div style={{ fontSize: '12px', marginTop: '5px', color: 'var(--on-surface-variant)' }}>
                                 Total Diekstrak: {book.methodology_chunks?.length || 0} chunks metode
                               </div>
                             </td>
@@ -938,8 +986,8 @@ export default function AdminDashboard() {
                                 <button 
                                   onClick={() => handleViewChunks(book.id)}
                                   style={{
-                                    background: viewingChunksFor === book.id ? '#4b5563' : '#3b82f6',
-                                    color: 'white',
+                                    background: viewingChunksFor === book.id ? 'var(--surface-variant)' : 'var(--primary)',
+                                    color: viewingChunksFor === book.id ? 'var(--on-surface)' : 'var(--on-primary)',
                                     border: 'none',
                                     padding: '6px 12px',
                                     borderRadius: '4px',
@@ -966,21 +1014,21 @@ export default function AdminDashboard() {
                               </div>
                               
                               {viewingChunksFor === book.id && (
-                                <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #374151' }}>
-                                  <h5 style={{ margin: '0 0 10px 0', color: '#10b981' }}>Isi Ekstraksi (Chunks)</h5>
+                                <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid var(--border)' }}>
+                                  <h5 style={{ margin: '0 0 10px 0', color: 'var(--primary)' }}>Isi Ekstraksi (Chunks)</h5>
                                   {isLoadingChunks ? (
-                                    <div style={{ fontSize: '14px', color: '#9ca3af' }}>Memuat isi buku...</div>
+                                    <div style={{ fontSize: '14px', color: 'var(--on-surface-variant)' }}>Memuat isi buku...</div>
                                   ) : bookChunks.length === 0 ? (
                                     <div style={{ fontSize: '14px', color: '#ef4444' }}>Buku ini belum memiliki chunk ekstraksi teks.</div>
                                   ) : (
                                     <div style={{ display: 'grid', gap: '10px', maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
                                       {bookChunks.map((chunk, idx) => (
-                                        <div key={idx} style={{ background: '#111827', padding: '10px', borderRadius: '6px', fontSize: '13px' }}>
-                                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#3b82f6', fontWeight: 'bold' }}>
+                                        <div key={idx} style={{ background: 'var(--surface-container-low)', padding: '10px', borderRadius: '6px', fontSize: '13px' }}>
+                                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: 'var(--primary)', fontWeight: 'bold' }}>
                                             <span>Kategori: {chunk.method_category || 'Umum'}</span>
                                             <span>Hal. {chunk.page_start} - {chunk.page_end}</span>
                                           </div>
-                                          <div style={{ lineHeight: '1.5', color: '#d1d5db', whiteSpace: 'pre-wrap' }}>
+                                          <div style={{ lineHeight: '1.5', color: 'var(--on-surface-variant)', whiteSpace: 'pre-wrap' }}>
                                             {chunk.content}
                                           </div>
                                         </div>
@@ -997,6 +1045,205 @@ export default function AdminDashboard() {
                   </table>
                 </div>
               </div>
+            </div>
+          ) : activeTab === 'errors' ? (
+            <div className={styles.methodologySection}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2>Log Error Sistem & AI</h2>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button 
+                    onClick={loadData}
+                    style={{ padding: '8px 12px', background: 'var(--surface-variant)', color: 'var(--on-surface)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer' }}
+                  >
+                    ↻ Segarkan Data
+                  </button>
+                </div>
+              </div>
+              <p style={{ color: 'var(--on-surface-variant)', marginBottom: '20px' }}>
+                Berikut adalah detail error yang disembunyikan dari pengguna umum.
+              </p>
+              
+              <div style={{ overflowX: 'auto' }}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Waktu</th>
+                      <th>Fitur</th>
+                      <th>Pengguna</th>
+                      <th>Detail Pesan Error</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {errorLogs.map(log => (
+                      <tr key={log.id}>
+                        <td style={{ whiteSpace: 'nowrap' }}>{new Date(log.created_at).toLocaleString('id-ID')}</td>
+                        <td><span style={{ padding: '4px 8px', background: 'var(--surface-variant)', borderRadius: '4px', fontSize: '12px' }}>{log.feature}</span></td>
+                        <td>{log.profiles?.email || 'Guest/Sistem'}</td>
+                        <td style={{ maxWidth: '400px' }}>
+                          <div style={{ position: 'relative' }}>
+                            <div style={{ maxHeight: '100px', overflowY: 'auto', fontSize: '12px', background: 'var(--surface-container-low)', padding: '8px', paddingRight: '40px', borderRadius: '4px', border: '1px solid var(--border)', fontFamily: 'monospace' }}>
+                              {log.error_message}
+                            </div>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(log.error_message);
+                                const btn = document.getElementById(`copy-btn-${log.id}`);
+                                if (btn) {
+                                  const originalText = btn.innerText;
+                                  btn.innerText = '✅';
+                                  setTimeout(() => btn.innerText = originalText, 2000);
+                                }
+                              }}
+                              id={`copy-btn-${log.id}`}
+                              style={{ position: 'absolute', top: '4px', right: '4px', background: 'var(--surface-variant)', color: 'var(--on-surface)', border: 'none', borderRadius: '4px', padding: '4px 6px', cursor: 'pointer', fontSize: '12px' }}
+                              title="Salin log error"
+                            >
+                              📋
+                            </button>
+                          </div>
+                        </td>
+                        <td>
+                          <button 
+                            onClick={() => handleDeleteErrorLog(log.id)}
+                            style={{ background: 'none', border: '1px solid #ef4444', color: '#ef4444', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                          >
+                            Hapus
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {errorLogs.length === 0 && (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: 'center', padding: '20px', color: 'var(--on-surface-variant)' }}>
+                          Tidak ada log error yang terekam.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : activeTab === 'ai-config' ? (
+            <div>
+              <h2 style={{ marginTop: 0, marginBottom: '8px' }}>🤖 Konfigurasi AI Provider</h2>
+              <p style={{ color: 'var(--on-surface-variant)', marginBottom: '24px', fontSize: '14px' }}>
+                Pilih model AI yang akan digunakan secara global oleh seluruh fitur aplikasi untuk pengguna Pro dan Admin.
+                Pengguna Free selalu menggunakan Gemini Free Key terlepas dari pengaturan ini.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+                {/* Gemini Option */}
+                <div
+                  onClick={() => setAiProvider('gemini')}
+                  style={{
+                    border: `2px solid ${aiProvider === 'gemini' ? '#4f8ef7' : 'var(--border)'}`,
+                    borderRadius: '12px',
+                    padding: '20px',
+                    cursor: 'pointer',
+                    background: aiProvider === 'gemini' ? 'rgba(79,142,247,0.08)' : 'var(--surface-container)',
+                    transition: 'all 0.2s',
+                    position: 'relative'
+                  }}
+                >
+                  {aiProvider === 'gemini' && (
+                    <span style={{ position: 'absolute', top: '12px', right: '12px', background: '#4f8ef7', color: 'white', borderRadius: '20px', padding: '2px 10px', fontSize: '11px', fontWeight: 'bold' }}>
+                      ✓ AKTIF
+                    </span>
+                  )}
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔵</div>
+                  <h3 style={{ margin: '0 0 6px', color: '#4f8ef7' }}>Gemini 2.5 Flash Lite</h3>
+                  <p style={{ margin: 0, fontSize: '13px', color: 'var(--on-surface-variant)', lineHeight: 1.5 }}>
+                    Model default dari Google. Cepat, hemat, dan sudah dioptimasi dengan <strong>Priority Inference</strong> untuk pengguna Pro/Admin.
+                  </p>
+                  <div style={{ marginTop: '12px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <span style={{ background: 'rgba(79,142,247,0.15)', color: '#4f8ef7', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>Multimodal</span>
+                    <span style={{ background: 'rgba(79,142,247,0.15)', color: '#4f8ef7', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>1M Context</span>
+                    <span style={{ background: 'rgba(79,142,247,0.15)', color: '#4f8ef7', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>Priority Tier</span>
+                  </div>
+                </div>
+
+                {/* DeepSeek Option */}
+                <div
+                  onClick={() => setAiProvider('deepseek')}
+                  style={{
+                    border: `2px solid ${aiProvider === 'deepseek' ? '#f97316' : 'var(--border)'}`,
+                    borderRadius: '12px',
+                    padding: '20px',
+                    cursor: 'pointer',
+                    background: aiProvider === 'deepseek' ? 'rgba(249,115,22,0.08)' : 'var(--surface-container)',
+                    transition: 'all 0.2s',
+                    position: 'relative'
+                  }}
+                >
+                  {aiProvider === 'deepseek' && (
+                    <span style={{ position: 'absolute', top: '12px', right: '12px', background: '#f97316', color: 'white', borderRadius: '20px', padding: '2px 10px', fontSize: '11px', fontWeight: 'bold' }}>
+                      ✓ AKTIF
+                    </span>
+                  )}
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>🟠</div>
+                  <h3 style={{ margin: '0 0 6px', color: '#f97316' }}>DeepSeek V4 Pro</h3>
+                  <p style={{ margin: 0, fontSize: '13px', color: 'var(--on-surface-variant)', lineHeight: 1.5 }}>
+                    Model reasoning tingkat tinggi. Menggunakan <strong>Chain-of-Thought</strong> adaptif untuk fitur analitik akademis yang kompleks.
+                  </p>
+                  <div style={{ marginTop: '12px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <span style={{ background: 'rgba(249,115,22,0.15)', color: '#f97316', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>Think Max</span>
+                    <span style={{ background: 'rgba(249,115,22,0.15)', color: '#f97316', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>Think Medium</span>
+                    <span style={{ background: 'rgba(249,115,22,0.15)', color: '#f97316', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>1M Context</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mode mapping info */}
+              {aiProvider === 'deepseek' && (
+                <div style={{ background: 'rgba(249,115,22,0.06)', border: '1px solid rgba(249,115,22,0.2)', borderRadius: '8px', padding: '16px', marginBottom: '20px' }}>
+                  <h4 style={{ margin: '0 0 10px', color: '#f97316', fontSize: '14px' }}>⚡ Mode Reasoning per Fitur (saat DeepSeek aktif)</h4>
+                  <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ color: 'var(--on-surface-variant)' }}>
+                        <th style={{ textAlign: 'left', padding: '4px 8px', borderBottom: '1px solid var(--border)' }}>Fitur</th>
+                        <th style={{ textAlign: 'left', padding: '4px 8px', borderBottom: '1px solid var(--border)' }}>Mode</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { fitur: 'Research GAP & Novelty', mode: 'Think Max 🔴', color: '#ef4444' },
+                        { fitur: 'Konfigurasi Blueprint (Aspek → Indikator)', mode: 'Think Max 🔴', color: '#ef4444' },
+                        { fitur: 'Kajian Pustaka (penulisan narasi)', mode: 'Think Medium 🟡', color: '#eab308' },
+                        { fitur: 'Sintesis Konsep Variabel Laten', mode: 'Think Medium 🟡', color: '#eab308' },
+                        { fitur: 'Pembuatan Aitem Skala', mode: 'Think Medium 🟡', color: '#eab308' },
+                        { fitur: 'Metodologi Penelitian', mode: 'Think Medium 🟡', color: '#eab308' },
+                        { fitur: 'Ekstraksi TOC / Upload Referensi', mode: 'Non-Think ⚡', color: '#10b981' },
+                        { fitur: 'Tabel SOTA (Literature Review)', mode: 'Non-Think ⚡', color: '#10b981' },
+                      ].map((row, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
+                          <td style={{ padding: '6px 8px' }}>{row.fitur}</td>
+                          <td style={{ padding: '6px 8px', color: row.color, fontWeight: 'bold' }}>{row.mode}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <button
+                className={styles.saveButton}
+                disabled={aiProviderSaving}
+                onClick={async () => {
+                  setAiProviderSaving(true);
+                  setError('');
+                  setSuccess('');
+                  const res = await setAiProviderAction(aiProvider);
+                  if (res.success) {
+                    setSuccess(`✅ AI Provider berhasil diubah ke ${aiProvider === 'deepseek' ? 'DeepSeek V4 Pro' : 'Gemini 2.5 Flash Lite'}.`);
+                  } else {
+                    setError(res.error || 'Gagal menyimpan konfigurasi AI.');
+                  }
+                  setAiProviderSaving(false);
+                }}
+              >
+                {aiProviderSaving ? 'Menyimpan...' : '💾 Simpan Konfigurasi AI'}
+              </button>
             </div>
           ) : null}
         </div>

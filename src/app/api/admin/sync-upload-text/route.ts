@@ -28,8 +28,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { key: geminiKey, modelName } = await import('@/utils/apiKeyManager').then(m => m.getGeminiApiKey(role));
-    const genAI = new GoogleGenerativeAI(geminiKey);
+    // Model initialization moved to retry loop
     
     const responseSchema: Schema = {
       type: SchemaType.OBJECT,
@@ -57,15 +56,7 @@ export async function POST(req: NextRequest) {
         },
       },
     };
-
-    const model = genAI.getGenerativeModel({ 
-      model: modelName, 
-      generationConfig: { 
-        responseMimeType: "application/json",
-        responseSchema: responseSchema
-      } 
-    });
-
+    // Model initialization moved to retry loop
     // Extract metadata and chunks using Gemini
     // Jika metadata sudah disediakan (dari tahap ekstrak TOC), gunakan itu. Jika tidak, minta AI mengekstrak.
     const prompt = metadata ? `
@@ -103,9 +94,39 @@ ${text.substring(0, 500000)}
 """
 `;
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    const parsedData = parseGeminiJSON(responseText);
+    let parsedData: any;
+    let lastError: any;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        const { key: geminiKey, modelName } = await import('@/utils/apiKeyManager').then(m => m.getGeminiApiKey(role));
+        const genAI = new GoogleGenerativeAI(geminiKey);
+        const model = genAI.getGenerativeModel({ 
+          model: modelName, 
+          generationConfig: { 
+            responseMimeType: "application/json",
+            responseSchema: responseSchema
+          } 
+        });
+
+        const result = await model.generateContent(prompt);
+        const responseText = result.response.text();
+        parsedData = parseGeminiJSON(responseText);
+        break;
+      } catch (err: any) {
+        lastError = err;
+        const errMsg = err.message || String(err);
+        if (errMsg.includes('429') || errMsg.includes('Quota') || errMsg.includes('Resource Exhausted') || err.status === 429) {
+          console.warn(`Sync Upload Text Rate Limit on attempt ${attempt + 1}. Retrying...`);
+          await new Promise(r => setTimeout(r, 2000 * (attempt + 1))); // Exponential backoff
+          continue;
+        }
+        throw err;
+      }
+    }
+    
+    if (!parsedData) {
+      throw lastError || new Error("Failed to extract methodology data after retries");
+    }
 
     let finalBookId = bookId;
 
@@ -173,7 +194,21 @@ ${text.substring(0, 500000)}
     });
 
   } catch (error: any) {
-    console.error("Methodology Upload Text Sync Error:", error);
+    const rawErrorMsg = error.message || String(error);
+    console.error("Methodology Upload Text Sync Error:", rawErrorMsg);
+    
+    try {
+      const supabaseAdmin = await createClient();
+      const { data: { session } } = await supabaseAdmin.auth.getSession();
+      await supabaseAdmin.from('error_logs').insert({
+        user_id: session?.user?.id || null,
+        feature: 'admin_sync_methodology_chunk',
+        error_message: rawErrorMsg
+      });
+    } catch (logErr) {
+      console.error("Failed to log error to error_logs:", logErr);
+    }
+
     return NextResponse.json({ error: sanitizeError(error) }, { status: 500 });
   }
 }
