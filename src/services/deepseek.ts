@@ -81,18 +81,13 @@ export async function callDeepSeek(
 
   // Build request params
   const params: any = {
-    model: 'deepseek-v4-pro',
+    model: 'deepseek-reasoner',
     messages,
     max_tokens: 8000,
   };
 
-  // Enable thinking mode jika diperlukan
-  if (reasoningConfig.thinking_enabled) {
-    params.thinking = {
-      type: 'enabled',
-      budget_tokens: reasoningConfig.budget_tokens,
-    };
-  }
+  // DeepSeek Reasoner automatically thinks. Budget tokens parameter is not supported by DeepSeek API.
+
 
   // JSON mode
   if (jsonMode) {
@@ -129,18 +124,14 @@ export async function streamDeepSeek(
   ];
 
   const params: any = {
-    model: 'deepseek-v4-pro',
+    model: 'deepseek-reasoner',
     messages,
     max_tokens: 8000,
     stream: true,
   };
 
-  if (reasoningConfig.thinking_enabled) {
-    params.thinking = {
-      type: 'enabled',
-      budget_tokens: reasoningConfig.budget_tokens,
-    };
-  }
+  // DeepSeek Reasoner automatically thinks. Budget tokens parameter is not supported by DeepSeek API.
+
 
   console.log(`[DeepSeek] Streaming deepseek-v4-pro | mode: ${mode}`);
 

@@ -633,7 +633,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
             </div>
           )}
 
-          {!error && !isGeneratingKajian && kajianPustaka && !kajianPustaka.includes('## Daftar Pustaka') && outline.length > 0 && (
+          {!error && !isGeneratingKajian && kajianPustaka && !(kajianPustaka.toLowerCase().includes('daftar pustaka') || kajianPustaka.toLowerCase().includes('referensi')) && outline.length > 0 && (
             <div className={`${styles.alert} ${styles.warning}`} style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
@@ -658,7 +658,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
                 remarkPlugins={[remarkGfm]}
                 components={{
                   h2: ({node, ...props}) => {
-                    const isDaftarPustaka = String(props.children).includes('Daftar Pustaka');
+                    const isDaftarPustaka = String(props.children).toLowerCase().includes('daftar pustaka') || String(props.children).toLowerCase().includes('referensi');
                     return (
                       <h2 {...props} style={isDaftarPustaka ? { color: '#3b82f6', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginTop: '2.5rem', marginBottom: '1.5rem', fontSize: '1.5rem' } : { marginTop: '1.5em', marginBottom: '0.5em', color: 'var(--on-surface)' }}>
                         {props.children}
