@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import styles from './KajianPustakaInterface.module.css';
-import { generateOutlineAction, generateKajianPustakaChunkAction, generateDaftarPustakaAction, getAllAdditionalReferenceChunksAction } from './actions';
+import { generateOutlineAction, generateKajianPustakaChunkAction, generateDaftarPustakaAction, getAllAdditionalReferenceChunksAction, getSavedReferencesAction } from './actions';
 import AdditionalReferencesPanel from './AdditionalReferencesPanel';
 
 interface KajianPustakaInterfaceProps {
@@ -131,10 +131,6 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
 
   // Step 1 -> 2
   const handleGenerateOutline = async () => {
-    if (!sotaMarkdown) {
-      setError('Tabel SOTA masih kosong. Silakan kembali ke tab Tabel SOTA & Analisis terlebih dahulu.');
-      return;
-    }
     if (!researchTopic) {
       setError('Topik Penelitian masih kosong. Silakan isi Topik di tab SOTA atau Gap.');
       return;
@@ -234,6 +230,16 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
     setIsGeneratingKajian(true);
     setError('');
     
+    let projectMetadata = sotaMarkdown;
+    try {
+      const refsRes = await getSavedReferencesAction(projectId);
+      if (refsRes.data && refsRes.data.length > 0) {
+         projectMetadata = refsRes.data.map((ref: any) => `Judul: ${ref.title}\nPenulis: ${ref.authors || 'Tidak diketahui'}\nDOI: ${ref.doi || 'Tidak ada'}\nAbstrak: ${ref.abstract || 'Tidak ada'}\n`).join('\n---\n');
+      }
+    } catch(e) { 
+      console.error("Gagal mengambil referensi proyek:", e);
+    }
+    
     let currentText = resume ? kajianPustaka : '';
     if (!resume) {
       setKajianPustaka('');
@@ -330,7 +336,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
           variables,
           citationStyle,
           researchTopic,
-          sotaMarkdown,
+          projectMetadata,
           selectedGap,
           outline,
           outline[i],
@@ -355,7 +361,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
       // Generate Daftar Pustaka
       const dpRes = await generateDaftarPustakaAction(
         projectId,
-        sotaMarkdown,
+        projectMetadata,
         enhancedBooksData,
         citationStyle,
         userKey,
