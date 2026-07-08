@@ -283,11 +283,11 @@ ${booksData ? booksData : '(Tidak ada data buku yang ditemukan, silakan gunakan 
 PANDUAN KEILMUAN MENULIS KAJIAN PUSTAKA (BERDASARKAN CRESWELL):
 1. Jika Kuantitatif: Teks harus mengalir secara deduktif.
 2. Jika Kualitatif: Teks harus mengalir secara tematis/induktif.
-3. Aturan Sitasi: Setiap klaim faktual WAJIB menyertakan in-text citation yang mengacu pada data SOTA atau Buku yang diberikan. Anda HARUS MENGGUNAKAN format TEPAT sesuai gaya ${citationStyle}. Panduan in-text citation:
-    - Jika gaya APA/Harvard: gunakan format (Nama Belakang, Tahun), contoh: (Larmer, 2015) atau (Larmer & Boss, 2015) atau (Larmer et al., 2015).
-    - Jika gaya IEEE/Vancouver: gunakan angka dalam kurung siku, contoh: [1] atau [1, 2] yang merujuk pada referensi terkait.
-    - Jika gaya Chicago: gunakan format (Nama Belakang Tahun), contoh: (Larmer 2015).
-    - Jika gaya MLA: gunakan format (Nama Belakang), contoh: (Larmer).
+3. Aturan Sitasi: Setiap klaim faktual WAJIB menyertakan in-text citation yang mengacu pada data SOTA atau Buku yang diberikan. Anda HARUS MENGGUNAKAN format TEPAT sesuai gaya ${citationStyle}. Panduan in-text citation berdasarkan jumlah penulis:
+    - Jika gaya APA/Harvard: 1 penulis (Larmer, 2015); 2 penulis (Larmer & Boss, 2015); 3 penulis atau lebih (Larmer et al., 2015).
+    - Jika gaya Chicago: 1 penulis (Larmer 2015); 2 penulis (Larmer and Boss 2015); 3 penulis atau lebih (Larmer et al. 2015).
+    - Jika gaya MLA: 1 penulis (Larmer); 2 penulis (Larmer and Boss); 3 penulis atau lebih (Larmer et al.).
+    - Jika gaya IEEE/Vancouver: gunakan angka dalam kurung siku TANPA nama penulis, contoh: [1] atau [1, 2].
 4. Kualitas Teks: Gunakan bahasa Indonesia ilmiah yang formal, baku, dan objektif. 
 5. JANGAN menuliskan teks basa-basi AI di awal atau akhir. Langsung mulai dengan format Markdown heading (### ${subSubHeading} ${subSubTitle}).
 6. Buat paragraf yang panjang, padat, dan analitis. Jangan sekadar membuat list/bullet points. Sintesiskan berbagai penulis menjadi satu paragraf diskusi.
@@ -336,11 +336,11 @@ ${booksData ? booksData : '(Tidak ada data buku yang ditemukan, silakan gunakan 
 PANDUAN KEILMUAN MENULIS KAJIAN PUSTAKA (BERDASARKAN CRESWELL):
 1. Jika Kuantitatif: Teks harus mengalir secara deduktif.
 2. Jika Kualitatif: Teks harus mengalir secara tematis/induktif.
-3. Aturan Sitasi: Setiap klaim faktual WAJIB menyertakan in-text citation yang mengacu pada data SOTA atau Buku yang diberikan. Anda HARUS MENGGUNAKAN format TEPAT sesuai gaya ${citationStyle}. Panduan in-text citation:
-    - Jika gaya APA/Harvard: gunakan format (Nama Belakang, Tahun), contoh: (Larmer, 2015) atau (Larmer & Boss, 2015) atau (Larmer et al., 2015).
-    - Jika gaya IEEE/Vancouver: gunakan angka dalam kurung siku, contoh: [1] atau [1, 2] yang merujuk pada referensi terkait.
-    - Jika gaya Chicago: gunakan format (Nama Belakang Tahun), contoh: (Larmer 2015).
-    - Jika gaya MLA: gunakan format (Nama Belakang), contoh: (Larmer).
+3. Aturan Sitasi: Setiap klaim faktual WAJIB menyertakan in-text citation yang mengacu pada data SOTA atau Buku yang diberikan. Anda HARUS MENGGUNAKAN format TEPAT sesuai gaya ${citationStyle}. Panduan in-text citation berdasarkan jumlah penulis:
+    - Jika gaya APA/Harvard: 1 penulis (Larmer, 2015); 2 penulis (Larmer & Boss, 2015); 3 penulis atau lebih (Larmer et al., 2015).
+    - Jika gaya Chicago: 1 penulis (Larmer 2015); 2 penulis (Larmer and Boss 2015); 3 penulis atau lebih (Larmer et al. 2015).
+    - Jika gaya MLA: 1 penulis (Larmer); 2 penulis (Larmer and Boss); 3 penulis atau lebih (Larmer et al.).
+    - Jika gaya IEEE/Vancouver: gunakan angka dalam kurung siku TANPA nama penulis, contoh: [1] atau [1, 2].
 4. Kualitas Teks: Gunakan bahasa Indonesia ilmiah yang formal, baku, dan objektif. 
 5. JANGAN menuliskan teks basa-basi AI di awal atau akhir. Langsung mulai dengan format Markdown heading (## 2.${subChapterIndex} ${subChapter.title}).
 6. Buat paragraf yang panjang, padat, dan analitis. Jangan sekadar membuat list/bullet points. Sintesiskan berbagai penulis menjadi satu paragraf diskusi.
