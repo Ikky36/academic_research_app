@@ -288,6 +288,7 @@ PANDUAN KEILMUAN MENULIS KAJIAN PUSTAKA (BERDASARKAN CRESWELL):
 5. JANGAN menuliskan teks basa-basi AI di awal atau akhir. Langsung mulai dengan format Markdown heading (### ${subSubHeading} ${subSubTitle}).
 6. Buat paragraf yang panjang, padat, dan analitis. Jangan sekadar membuat list/bullet points. Sintesiskan berbagai penulis menjadi satu paragraf diskusi.
 7. PANJANG TEKS MUTLAK: Pastikan sub-sub bab yang Anda buat ini terdiri dari MINIMAL 4 paragraf. Setiap paragraf harus padat dan komprehensif.
+8. PENTING: JANGAN PERNAH menambahkan bagian Daftar Pustaka, Referensi, atau Daftar Sitasi di akhir teks. Bagian referensi akan digenerate secara terpisah di akhir dokumen seluruhnya. HANYA gunakan in-text citation di dalam paragraf.
 
 Hasilkan teks untuk sub-sub-bab ini secara lengkap dalam format Markdown sekarang.`;
 
@@ -336,6 +337,7 @@ PANDUAN KEILMUAN MENULIS KAJIAN PUSTAKA (BERDASARKAN CRESWELL):
 5. JANGAN menuliskan teks basa-basi AI di awal atau akhir. Langsung mulai dengan format Markdown heading (## 2.${subChapterIndex} ${subChapter.title}).
 6. Buat paragraf yang panjang, padat, dan analitis. Jangan sekadar membuat list/bullet points. Sintesiskan berbagai penulis menjadi satu paragraf diskusi.
 7. PANJANG TEKS MUTLAK: Pastikan sub-bab ini terdiri dari MINIMAL 4 paragraf. Setiap paragraf harus padat dan komprehensif.
+8. PENTING: JANGAN PERNAH menambahkan bagian Daftar Pustaka, Referensi, atau Daftar Sitasi di akhir teks. Bagian referensi akan digenerate secara terpisah di akhir dokumen seluruhnya. HANYA gunakan in-text citation di dalam paragraf.
 
 Hasilkan teks untuk sub-bab ini secara lengkap dalam format Markdown sekarang.`;
 
