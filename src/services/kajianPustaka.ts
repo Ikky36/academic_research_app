@@ -287,7 +287,7 @@ PANDUAN KEILMUAN MENULIS KAJIAN PUSTAKA (BERDASARKAN CRESWELL):
     - Jika gaya APA/Harvard: 1 penulis (Larmer, 2015); 2 penulis (Larmer & Boss, 2015); 3 penulis atau lebih (Larmer et al., 2015).
     - Jika gaya Chicago: 1 penulis (Larmer 2015); 2 penulis (Larmer and Boss 2015); 3 penulis atau lebih (Larmer et al. 2015).
     - Jika gaya MLA: 1 penulis (Larmer); 2 penulis (Larmer and Boss); 3 penulis atau lebih (Larmer et al.).
-    - Jika gaya IEEE/Vancouver: gunakan angka dalam kurung siku TANPA nama penulis, contoh: [1] atau [1, 2].
+    - Jika gaya IEEE/Vancouver: WAJIB gunakan angka urut mulai dari [1], [2], [3] dst. JANGAN PERNAH mengarang angka besar secara acak seperti [82] atau [83]! Lanjutkan angka dari Konteks Sebelumnya jika ada.
 4. Kualitas Teks: Gunakan bahasa Indonesia ilmiah yang formal, baku, dan objektif. 
 5. JANGAN menuliskan teks basa-basi AI di awal atau akhir. Langsung mulai dengan format Markdown heading (### ${subSubHeading} ${subSubTitle}).
 6. Buat paragraf yang panjang, padat, dan analitis. Jangan sekadar membuat list/bullet points. Sintesiskan berbagai penulis menjadi satu paragraf diskusi.
@@ -340,7 +340,7 @@ PANDUAN KEILMUAN MENULIS KAJIAN PUSTAKA (BERDASARKAN CRESWELL):
     - Jika gaya APA/Harvard: 1 penulis (Larmer, 2015); 2 penulis (Larmer & Boss, 2015); 3 penulis atau lebih (Larmer et al., 2015).
     - Jika gaya Chicago: 1 penulis (Larmer 2015); 2 penulis (Larmer and Boss 2015); 3 penulis atau lebih (Larmer et al. 2015).
     - Jika gaya MLA: 1 penulis (Larmer); 2 penulis (Larmer and Boss); 3 penulis atau lebih (Larmer et al.).
-    - Jika gaya IEEE/Vancouver: gunakan angka dalam kurung siku TANPA nama penulis, contoh: [1] atau [1, 2].
+    - Jika gaya IEEE/Vancouver: WAJIB gunakan angka urut mulai dari [1], [2], [3] dst. JANGAN PERNAH mengarang angka besar secara acak seperti [82] atau [83]! Lanjutkan angka dari Konteks Sebelumnya jika ada.
 4. Kualitas Teks: Gunakan bahasa Indonesia ilmiah yang formal, baku, dan objektif. 
 5. JANGAN menuliskan teks basa-basi AI di awal atau akhir. Langsung mulai dengan format Markdown heading (## 2.${subChapterIndex} ${subChapter.title}).
 6. Buat paragraf yang panjang, padat, dan analitis. Jangan sekadar membuat list/bullet points. Sintesiskan berbagai penulis menjadi satu paragraf diskusi.
@@ -436,7 +436,7 @@ export async function generateDaftarPustaka(
     fetchedCitations = citations.filter(c => c.length > 0).join('\n\n');
   }
 
-  const sotaContext = fetchedCitations.length > 0 ? fetchedCitations : sota;
+  const sotaContext = fetchedCitations.length > 0 ? `REFERENSI DARI TABEL SOTA MANUAL:\n${sota}\n\nREFERENSI TAMBAHAN (FILE PDF):\n${fetchedCitations}` : sota;
 
   const prompt = `Susunlah sebuah DAFTAR PUSTAKA (References) lengkap berdasarkan SEMUA referensi yang diberikan di bawah ini.
 JANGAN menambahkan daftar pustaka palsu atau halusinasi. Hanya gunakan referensi dari teks di bawah ini (baik dari Referensi Jurnal maupun Referensi Buku Teori/Google Books).
