@@ -1,5 +1,5 @@
 // src/services/deepseek.ts
-// Service layer untuk DeepSeek V4 Pro via OpenAI-compatible API
+// Service layer untuk DeepSeek V4 Flash via OpenAI-compatible API
 import OpenAI from 'openai';
 import fs from 'fs';
 import path from 'path';
@@ -59,7 +59,7 @@ function getReasoningConfig(mode: DeepSeekReasoningMode): {
 }
 
 /**
- * Fungsi utama untuk memanggil DeepSeek V4 Pro
+ * Fungsi utama untuk memanggil DeepSeek V4 Flash
  * @param userPrompt - Pertanyaan/instruksi utama dari user/sistem
  * @param systemPrompt - Konteks/instruksi sistem untuk AI
  * @param mode - Mode reasoning: 'non-think' | 'think-medium' | 'think-max'
@@ -81,12 +81,19 @@ export async function callDeepSeek(
 
   // Build request params
   const params: any = {
-    model: 'deepseek-reasoner',
+    model: 'deepseek-v4-flash',
     messages,
     max_tokens: 8000,
   };
 
-  // DeepSeek Reasoner automatically thinks. Budget tokens parameter is not supported by DeepSeek API.
+  if (reasoningConfig.thinking_enabled) {
+    params.thinking = {
+      type: 'enabled',
+      budget_tokens: reasoningConfig.budget_tokens,
+    };
+  } else {
+    params.thinking = { type: 'disabled' };
+  }
 
 
   // JSON mode
@@ -94,7 +101,7 @@ export async function callDeepSeek(
     params.response_format = { type: 'json_object' };
   }
 
-  console.log(`[DeepSeek] Calling deepseek-v4-pro | mode: ${mode}`);
+  console.log(`[DeepSeek] Calling deepseek-v4-flash | mode: ${mode}`);
 
   try {
     const response = await client.chat.completions.create(params);
@@ -124,16 +131,22 @@ export async function streamDeepSeek(
   ];
 
   const params: any = {
-    model: 'deepseek-reasoner',
+    model: 'deepseek-v4-flash',
     messages,
     max_tokens: 8000,
     stream: true,
   };
 
-  // DeepSeek Reasoner automatically thinks. Budget tokens parameter is not supported by DeepSeek API.
+  if (reasoningConfig.thinking_enabled) {
+    params.thinking = {
+      type: 'enabled',
+      budget_tokens: reasoningConfig.budget_tokens,
+    };
+  } else {
+    params.thinking = { type: 'disabled' };
+  }
 
-
-  console.log(`[DeepSeek] Streaming deepseek-v4-pro | mode: ${mode}`);
+  console.log(`[DeepSeek] Streaming deepseek-v4-flash | mode: ${mode}`);
 
   let fullText = '';
   const stream = await client.chat.completions.create(params);
