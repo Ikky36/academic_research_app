@@ -1182,9 +1182,9 @@ export default function AdminDashboard() {
                     </span>
                   )}
                   <div style={{ fontSize: '32px', marginBottom: '8px' }}>🟠</div>
-                  <h3 style={{ margin: '0 0 6px', color: '#f97316' }}>DeepSeek V4 Flash</h3>
+                  <h3 style={{ margin: '0 0 6px', color: '#f97316' }}>DeepSeek V4 Pro</h3>
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--on-surface-variant)', lineHeight: 1.5 }}>
-                    Model reasoning super cepat (Flash). Menggunakan <strong>Chain-of-Thought</strong> adaptif untuk fitur analitik akademis yang kompleks.
+                    Model reasoning tingkat tinggi. Menggunakan <strong>Chain-of-Thought</strong> adaptif untuk fitur analitik akademis yang kompleks.
                   </p>
                   <div style={{ marginTop: '12px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     <span style={{ background: 'rgba(249,115,22,0.15)', color: '#f97316', padding: '2px 8px', borderRadius: '4px', fontSize: '11px' }}>Think Medium</span>
@@ -1234,7 +1234,7 @@ export default function AdminDashboard() {
                   setSuccess('');
                   const res = await setAiProviderAction(aiProvider);
                   if (res.success) {
-                    setSuccess(`✅ AI Provider berhasil diubah ke ${aiProvider === 'deepseek' ? 'DeepSeek V4 Flash' : 'Gemini 2.5 Flash Lite'}.`);
+                    setSuccess(`✅ AI Provider berhasil diubah ke ${aiProvider === 'deepseek' ? 'DeepSeek V4 Pro' : 'Gemini 2.5 Flash Lite'}.`);
                   } else {
                     setError(res.error || 'Gagal menyimpan konfigurasi AI.');
                   }
