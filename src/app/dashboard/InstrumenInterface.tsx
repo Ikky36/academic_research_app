@@ -947,7 +947,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
               </div>
             </div>
           </div>
-          ) : (activeInstData?.instrument_type === 'Observasi' || activeInstData?.instrument_type?.trim() === 'Observasi') && !isChatComplete ? (
+          ) : (activeInstData?.instrument_type === 'Observasi' || activeInstData?.instrument_type?.trim() === 'Observasi') ? (
             <div className={styles.chatContainer}>
               <div className={styles.chatHeader}>
                 <h3>Merancang Instrumen Observasi</h3>
@@ -1106,15 +1106,6 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                 </div>
               </div>
               <div className={styles.markdownContent}>
-                {(activeInstData?.instrument_type === 'Observasi' || activeInstData?.instrument_type?.trim() === 'Observasi') && chatHistory.find(m => m.role === 'obs_conceptual') && (
-                  <div style={{ marginBottom: '24px', padding: '16px', background: 'var(--surface-hover)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                    <h4 style={{ marginTop: 0, marginBottom: '8px' }}>Definisi Konseptual</h4>
-                    <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.6' }}>{chatHistory.find(m => m.role === 'obs_conceptual')?.text}</p>
-                    
-                    <h4 style={{ marginTop: '16px', marginBottom: '8px' }}>Definisi Operasional</h4>
-                    <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.6' }}>{chatHistory.find(m => m.role === 'obs_operational')?.text}</p>
-                  </div>
-                )}
                 <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
                   {finalResult.replace(/^```(markdown)?\s*/gi, '').replace(/```$/g, '').trim()}
                 </ReactMarkdown>
