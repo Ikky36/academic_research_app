@@ -1,0 +1,360 @@
+
+
+=== URL: https://api-docs.deepseek.com/prompt-library ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOThfNGZhZjI0MDlfZmFlZF8xMGUwOWVkMw== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/api_samples/chat_curl ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOTlfOTJhNzI0MDlfZDY2MF85OWZkZDM1 TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/api_samples/chat_nodejs ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOTlfNTliNDI0MDlfMTFmOTdfMTBmNjI3NWU= TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/api_samples/chat_python ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOTlfMWVhNzI0MDlfMTc1ZTlfYTI2OWRkZQ== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/api_samples/thinking_mode_api_example_non_streaming ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOWFfOGJhYTI0MDlfZGNmX2E3MGY1N2Y= TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/api_samples/thinking_mode_api_example_streaming ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOWJfMTJhZTI0MDlfNjliOF85Y2ZjYzZk TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/api_samples/thinking_mode_api_example_tool_call ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOWJfYzlhZjI0MDlfNTJjZV8xMGU5NTkxNQ== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/api_samples/thinking_mode_api_example_tool_call_output ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOWNfZDFhZTI0MDlfYTE0Y19hMDc5MmJl TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/api/create-chat-completion ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOWNfNTNhYTY0MDlfNzhiMl85ZDUwMzdh TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/api/create-completion ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOWNfMWNhYjI0MDlfOWQ0YV8xMTU5NWU1Yg== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/api/deepseek-api ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOWRfMThhNzI0MDlfMTZjNDVfOWYzNzAxMw== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/api/get-user-balance ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOWRfNGVhOTI0MDlfNzk0XzExMjdkN2U1 TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/api/list-models ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOWRfNGZhZjI0MDlfZmFkZV8xMGM4YjRiOA== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/faq ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOWVfOWViMjI0MDlfMTIzNzdfMTExNTBjYjc= TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/guides/anthropic_api ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOWVfOGMyODY1MDlfYTIyN18xMTYzZDY2Ng== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/guides/chat_prefix_completion ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOWZfOGFiMTI0MDlfZjlkYV8xMThkMzQ1NQ== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/guides/coding_agents ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOWZfYzRhZDY0MDlfMTc0MWJfOWI4NjMwNw== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/guides/fim_completion ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlOWZfOTRhNzI0MDlfN2U3NF85YjY1MWZj TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/guides/json_mode ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTBfMTVhZjQ1MWVfMzFmYl8xMjNlNTM4OQ== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/guides/kv_cache ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTBfZDRhOTY0MDlfMTUwMzBfMTFlZTU4ODk= TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/guides/multi_round_chat ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTBfYzliMzI0MDlfNzgxOF8xMTY4MTJmZQ== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/guides/thinking_mode ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTFfYmE5NjQwOV82NWM3XzEyMTQ5MDM4 TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/guides/tool_calls ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTFfOWE4NjQwOV81OWQyXzEyMmExZmVk TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news0725 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTFfODdjOTQ1MWVfMTFiNDVfOWViODA2Zg== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news0802 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTJfY2FhZDI0MDlfMTBmN2FfMTEzYzRhZjM= TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news0905 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTJfYzZiMDQ1MWVfZGUxNV8xMWViNmY1OQ== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news1120 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTJfYzljMTQ1MWVfMTY1ZTlfMTIxM2Q1MGY= TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news1210 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTNfOGJhYTI0MDlfZGM2XzlkNTFiMGY= TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news1226 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTNfOTNhZTI0MDlfYTY2N19hMjYyZDMy TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news250115 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTNfNjJhYTY0MDlfNWViZV8xMWE5NjcwZA== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news250120 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTRfOGMyODY1MDlfYTIxYV8xMTQ2YjZkNQ== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news250325 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTRfMWJhODY0MDlfZDNjYV8xMjFmMTc5ZQ== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news250528 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTVfNTFhOTI0MDlfZGIwNl9hOWI4YWU0 TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news250821 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTVfYzhhZjQ1MWVfOThmZl8xMjA4NWM3Ng== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news250922 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTVfOGFiODI0MDlfY2FiN18xMTEyODI3OA== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news250929 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTZfYzhhZjI0MDlfMTQ4NF8xMGM2MGYxMg== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news251201 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTZfNDZhNzI0MDlfOGRmNV85NjdhMGMw TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/news/news260424 ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTZfODVjOTQ1MWVfMWVhMl85ZmEwYTkw TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/astrbot ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTdfMjVhZDI0MDlfNWQ1NF8xMTRkZjFhMg== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/claude_code ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTdfMTBhZTI0MDlfMTI4NGVfM2Y4N2YzNA== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/copilot_cli ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTdfNDZiMDQ1MWVfODNiOV8xMWViNzFiOA== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/crush ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYThfOGRhZDY0MDlfZDdjXzExZmI0Zjcy TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/deepcode ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYThfMWJhODY0MDlfZDNiOF8xMjJiZjI2Ng== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/github_copilot ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTlfOTVhZTI0MDlfOTQwX2EyMmNiNzY= TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/hermes ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTlfOWViMjI0MDlfMTIzNzlfMTEwODEyYjk= TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/kilo_code ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYTlfOWZhYjI0MDlfY2I2XzExMTQwMzE5 TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/langcli ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYWFfOTNhZTI0MDlfYTVmM185Zjc3MWU1 TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/nanobot ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYWFfODRhZTY0MDlfMTE3MThfMTA1MDA2OTA= TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/oh_my_pi ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYWFfODhhNzY0MDlfM2VlZF8xMjU2ZjA0Yg== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/openclaw ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYWJfY2NhZTI0MDlfOGExZV80Nzc0YjU5 TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/opencode ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYWJfZjI5NjUwOV8xMmJmM18xMTUwYWVmMw== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/pi_mono ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYWNfYzliNDI0MDlfMTQyNDJfOTA3Zjk3MQ== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/reasonix ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYWNfNDliNzI0MDlfY2M0YV8xMTU3NTFlNA== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/agent_integrations/workbuddy ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYWNfOTNhZTI0MDlfYTY3Nl9hM2YyNThm TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/error_codes ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYWRfOGMyODY1MDlfYTFmZl8xMTY0Zjk2YQ== TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/pricing ===
+
+Your First API Call | DeepSeek API Docs Skip to main content DeepSeek API Docs English English 中文（中国） DeepSeek Platform Quick Start Your First API Call Models &amp; Pricing Token &amp; Token Usage Rate Limit &amp; Isolation Error Codes Agent Integrations API Guides Thinking Mode Multi-round Conversation Chat Prefix Completion (Beta) FIM Completion (Beta) JSON Output Tool Calls Context Caching Anthropic API API Reference News Other Resources FAQ Change Log Quick Start Your First API Call On this page Your First API Call The DeepSeek API uses an API format compatible with OpenAI/Anthropic. By modifying the configuration, you can use the OpenAI/Anthropic SDK or softwares compatible with the OpenAI/Anthropic API to access the DeepSeek API. PARAM VALUE base_url (OpenAI) https://api.deepseek.com base_url (Anthropic) https://api.deepseek.com/anthropic api_key apply for an API key model * deepseek-v4-flash deepseek-v4-pro deepseek-chat (to be deprecated on 2026/07/24) deepseek-reasoner (to be deprecated on 2026/07/24) * The model names deepseek-chat and deepseek-reasoner will be deprecated on 2026/07/24 15:59 UTC. For compatibility, they correspond to the non-thinking mode and thinking mode of deepseek-v4-flash , respectively. Integrate with Agent Tools ​ The DeepSeek API is supported by many popular AI agent and coding assistant tools. If you use tools like Claude Code, GitHub Copilot, or OpenCode, you can use DeepSeek as the backend model directly — no code required. See the Agent Integrations Guide for details. Invoke The Chat API ​ Once you have obtained an API key, you can access the DeepSeek model using the following example scripts in the OpenAI API format. This is a non-stream example, you can set the stream parameter to true to get stream response. For examples using the Anthropic API format, please refer to Anthropic API . curl python nodejs curl https://api.deepseek.com/chat/completions \ -H &quot;Content-Type: application/json&quot; \ -H &quot;Authorization: Bearer ${DEEPSEEK_API_KEY}&quot; \ -d &#x27;{ &quot;model&quot;: &quot;deepseek-v4-pro&quot;, &quot;messages&quot;: [ {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are a helpful assistant.&quot;}, {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;Hello!&quot;} ], &quot;thinking&quot;: {&quot;type&quot;: &quot;enabled&quot;}, &quot;reasoning_effort&quot;: &quot;high&quot;, &quot;stream&quot;: false }&#x27; # Please install OpenAI SDK first: `pip3 install openai` import os from openai import OpenAI client = OpenAI ( api_key = os . environ . get ( &#x27;DEEPSEEK_API_KEY&#x27; ) , base_url = &quot;https://api.deepseek.com&quot; ) response = client . chat . completions . create ( model = &quot;deepseek-v4-pro&quot; , messages = [ { &quot;role&quot; : &quot;system&quot; , &quot;content&quot; : &quot;You are a helpful assistant&quot; } , { &quot;role&quot; : &quot;user&quot; , &quot;content&quot; : &quot;Hello&quot; } , ] , stream = False , reasoning_effort = &quot;high&quot; , extra_body = { &quot;thinking&quot; : { &quot;type&quot; : &quot;enabled&quot; } } ) print ( response . choices [ 0 ] . message . content ) // Please install OpenAI SDK first: `npm install openai` import OpenAI from &quot;openai&quot; ; const openai = new OpenAI ( { baseURL : &#x27;https://api.deepseek.com&#x27; , apiKey : process . env . DEEPSEEK_API_KEY , } ) ; async function main ( ) { const completion = await openai . chat . completions . create ( { messages : [ { role : &quot;system&quot; , content : &quot;You are a helpful assistant.&quot; } ] , model : &quot;deepseek-v4-pro&quot; , thinking : { &quot;type&quot; : &quot;enabled&quot; } , reasoning_effort : &quot;high&quot; , stream : false , } ) ; console . log ( completion . choices [ 0 ] . message . content ) ; } main ( ) ; Next Models &amp; Pricing Integrate with Agent Tools Invoke The Chat API WeChat Official Account Community Email Discord Twitter More GitHub Copyright © 2026 DeepSeek, Inc.
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/rate_limit ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYWRfNGFhODY0MDlfMTMxNjFfMTIwYTIwN2U= TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/quick_start/token_usage ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYWVfOGE5NjQwOV8yZGQwXzEyMGY1NDdh TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/updates ===
+
+302 Moved Temporarily 302 Moved Temporarily Code: Found Message: Resource Found RequestId: NmE1MjRlYWVfOTJhNzI0MDlfZDVmOV85ZmQyNjI3 TraceId: OGVmYzZiMmQzYjA2OWNhODk0NTRkMTBiOWVmMDAxODc0OWRkZjk0ZDM1NmI1M2E2MTRlY2MzZDhmNmI5MWI1OTQ5YWUxMjNkYTk3NzdjZmZlMDQzOTgxOThkOTNlOWFkNjU0MDk4ZDk2ZDdiMWQyNDJlMTk4NGQ3ZjE4MjFkOGE=
+
+
+
+=== URL: https://api-docs.deepseek.com/ ===
+
+Your First API Call | DeepSeek API Docs Skip to main content DeepSeek API Docs English English 中文（中国） DeepSeek Platform Quick Start Your First API Call Models &amp; Pricing Token &amp; Token Usage Rate Limit &amp; Isolation Error Codes Agent Integrations API Guides Thinking Mode Multi-round Conversation Chat Prefix Completion (Beta) FIM Completion (Beta) JSON Output Tool Calls Context Caching Anthropic API API Reference News Other Resources FAQ Change Log Quick Start Your First API Call On this page Your First API Call The DeepSeek API uses an API format compatible with OpenAI/Anthropic. By modifying the configuration, you can use the OpenAI/Anthropic SDK or softwares compatible with the OpenAI/Anthropic API to access the DeepSeek API. PARAM VALUE base_url (OpenAI) https://api.deepseek.com base_url (Anthropic) https://api.deepseek.com/anthropic api_key apply for an API key model * deepseek-v4-flash deepseek-v4-pro deepseek-chat (to be deprecated on 2026/07/24) deepseek-reasoner (to be deprecated on 2026/07/24) * The model names deepseek-chat and deepseek-reasoner will be deprecated on 2026/07/24 15:59 UTC. For compatibility, they correspond to the non-thinking mode and thinking mode of deepseek-v4-flash , respectively. Integrate with Agent Tools ​ The DeepSeek API is supported by many popular AI agent and coding assistant tools. If you use tools like Claude Code, GitHub Copilot, or OpenCode, you can use DeepSeek as the backend model directly — no code required. See the Agent Integrations Guide for details. Invoke The Chat API ​ Once you have obtained an API key, you can access the DeepSeek model using the following example scripts in the OpenAI API format. This is a non-stream example, you can set the stream parameter to true to get stream response. For examples using the Anthropic API format, please refer to Anthropic API . curl python nodejs curl https://api.deepseek.com/chat/completions \ -H &quot;Content-Type: application/json&quot; \ -H &quot;Authorization: Bearer ${DEEPSEEK_API_KEY}&quot; \ -d &#x27;{ &quot;model&quot;: &quot;deepseek-v4-pro&quot;, &quot;messages&quot;: [ {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are a helpful assistant.&quot;}, {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;Hello!&quot;} ], &quot;thinking&quot;: {&quot;type&quot;: &quot;enabled&quot;}, &quot;reasoning_effort&quot;: &quot;high&quot;, &quot;stream&quot;: false }&#x27; # Please install OpenAI SDK first: `pip3 install openai` import os from openai import OpenAI client = OpenAI ( api_key = os . environ . get ( &#x27;DEEPSEEK_API_KEY&#x27; ) , base_url = &quot;https://api.deepseek.com&quot; ) response = client . chat . completions . create ( model = &quot;deepseek-v4-pro&quot; , messages = [ { &quot;role&quot; : &quot;system&quot; , &quot;content&quot; : &quot;You are a helpful assistant&quot; } , { &quot;role&quot; : &quot;user&quot; , &quot;content&quot; : &quot;Hello&quot; } , ] , stream = False , reasoning_effort = &quot;high&quot; , extra_body = { &quot;thinking&quot; : { &quot;type&quot; : &quot;enabled&quot; } } ) print ( response . choices [ 0 ] . message . content ) // Please install OpenAI SDK first: `npm install openai` import OpenAI from &quot;openai&quot; ; const openai = new OpenAI ( { baseURL : &#x27;https://api.deepseek.com&#x27; , apiKey : process . env . DEEPSEEK_API_KEY , } ) ; async function main ( ) { const completion = await openai . chat . completions . create ( { messages : [ { role : &quot;system&quot; , content : &quot;You are a helpful assistant.&quot; } ] , model : &quot;deepseek-v4-pro&quot; , thinking : { &quot;type&quot; : &quot;enabled&quot; } , reasoning_effort : &quot;high&quot; , stream : false , } ) ; console . log ( completion . choices [ 0 ] . message . content ) ; } main ( ) ; Next Models &amp; Pricing Integrate with Agent Tools Invoke The Chat API WeChat Official Account Community Email Discord Twitter More GitHub Copyright © 2026 DeepSeek, Inc.
+

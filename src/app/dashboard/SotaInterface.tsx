@@ -126,7 +126,11 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
 
         if (isFirstEverChunk) {
           // Chunk 1: Ambil HANYA baris yang merupakan bagian dari tabel (dimulai dengan |)
-          const tableLines = lines.filter(line => line.trim().startsWith('|'));
+          const tableLines = lines.filter(line => line.trim().startsWith('|')).map(line => {
+            let formatted = line.trim();
+            if (!formatted.endsWith('|')) formatted += ' |';
+            return formatted;
+          });
           chunkResult = tableLines.join('\n');
         } else {
           // Chunk 2+ atau Melanjutkan: Ambil HANYA baris DATA tabel (buang header, separator, dan basa-basi)
@@ -360,6 +364,17 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
     }
   };
 
+  // Fungsi untuk memastikan tabel SOTA bisa di-parse meskipun newlines hilang (fallback safety)
+  const getCleanedMarkdown = () => {
+    if (!sotaMarkdown) return '';
+    let cleaned = '\n\n' + sotaMarkdown.trim();
+    // Kembalikan newline antara header dan delimiter (misal: | |---| jadi |\n|---| )
+    cleaned = cleaned.replace(/\|\s+\|\s*-/g, '|\n|-');
+    // Kembalikan newline sebelum baris nomor urut (misal: | | 1 | jadi |\n| 1 | )
+    cleaned = cleaned.replace(/\|\s+\|\s*(\d+)\s*\|/g, '|\n| $1 |');
+    return cleaned;
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -460,7 +475,7 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
                 }
               }}
             >
-              {sotaMarkdown}
+              {getCleanedMarkdown()}
             </ReactMarkdown>
           </div>
         </div>
