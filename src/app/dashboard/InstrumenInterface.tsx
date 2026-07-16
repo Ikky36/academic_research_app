@@ -959,8 +959,8 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                   <div style={{ color: '#ef4444' }}>Gagal mendeteksi Sub Bab pada Kajian Pustaka. Pastikan format menggunakan heading "### 2.x".</div>
                 ) : (
                   <>
-                    {obsStep === 1 && (
-                      <>
+                    {obsStep >= 1 && (
+                      <div style={{ paddingBottom: obsStep > 1 ? '24px' : '0', borderBottom: obsStep > 1 ? '1px solid var(--border)' : 'none', marginBottom: obsStep > 1 ? '24px' : '0' }}>
                         <h3 style={{ marginTop: 0 }}>Tahap 1: Pilih Fokus Penelitian</h3>
                         <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>Pilih variabel dari Kajian Pustaka (Bab 2) yang ingin diubah menjadi Instrumen Observasi.</p>
                         <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '16px' }}>
@@ -981,14 +981,14 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                           <button onClick={handleObsStep1Next} className={styles.btnPrimary} disabled={isGeneratingObs || !selectedObsTitle}>
-                            {isGeneratingObs ? 'Menganalisis AI (think-max)...' : 'Lanjut ke Definisi Konseptual'}
+                            {isGeneratingObs && obsStep === 1 ? 'Menganalisis AI (think-max)...' : obsStep > 1 ? 'Generate Ulang Definisi Konseptual' : 'Lanjut ke Definisi Konseptual'}
                           </button>
                         </div>
-                      </>
+                      </div>
                     )}
 
-                    {obsStep === 2 && (
-                      <>
+                    {obsStep >= 2 && (
+                      <div style={{ paddingBottom: obsStep > 2 ? '24px' : '0', borderBottom: obsStep > 2 ? '1px solid var(--border)' : 'none', marginBottom: obsStep > 2 ? '24px' : '0' }}>
                         <h3 style={{ marginTop: 0 }}>Tahap 2: Definisi Konseptual</h3>
                         <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>AI telah menyintesis definisi konseptual (abstrak) dari teori kajian pustaka Anda. Anda dapat mengeditnya sebelum lanjut.</p>
                         <textarea 
@@ -997,16 +997,15 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                           style={{ width: '100%', height: '150px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px', background: 'var(--surface-hover)', color: 'var(--on-surface)' }}
                         />
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                          <button onClick={() => setObsStep(1)} className={styles.btnSecondary} disabled={isGeneratingObs}>Kembali</button>
                           <button onClick={handleObsStep2Next} className={styles.btnPrimary} disabled={isGeneratingObs || !obsConceptualDef.trim()}>
-                            {isGeneratingObs ? 'Menganalisis AI (think-max)...' : 'Lanjut ke Definisi Operasional'}
+                            {isGeneratingObs && obsStep === 2 ? 'Menganalisis AI (think-max)...' : obsStep > 2 ? 'Generate Ulang Definisi Operasional' : 'Lanjut ke Definisi Operasional'}
                           </button>
                         </div>
-                      </>
+                      </div>
                     )}
 
-                    {obsStep === 3 && (
-                      <>
+                    {obsStep >= 3 && (
+                      <div>
                         <h3 style={{ marginTop: 0 }}>Tahap 3: Definisi Operasional</h3>
                         <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>AI telah menerjemahkan ke definisi operasional yang dapat diamati. Silakan edit jika perlu.</p>
                         <textarea 
@@ -1015,12 +1014,11 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                           style={{ width: '100%', height: '150px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px', background: 'var(--surface-hover)', color: 'var(--on-surface)' }}
                         />
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                          <button onClick={() => setObsStep(2)} className={styles.btnSecondary} disabled={isGeneratingObs}>Kembali</button>
                           <button onClick={handleObsStep3Next} className={styles.btnPrimary} disabled={isGeneratingObs || !obsOperationalDef.trim()}>
-                            {isGeneratingObs ? 'Mengekstrak Aspek & Indikator...' : 'Generate Tabel Observasi'}
+                            {isGeneratingObs && obsStep === 3 ? 'Mengekstrak Aspek & Indikator...' : 'Generate Tabel Observasi'}
                           </button>
                         </div>
-                      </>
+                      </div>
                     )}
                   </>
                 )}
