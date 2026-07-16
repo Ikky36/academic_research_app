@@ -181,7 +181,7 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
       
       // Enforce a cool-down delay if there are more chunks to process
       if (i + CHUNK_SIZE < toProcess.length) {
-        setProgressText(`Menunggu 6 detik (jeda aman API Gemini)...`);
+        setProgressText(`Menunggu 6 detik (jeda aman request API)...`);
         await new Promise(resolve => setTimeout(resolve, 6000));
       }
     }
