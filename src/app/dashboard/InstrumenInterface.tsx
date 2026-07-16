@@ -209,6 +209,16 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
     if (res.result) {
       setObsConceptualDef(res.result);
       setObsStep(2);
+      if (activeInstrumentId) {
+        const newHistory = [
+          { role: 'obs_step', text: '2' },
+          { role: 'obs_title', text: selectedObsTitle },
+          { role: 'obs_content', text: selectedObsContent },
+          { role: 'obs_conceptual', text: res.result }
+        ];
+        setChatHistory(newHistory as ChatMessage[]);
+        saveState(activeInstrumentId, newHistory as ChatMessage[], 'in_progress');
+      }
     } else {
       alert(res.error || 'Gagal mensintesis definisi konseptual.');
     }
@@ -222,6 +232,17 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
     if (res.result) {
       setObsOperationalDef(res.result);
       setObsStep(3);
+      if (activeInstrumentId) {
+        const newHistory = [
+          { role: 'obs_step', text: '3' },
+          { role: 'obs_title', text: selectedObsTitle },
+          { role: 'obs_content', text: selectedObsContent },
+          { role: 'obs_conceptual', text: obsConceptualDef },
+          { role: 'obs_operational', text: res.result }
+        ];
+        setChatHistory(newHistory as ChatMessage[]);
+        saveState(activeInstrumentId, newHistory as ChatMessage[], 'in_progress');
+      }
     } else {
       alert(res.error || 'Gagal mensintesis definisi operasional.');
     }
@@ -235,11 +256,14 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
     setIsGeneratingObs(false);
     if (res.result) {
       const newHistory = [
+        { role: 'obs_step', text: '3' },
         { role: 'obs_title', text: selectedObsTitle },
+        { role: 'obs_content', text: selectedObsContent },
         { role: 'obs_conceptual', text: obsConceptualDef },
         { role: 'obs_operational', text: obsOperationalDef }
       ];
-      if (activeInstrumentId) await saveState(activeInstrumentId, newHistory as ChatMessage[], 'completed');
+      setChatHistory(newHistory as ChatMessage[]);
+      if (activeInstrumentId) await saveState(activeInstrumentId, newHistory as ChatMessage[], 'completed', res.result);
       setFinalResult(res.result);
       setIsChatComplete(true);
       // update instruments list
@@ -266,7 +290,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
     if (data) {
       setChatHistory(data.chat_history || []);
       
-      if ((type === 'Tes Prestasi' || type === 'Skala') && data.chat_history) {
+      if ((type === 'Tes Prestasi' || type === 'Skala' || type === 'Observasi') && data.chat_history) {
          try {
            const bpData = data.chat_history.find((m: any) => m.role === 'blueprint_data');
            if (bpData && bpData.text) setBlueprintData(JSON.parse(bpData.text));
@@ -278,6 +302,18 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
            if (conceptsData && conceptsData.text) setSkalaConcepts(JSON.parse(conceptsData.text));
            const synthesizedDefData = data.chat_history.find((m: any) => m.role === 'synthesized_def');
            if (synthesizedDefData && synthesizedDefData.text) setSkalaSynthesizedDef(synthesizedDefData.text);
+           
+           // Restore state for Observasi
+           const obsStepData = data.chat_history.find((m: any) => m.role === 'obs_step');
+           if (obsStepData && obsStepData.text) setObsStep(parseInt(obsStepData.text));
+           const obsTitleData = data.chat_history.find((m: any) => m.role === 'obs_title');
+           if (obsTitleData && obsTitleData.text) setSelectedObsTitle(obsTitleData.text);
+           const obsContentData = data.chat_history.find((m: any) => m.role === 'obs_content');
+           if (obsContentData && obsContentData.text) setSelectedObsContent(obsContentData.text);
+           const obsConceptualData = data.chat_history.find((m: any) => m.role === 'obs_conceptual');
+           if (obsConceptualData && obsConceptualData.text) setObsConceptualDef(obsConceptualData.text);
+           const obsOperationalData = data.chat_history.find((m: any) => m.role === 'obs_operational');
+           if (obsOperationalData && obsOperationalData.text) setObsOperationalDef(obsOperationalData.text);
          } catch(e) {}
       }
 
