@@ -163,11 +163,13 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
   };
 
   const parseKpForSubBabs = (markdown: string) => {
-    const regex = /###\s+(2\.\d+[^#\n]+)([\s\S]*?)(?=\n###\s+2\.\d+|$)/g;
+    // Cari semua heading (##, ###, atau ####) yang memiliki format 2.X (tanpa .Y di belakangnya)
+    // dan ambil seluruh kontennya (termasuk sub-sub bab) sampai heading dengan level yang sama berikutnya.
+    const regex = /(?:^|\n)(#{2,4})\s+(2\.\d+(?!\.\d)[^#\n]*)([\s\S]*?)(?=\n\1\s|$)/g;
     const matches = [];
     let match;
     while ((match = regex.exec(markdown)) !== null) {
-      matches.push({ title: match[1].trim(), content: match[0].trim() });
+      matches.push({ title: match[2].trim(), content: match[0].trim() });
     }
     return matches;
   };
