@@ -1,12 +1,15 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
+import { logClientErrorAction } from './actions';
+import { getProjectState } from '@/services/projectState';
 import { createClient } from '@/utils/supabase/client'
 import styles from './InstrumenInterface.module.css'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkBreaks from 'remark-breaks'
 import { generateInstrumentQuestionsAction, continueInstrumentChatAction, generateFinalInstrumentAction, generateBlueprintAction, generateLatentVariableDefinitionAction } from './instrumenActions'
+import { generateConceptualDefAction, generateOperationalDefAction, generateObservationTableAction } from './actions'
 import { ChatMessage } from '@/services/instrumen'
 
 interface InstrumenInterfaceProps {
@@ -22,13 +25,17 @@ const INSTRUMENT_TYPES = [
 ];
 
 export default function InstrumenInterface({ projectId, isActive, limits, role, isPaidApi }: InstrumenInterfaceProps) {
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [activeInstrument, setActiveInstrument] = useState<string | null>(null);
+  type InstrumentData = { id: string, instrument_type: string, name: string | null, status: string };
+  const [instruments, setInstruments] = useState<InstrumentData[]>([]);
+  const [activeInstrumentId, setActiveInstrumentId] = useState<string | null>(null);
+  const [newInstrumentType, setNewInstrumentType] = useState(INSTRUMENT_TYPES[0]);
+  const [newInstrumentName, setNewInstrumentName] = useState('');
   
   // Data from previous tabs
   const [pendekatan, setPendekatan] = useState('');
   const [variables, setVariables] = useState('');
   const [gap, setGap] = useState('');
+  const [metodologiText, setMetodologiText] = useState('');
 
   // Upload Reference
   const [files, setFiles] = useState<File[]>([]);
@@ -60,11 +67,20 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
   const [skalaSynthesizedDef, setSkalaSynthesizedDef] = useState('');
   const [isGeneratingLatentDef, setIsGeneratingLatentDef] = useState(false);
 
+  // Observasi State
+  const [kpResult, setKpResult] = useState('');
+  const [obsSubBabs, setObsSubBabs] = useState<{title: string, content: string}[]>([]);
+  const [obsStep, setObsStep] = useState<1 | 2 | 3 | 4>(1);
+  const [selectedObsTitle, setSelectedObsTitle] = useState('');
+  const [selectedObsContent, setSelectedObsContent] = useState('');
+  const [obsConceptualDef, setObsConceptualDef] = useState('');
+  const [obsOperationalDef, setObsOperationalDef] = useState('');
+  const [isGeneratingObs, setIsGeneratingObs] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Status mapping
-  const [instrumentStatus, setInstrumentStatus] = useState<Record<string, string>>({});
-
+  const activeInstData = instruments.find(i => i.id === activeInstrumentId);
+  
   useEffect(() => {
     if (isActive) {
       loadProjectData();
@@ -75,6 +91,15 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory, isChatting]);
+
+  useEffect(() => {
+    if (activeInstData?.instrument_type === 'Observasi' && !isChatComplete) {
+      if (kpResult) {
+        const babs = parseKpForSubBabs(kpResult);
+        setObsSubBabs(babs);
+      }
+    }
+  }, [activeInstData?.instrument_type, isChatComplete, kpResult]);
 
   const loadProjectData = async () => {
     const supabase = createClient();
@@ -87,71 +112,168 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
     if (searches && searches.length > 0) {
       setGap(searches[0].gap || '');
     }
+    
+    // Load variables and context from selected gap if available
+    const savedGap = await getProjectState(projectId, 'selected_gap');
+    let defaultVars = 'Variabel Utama';
+    let defaultSubject = '';
+    
+    if (savedGap) {
+      try {
+        const gapData = JSON.parse(savedGap);
+        if (gapData.topikBaru) {
+          const match = gapData.topikBaru.match(/<!--\s*var:\s*(.*?);\s*ctx:\s*(.*?)\s*-->/);
+          if (match) {
+            defaultVars = match[1].replace(/[\[\]]/g, '').trim();
+            defaultSubject = match[2].replace(/[\[\]]/g, '').trim();
+          } else {
+            defaultVars = gapData.topikBaru;
+          }
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
+    }
+    
     // Set some defaults
     setPendekatan('Kuantitatif / Kualitatif (Campuran)');
-    setVariables('Variabel Utama');
+    setVariables(defaultVars);
+    if (defaultSubject) {
+      setSubject(defaultSubject);
+    }
+
+    const savedMetodologi = await getProjectState(projectId, 'metodologi_result');
+    if (savedMetodologi) {
+       setMetodologiText(savedMetodologi);
+    }
+    const savedKp = await getProjectState(projectId, 'kp_result');
+    if (savedKp) {
+       setKpResult(savedKp);
+    }
   };
 
   const loadInstruments = async () => {
     const supabase = createClient();
     const { data } = await supabase.from('project_instruments').select('*').eq('project_id', projectId);
     if (data) {
-      const types = data.map((d: any) => d.instrument_type);
-      setSelectedTypes(types);
-      const statusObj: Record<string, string> = {};
-      data.forEach((d: any) => {
-        statusObj[d.instrument_type] = d.status;
-      });
-      setInstrumentStatus(statusObj);
-      
-      // Load uploaded files
-      const { data: filesData } = await supabase.from('instrument_reference_chunks').select('id, instrument_type, filename').eq('project_id', projectId);
+      setInstruments(data);
+      const { data: filesData } = await supabase.from('instrument_reference_chunks').select('id, instrument_id, filename').eq('project_id', projectId);
       if (filesData) setUploadedFiles(filesData);
     }
   };
 
-  const handleTypeToggle = async (type: string) => {
+  const parseKpForSubBabs = (markdown: string) => {
+    const regex = /###\s+(2\.\d+[^#\n]+)([\s\S]*?)(?=\n###\s+2\.\d+|$)/g;
+    const matches = [];
+    let match;
+    while ((match = regex.exec(markdown)) !== null) {
+      matches.push({ title: match[1].trim(), content: match[0].trim() });
+    }
+    return matches;
+  };
+
+  const handleAddInstrument = async () => {
+    if (!newInstrumentType) return;
+    await executeAddInstrument();
+  };
+
+  const executeAddInstrument = async (finalStr: string = '', status: string = 'pending') => {
     const supabase = createClient();
-    if (selectedTypes.includes(type)) {
-      if (confirm(`Yakin ingin menghapus instrumen ${type}? Data chat akan hilang.`)) {
-        await supabase.from('project_instruments').delete().eq('project_id', projectId).eq('instrument_type', type);
-        setSelectedTypes(selectedTypes.filter(t => t !== type));
-        if (activeInstrument === type) setActiveInstrument(null);
-        loadInstruments();
+    const { data, error } = await supabase.from('project_instruments').insert({
+      project_id: projectId,
+      instrument_type: newInstrumentType,
+      name: newInstrumentName || newInstrumentType,
+      status: status,
+      final_result: finalStr
+    }).select().single();
+    if (data) {
+      setInstruments([...instruments, data]);
+      setNewInstrumentName('');
+      if (status === 'completed') {
+        setActiveInstrumentId(data.id);
+        setFinalResult(data.final_result);
+        setIsChatComplete(true);
       }
-    } else {
-      await supabase.from('project_instruments').insert({
-        project_id: projectId,
-        instrument_type: type,
-        status: 'pending'
-      });
-      setSelectedTypes([...selectedTypes, type]);
-      loadInstruments();
     }
   };
 
-  const handleStartInstrument = async (type: string) => {
-    setActiveInstrument(type);
+  // --- Observasi Multi-Step Handlers ---
+
+  const handleObsStep1Next = async () => {
+    if (!selectedObsTitle) return;
+    setIsGeneratingObs(true);
+    const res = await generateConceptualDefAction(selectedObsTitle, selectedObsContent, undefined, isPaidApi);
+    setIsGeneratingObs(false);
+    if (res.result) {
+      setObsConceptualDef(res.result);
+      setObsStep(2);
+    } else {
+      alert(res.error || 'Gagal mensintesis definisi konseptual.');
+    }
+  };
+
+  const handleObsStep2Next = async () => {
+    if (!obsConceptualDef.trim()) return;
+    setIsGeneratingObs(true);
+    const res = await generateOperationalDefAction(selectedObsTitle, obsConceptualDef, undefined, isPaidApi);
+    setIsGeneratingObs(false);
+    if (res.result) {
+      setObsOperationalDef(res.result);
+      setObsStep(3);
+    } else {
+      alert(res.error || 'Gagal mensintesis definisi operasional.');
+    }
+  };
+
+  const handleObsStep3Next = async () => {
+    if (!obsOperationalDef.trim()) return;
+    setIsGeneratingObs(true);
+    // As per instruction, this step runs generateObservationTableAction which does the max->medium pipeline
+    const res = await generateObservationTableAction(selectedObsTitle, obsOperationalDef, undefined, isPaidApi);
+    setIsGeneratingObs(false);
+    if (res.result) {
+      const newHistory = [
+        { role: 'obs_title', text: selectedObsTitle },
+        { role: 'obs_conceptual', text: obsConceptualDef },
+        { role: 'obs_operational', text: obsOperationalDef }
+      ];
+      if (activeInstrumentId) await saveState(activeInstrumentId, newHistory as ChatMessage[], 'completed');
+      setFinalResult(res.result);
+      setIsChatComplete(true);
+      // update instruments list
+      setInstruments(instruments.map(inst => inst.id === activeInstrumentId ? { ...inst, status: 'completed', final_result: res.result } : inst));
+    } else {
+      alert(res.error || 'Gagal mengekstrak aspek dan indikator observasi.');
+    }
+  };
+
+  const handleRemoveInstrument = async (id: string) => {
+    if (confirm('Yakin ingin menghapus instrumen ini? Data chat akan hilang.')) {
+      const supabase = createClient();
+      await supabase.from('project_instruments').delete().eq('id', id);
+      setInstruments(instruments.filter(i => i.id !== id));
+      if (activeInstrumentId === id) setActiveInstrumentId(null);
+    }
+  };
+
+  const handleStartInstrument = async (id: string, type: string) => {
+    setActiveInstrumentId(id);
     const supabase = createClient();
-    const { data } = await supabase.from('project_instruments').select('*').eq('project_id', projectId).eq('instrument_type', type).single();
+    const { data } = await supabase.from('project_instruments').select('*').eq('id', id).single();
     
     if (data) {
       setChatHistory(data.chat_history || []);
       
-      // Load blueprint data if it's a Tes Prestasi or Skala
       if ((type === 'Tes Prestasi' || type === 'Skala') && data.chat_history) {
          try {
            const bpData = data.chat_history.find((m: any) => m.role === 'blueprint_data');
            if (bpData && bpData.text) setBlueprintData(JSON.parse(bpData.text));
            const domData = data.chat_history.find((m: any) => m.role === 'blueprint_domains');
            if (domData && domData.text) setSelectedDomains(JSON.parse(domData.text));
-
            const latentVarData = data.chat_history.find((m: any) => m.role === 'latent_var_name');
            if (latentVarData && latentVarData.text) setSkalaLatentVarName(latentVarData.text);
-           
            const conceptsData = data.chat_history.find((m: any) => m.role === 'skala_concepts');
            if (conceptsData && conceptsData.text) setSkalaConcepts(JSON.parse(conceptsData.text));
-           
            const synthesizedDefData = data.chat_history.find((m: any) => m.role === 'synthesized_def');
            if (synthesizedDefData && synthesizedDefData.text) setSkalaSynthesizedDef(synthesizedDefData.text);
          } catch(e) {}
@@ -163,26 +285,25 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
       } else {
         setFinalResult('');
         setIsChatComplete(false);
-        // If no chat history, initialize chat (only if not Tes Prestasi and not Skala)
-        if (type !== 'Tes Prestasi' && type !== 'Skala' && (!data.chat_history || data.chat_history.length === 0)) {
-          initChat(type);
+        if (type !== 'Tes Prestasi' && type !== 'Skala' && type !== 'Observasi' && (!data.chat_history || data.chat_history.length === 0)) {
+          initChat(id, type, data.name);
         }
       }
     }
   };
 
-  const initChat = async (type: string) => {
+  const initChat = async (id: string, type: string, name: string | null) => {
     setIsChatting(true);
-    const res = await generateInstrumentQuestionsAction(projectId, type, pendekatan, variables, gap, '', isPaidApi);
+    const res = await generateInstrumentQuestionsAction(projectId, id, type, name || type, pendekatan, variables, gap, metodologiText, '', isPaidApi);
     if (res.questions && res.questions.length > 0) {
-      const firstMsg = `Mari kita susun instrumen **${type}**. Untuk memulainya, saya perlu beberapa informasi:\n\n` + res.questions.map((q, i) => `${i+1}. ${q}`).join('\n');
+      const firstMsg = `Mari kita susun instrumen **${name || type}**. Untuk memulainya, saya perlu beberapa informasi:\n\n` + res.questions.map((q, i) => `${i+1}. ${q}`).join('\n');
       const newHistory: ChatMessage[] = [{ role: 'ai', text: firstMsg }];
       setChatHistory(newHistory);
-      saveState(type, newHistory, 'in_progress');
+      saveState(id, newHistory, 'in_progress');
     } else {
       const newHistory: ChatMessage[] = [{ role: 'ai', text: 'Mari kita susun instrumen ini. Ceritakan secara singkat fokus yang ingin Anda ukur/tanyakan.' }];
       setChatHistory(newHistory);
-      saveState(type, newHistory, 'in_progress');
+      saveState(id, newHistory, 'in_progress');
     }
     setIsChatting(false);
   };
@@ -211,35 +332,33 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
         { role: 'synthesized_def', text: res.result },
         ...(blueprintData ? [{ role: 'blueprint_data', text: JSON.stringify(blueprintData) }] : [])
       ];
-      saveState('Skala', newHistory as ChatMessage[], 'in_progress');
+      if (activeInstrumentId) saveState(activeInstrumentId, newHistory as ChatMessage[], 'in_progress');
     } else {
       alert(res.error || 'Gagal mensintesis definisi');
     }
   };
 
-  const saveState = async (type: string, history: ChatMessage[], status: string, finalStr: string = '') => {
+  const saveState = async (id: string, history: ChatMessage[], status: string, finalStr: string = '') => {
     const supabase = createClient();
     await supabase.from('project_instruments').update({
       chat_history: history,
       status: status,
       final_result: finalStr,
       updated_at: new Date().toISOString()
-    }).eq('project_id', projectId).eq('instrument_type', type);
-    
-    setInstrumentStatus(prev => ({ ...prev, [type]: status }));
+    }).eq('id', id);
+    setInstruments(prev => prev.map(i => i.id === id ? { ...i, status } : i));
   };
-
   const sendMessage = async () => {
-    if (!inputMessage.trim() || !activeInstrument) return;
+    if (!inputMessage.trim() || !activeInstrumentId || !activeInstData) return;
 
     const newHistory: ChatMessage[] = [...chatHistory, { role: 'user', text: inputMessage }];
     setChatHistory(newHistory);
     setInputMessage('');
     setIsChatting(true);
     
-    await saveState(activeInstrument, newHistory, 'in_progress');
+    await saveState(activeInstrumentId, newHistory, 'in_progress');
 
-    const res = await continueInstrumentChatAction(projectId, activeInstrument, pendekatan, variables, newHistory, '', isPaidApi);
+    const res = await continueInstrumentChatAction(projectId, activeInstrumentId, activeInstData.instrument_type, activeInstData.name || activeInstData.instrument_type, pendekatan, variables, newHistory, metodologiText, '', isPaidApi);
     
     setIsChatting(false);
     if (res.error) {
@@ -253,30 +372,27 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
       const aiResponse = `**Baik, informasi sudah lengkap!**\n\nBerikut rangkuman kesepakatan instrumen kita:\n${res.summary}\n\nSilakan klik tombol **"Buat Draf Final Instrumen"** di bawah untuk menyusun format lengkapnya.`;
       const finalHistory: ChatMessage[] = [...newHistory, { role: 'ai', text: aiResponse }];
       setChatHistory(finalHistory);
-      await saveState(activeInstrument, finalHistory, 'in_progress');
+      await saveState(activeInstrumentId, finalHistory, 'in_progress');
     } else {
       const aiResponse = res.nextQuestion || 'Ada lagi yang perlu ditambahkan?';
       const finalHistory: ChatMessage[] = [...newHistory, { role: 'ai', text: aiResponse }];
       setChatHistory(finalHistory);
-      await saveState(activeInstrument, finalHistory, 'in_progress');
+      await saveState(activeInstrumentId, finalHistory, 'in_progress');
     }
   };
 
   const generateFinal = async () => {
-    if (!activeInstrument) return;
+    if (!activeInstrumentId || !activeInstData) return;
     setIsGeneratingFinal(true);
-    
     let contextData = chatSummary;
-    if (activeInstrument === 'Tes Prestasi' && blueprintData) {
+    if (activeInstData.instrument_type === 'Tes Prestasi' && blueprintData) {
       contextData = JSON.stringify(blueprintData);
     }
-    
-    const res = await generateFinalInstrumentAction(activeInstrument, variables, contextData, subject, subjectDescription, undefined, isPaidApi);
+    const res = await generateFinalInstrumentAction(activeInstData.instrument_type, activeInstData.name || activeInstData.instrument_type, variables, contextData, subject, subjectDescription, undefined, isPaidApi);
     setIsGeneratingFinal(false);
-    
     if (res.result) {
       setFinalResult(res.result);
-      await saveState(activeInstrument, chatHistory, 'completed', res.result);
+      await saveState(activeInstrumentId, chatHistory, 'completed', res.result);
     } else {
       alert(res.error || 'Gagal generate instrumen');
     }
@@ -284,9 +400,9 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
 
   const handleFileUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (files.length === 0 || !activeInstrument) return;
+    if (files.length === 0 || !activeInstrumentId || !activeInstData) return;
 
-    const currentFiles = uploadedFiles.filter(f => f.instrument_type === activeInstrument).length;
+    const currentFiles = uploadedFiles.filter(f => f.instrument_id === activeInstrumentId).length;
     const maxRefs = limits.max_instrumen_referensi || 2;
 
     if (currentFiles + files.length > maxRefs) {
@@ -323,7 +439,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
               text: textContent,
               fileName: f.name,
               projectId: projectId,
-              instrumentType: activeInstrument
+              instrumentId: activeInstrumentId
             })
           });
           const data = await res.json();
@@ -368,7 +484,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
   const copyBlueprintTable = () => {
     if (!blueprintData) return;
     let markdownTable = "";
-    if (activeInstrument === 'Tes Prestasi') {
+    if (activeInstData?.instrument_type === 'Tes Prestasi') {
       markdownTable = "| Topik Konten | Domain Kognitif/Psikomotorik/Afektif | Target Pembelajaran Spesifik | Bobot/Proporsi |\n| --- | --- | --- | --- |\n";
       blueprintData.forEach((row: any) => {
         markdownTable += `| ${row.topic} | ${row.domain} | ${row.target} | ${row.weight} |\n`;
@@ -393,16 +509,17 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
   };
 
   const generateBlueprint = async () => {
-    if (activeInstrument === 'Tes Prestasi' && selectedDomains.length === 0) return alert('Pilih minimal satu domain!');
+    if (activeInstData?.instrument_type === 'Tes Prestasi' && selectedDomains.length === 0) return alert('Pilih minimal satu domain!');
     setIsGeneratingBlueprint(true);
-    const res = await generateBlueprintAction(projectId, activeInstrument || '', selectedDomains, variables, gap, manualTopics, subject, subjectDescription, isPaidApi);
+    if (!activeInstrumentId || !activeInstData) return;
+    const res = await generateBlueprintAction(projectId, activeInstrumentId, activeInstData.instrument_type, activeInstData.name || activeInstData.instrument_type, selectedDomains, variables, gap, manualTopics, subject, subjectDescription, isPaidApi);
     setIsGeneratingBlueprint(false);
     
     if (res.blueprint) {
       setBlueprintData(res.blueprint);
       
       // Save state to project_instruments via chat_history field
-      const newHistory = activeInstrument === 'Tes Prestasi' ? [
+      const newHistory = activeInstData.instrument_type === 'Tes Prestasi' ? [
         { role: 'blueprint_domains', text: JSON.stringify(selectedDomains) },
         { role: 'blueprint_data', text: JSON.stringify(res.blueprint) }
       ] : [
@@ -411,7 +528,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
         { role: 'synthesized_def', text: skalaSynthesizedDef },
         { role: 'blueprint_data', text: JSON.stringify(res.blueprint) }
       ];
-      await saveState(activeInstrument || '', newHistory as ChatMessage[], 'in_progress');
+      await saveState(activeInstrumentId, newHistory as ChatMessage[], 'in_progress');
     } else {
       alert(res.error || 'Gagal generate blueprint');
     }
@@ -423,7 +540,8 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
     newData[index][field] = value;
     setBlueprintData(newData);
     
-    const newHistory = activeInstrument === 'Tes Prestasi' ? [
+    if (!activeInstData) return;
+    const newHistory = activeInstData.instrument_type === 'Tes Prestasi' ? [
         { role: 'blueprint_domains', text: JSON.stringify(selectedDomains) },
         { role: 'blueprint_data', text: JSON.stringify(newData) }
     ] : [
@@ -432,51 +550,51 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
         { role: 'synthesized_def', text: skalaSynthesizedDef },
         { role: 'blueprint_data', text: JSON.stringify(newData) }
     ];
-    saveState(activeInstrument || '', newHistory as ChatMessage[], 'in_progress');
+    if (activeInstrumentId) saveState(activeInstrumentId, newHistory as ChatMessage[], 'in_progress');
   };
 
-  if (!activeInstrument) {
+  if (!activeInstrumentId) {
     return (
       <div className={styles.container}>
         <div className={styles.header}>
           <h2 className={styles.title}>Instrumen Penelitian</h2>
-          <p className={styles.subtitle}>Pilih dan rancang instrumen penelitian Anda (Kuesioner, Pedoman Wawancara, dll) dipandu oleh AI.</p>
+          <p className={styles.subtitle}>Pilih dan rancang instrumen penelitian Anda dipandu oleh AI.</p>
         </div>
 
         <div className={styles.content}>
           <div className={styles.formGroup}>
-            <label>Pilih Instrumen yang Dibutuhkan</label>
-            <div className={styles.checkboxGrid}>
-              {INSTRUMENT_TYPES.map(type => (
-                <label key={type} className={styles.checkboxLabel}>
-                  <input 
-                    type="checkbox" 
-                    checked={selectedTypes.includes(type)}
-                    onChange={() => handleTypeToggle(type)}
-                  />
-                  {type}
-                </label>
-              ))}
+            <label>Tambah Instrumen Baru</label>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '8px' }}>
+               <select className={styles.chatInput} value={newInstrumentType} onChange={e => setNewInstrumentType(e.target.value)} style={{ padding: '8px', borderRadius: '8px' }}>
+                 {INSTRUMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+               </select>
+               <input className={styles.chatInput} type="text" placeholder="Nama Spesifik (Misal: Kuesioner Siswa)" value={newInstrumentName} onChange={e => setNewInstrumentName(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: '8px' }} />
+               <button className={styles.btnPrimary} onClick={handleAddInstrument}>Tambah</button>
             </div>
-            <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '12px' }}>
-              *Anda dapat memilih lebih dari satu instrumen jika menggunakan Mixed Methods atau butuh triangulasi.
-            </p>
           </div>
 
-          {selectedTypes.length > 0 && (
+          {instruments.length > 0 && (
             <div className={styles.instrumentList}>
               <h3 style={{ marginBottom: '8px' }}>Instrumen Proyek Ini</h3>
-              {selectedTypes.map(type => (
-                <div key={type} className={styles.instrumentCard}>
+              {instruments.map(inst => (
+                <div key={inst.id} className={styles.instrumentCard} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <h3>{type}</h3>
-                    <span className={`${styles.statusBadge} ${instrumentStatus[type] === 'completed' ? styles.statusCompleted : instrumentStatus[type] === 'in_progress' ? styles.statusInProgress : styles.statusPending}`}>
-                      {instrumentStatus[type] === 'completed' ? 'Selesai' : instrumentStatus[type] === 'in_progress' ? 'Sedang Dikerjakan' : 'Belum Dimulai'}
-                    </span>
+                    <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                       {inst.name || inst.instrument_type} 
+                       <span style={{ fontSize: '12px', fontWeight: 'normal', color: '#666', background: '#eee', padding: '2px 6px', borderRadius: '4px' }}>{inst.instrument_type}</span>
+                    </h3>
+                    <div style={{ marginTop: '8px' }}>
+                      <span className={`${styles.statusBadge} ${inst.status === 'completed' ? styles.statusCompleted : inst.status === 'in_progress' ? styles.statusInProgress : styles.statusPending}`}>
+                        {inst.status === 'completed' ? 'Selesai' : inst.status === 'in_progress' ? 'Sedang Dikerjakan' : 'Belum Dimulai'}
+                      </span>
+                    </div>
                   </div>
-                  <button className={styles.btnPrimary} onClick={() => handleStartInstrument(type)}>
-                    {instrumentStatus[type] === 'completed' ? 'Lihat Hasil' : instrumentStatus[type] === 'in_progress' ? 'Lanjutkan' : 'Mulai Rancang'}
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className={styles.btnSecondary} onClick={() => handleRemoveInstrument(inst.id)} style={{ color: 'red', borderColor: 'red' }}>Hapus</button>
+                    <button className={styles.btnPrimary} onClick={() => handleStartInstrument(inst.id, inst.instrument_type)}>
+                      {inst.status === 'completed' ? 'Lihat Hasil' : inst.status === 'in_progress' ? 'Lanjutkan' : 'Mulai Rancang'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -490,10 +608,10 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
     <div className={styles.container}>
       <div className={styles.header} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <button className={styles.btnSecondary} onClick={() => setActiveInstrument(null)} style={{ marginBottom: '12px', padding: '6px 12px', fontSize: '14px' }}>
+          <button className={styles.btnSecondary} onClick={() => setActiveInstrumentId(null)} style={{ marginBottom: '12px', padding: '6px 12px', fontSize: '14px' }}>
             ← Kembali ke Daftar Instrumen
           </button>
-          <h2 className={styles.title}>Merancang {activeInstrument}</h2>
+          <h2 className={styles.title}>Merancang {activeInstData?.name || activeInstData?.instrument_type}</h2>
         </div>
       </div>
 
@@ -502,18 +620,18 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
         {/* Left Col: Setup & Chat */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
-          {!isChatComplete && activeInstrument !== 'Skala' && (
+          {!isChatComplete && activeInstData?.instrument_type !== 'Skala' && activeInstData?.instrument_type !== 'Observasi' && activeInstData?.instrument_type?.trim() !== 'Observasi' && (
             <div className={styles.formGroup} style={{ margin: 0 }}>
-              <label>{activeInstrument === 'Tes Prestasi' ? 'Materi Ajar (Opsional)' : 'Referensi Teori (Opsional)'}</label>
+              <label>{activeInstData?.instrument_type === 'Tes Prestasi' ? 'Materi Ajar (Opsional)' : 'Referensi Teori (Opsional)'}</label>
               <p style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '12px' }}>
-                {activeInstrument === 'Tes Prestasi' 
+                {activeInstData?.instrument_type === 'Tes Prestasi' 
                   ? `Upload PDF materi ajar agar AI mengekstrak Topik Konten secara otomatis (Max ${limits.max_instrumen_referensi || 2} PDF). Jika tidak ada PDF, Anda dapat menulis daftar Topik Konten secara manual di bawah.`
                   : `Jika tidak diunggah, AI akan otomatis menggunakan referensi dari tab Kajian Pustaka. Upload PDF teori instrumen spesifik (Max ${limits.max_instrumen_referensi || 2} PDF).`
                 }
               </p>
               
               <div style={{ marginBottom: '16px' }}>
-                {uploadedFiles.filter(f => f.instrument_type === activeInstrument).map(f => (
+                {uploadedFiles.filter(f => f.instrument_id === activeInstrumentId).map(f => (
                   <div key={f.id} className={styles.uploadedFile}>
                     <span style={{ fontSize: '13px' }}>📄 {f.filename}</span>
                     <button onClick={() => deleteFile(f.id)} className={styles.deleteBtn}>×</button>
@@ -521,13 +639,13 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                 ))}
               </div>
 
-              {uploadedFiles.filter(f => f.instrument_type === activeInstrument).length < (limits.max_instrumen_referensi || 2) && (
+              {uploadedFiles.filter(f => f.instrument_id === activeInstrumentId).length < (limits.max_instrumen_referensi || 2) && (
                 <form onSubmit={handleFileUpload} className={styles.uploadArea}>
                   <input type="file" accept="application/pdf" multiple onChange={e => setFiles(Array.from(e.target.files || []))} id="file-upload" className={styles.fileInput} />
                   <label htmlFor="file-upload" style={{ cursor: 'pointer', display: 'block' }}>
                     <div style={{ fontSize: '24px', marginBottom: '8px' }}>📄</div>
                     <div style={{ color: files.length > 0 ? 'var(--primary)' : 'var(--on-surface)' }}>
-                      {files.length > 0 ? `${files.length} file dipilih` : (activeInstrument === 'Tes Prestasi' ? 'Pilih file PDF' : 'Pilih file PDF Teori/Blueprint')}
+                      {files.length > 0 ? `${files.length} file dipilih` : (activeInstData?.instrument_type === 'Tes Prestasi' ? 'Pilih file PDF' : 'Pilih file PDF Teori/Blueprint')}
                     </div>
                   </label>
                   {files.length > 0 && (
@@ -538,7 +656,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                 </form>
               )}
               
-              {activeInstrument === 'Tes Prestasi' && uploadedFiles.filter(f => f.instrument_type === activeInstrument).length === 0 && (
+              {activeInstData?.instrument_type === 'Tes Prestasi' && uploadedFiles.filter(f => f.instrument_id === activeInstrumentId).length === 0 && (
                 <div style={{ marginTop: '16px' }}>
                   <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>Topik Konten Manual (Jika tidak mengunggah PDF)</label>
                   <textarea 
@@ -553,9 +671,9 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
             </div>
           )}
 
-          {(activeInstrument === 'Tes Prestasi' || activeInstrument === 'Skala') ? (
+          {(activeInstData?.instrument_type === 'Tes Prestasi' || activeInstData?.instrument_type === 'Skala') ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {activeInstrument === 'Tes Prestasi' && (
+              {activeInstData?.instrument_type === 'Tes Prestasi' && (
                 <div className={styles.formGroup} style={{ margin: 0 }}>
                   <h3 style={{ marginBottom: '16px' }}>Konteks Instrumen</h3>
                   <div style={{ marginBottom: '16px' }}>
@@ -582,7 +700,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                 </div>
               )}
 
-              {activeInstrument === 'Skala' && (
+              {activeInstData?.instrument_type === 'Skala' && (
                 <div className={styles.chatContainer}>
                   <div className={styles.chatHeader}>
                     <h3>Konsep Variabel Laten</h3>
@@ -662,7 +780,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                               { role: 'synthesized_def', text: e.target.value },
                               ...(blueprintData ? [{ role: 'blueprint_data', text: JSON.stringify(blueprintData) }] : [])
                             ];
-                            saveState('Skala', newHistory as ChatMessage[], 'in_progress');
+                            if (activeInstrumentId) saveState(activeInstrumentId, newHistory as ChatMessage[], 'in_progress');
                           }}
                         />
                       </div>
@@ -678,7 +796,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                 </div>
                 <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }}>
                   
-                  {activeInstrument === 'Tes Prestasi' && (
+                  {activeInstData?.instrument_type === 'Tes Prestasi' && (
                     <div>
                       <h4 style={{ marginBottom: '8px' }}>Pilih Domain & Level Taksonomi</h4>
                       <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>Pilih satu untuk Single Domain, atau beberapa untuk Multi Domain.</p>
@@ -716,7 +834,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                   )}
                   
                   
-                  {activeInstrument === 'Skala' ? (
+                  {activeInstData?.instrument_type === 'Skala' ? (
                     <button className={styles.btnPrimary} onClick={generateBlueprint} disabled={isGeneratingBlueprint || !skalaSynthesizedDef.trim()}>
                       {isGeneratingBlueprint ? 'Menyusun Blueprint...' : 'Generate Blueprint dari Definisi'}
                     </button>
@@ -738,7 +856,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                         <thead>
                           <tr style={{ background: 'var(--surface-hover)', textAlign: 'left' }}>
-                            {activeInstrument === 'Tes Prestasi' ? (
+                            {activeInstData?.instrument_type === 'Tes Prestasi' ? (
                               <>
                                 <th style={{ padding: '8px', borderBottom: '1px solid var(--border)' }}>Topik Konten</th>
                                 <th style={{ padding: '8px', borderBottom: '1px solid var(--border)' }}>Domain</th>
@@ -757,7 +875,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                         <tbody>
                           {blueprintData.map((row: any, i: number) => (
                             <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                              {activeInstrument === 'Tes Prestasi' ? (
+                              {activeInstData?.instrument_type === 'Tes Prestasi' ? (
                                 <>
                                   <td style={{ padding: '8px', verticalAlign: 'top' }}>
                                     <textarea 
@@ -826,6 +944,85 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                 )}
               </div>
             </div>
+          </div>
+          ) : (activeInstData?.instrument_type === 'Observasi' || activeInstData?.instrument_type?.trim() === 'Observasi') && !isChatComplete ? (
+            <div className={styles.chatContainer}>
+              <div className={styles.chatHeader}>
+                <h3>Merancang Instrumen Observasi</h3>
+              </div>
+              <div style={{ padding: '20px' }}>
+                {!kpResult ? (
+                  <div style={{ color: '#ef4444' }}>Data Kajian Pustaka (Bab 2) kosong. AI membutuhkan teori untuk menyusun observasi. Silakan isi terlebih dahulu di tab Kajian Pustaka.</div>
+                ) : obsSubBabs.length === 0 ? (
+                  <div style={{ color: '#ef4444' }}>Gagal mendeteksi Sub Bab pada Kajian Pustaka. Pastikan format menggunakan heading "### 2.x".</div>
+                ) : (
+                  <>
+                    {obsStep === 1 && (
+                      <>
+                        <h3 style={{ marginTop: 0 }}>Tahap 1: Pilih Fokus Penelitian</h3>
+                        <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>Pilih variabel dari Kajian Pustaka (Bab 2) yang ingin diubah menjadi Instrumen Observasi.</p>
+                        <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '8px', marginBottom: '16px' }}>
+                          {obsSubBabs.map((sub, idx) => (
+                            <div key={idx} 
+                                 onClick={() => { setSelectedObsTitle(sub.title); setSelectedObsContent(sub.content); }}
+                                 style={{ 
+                                   padding: '12px', 
+                                   borderBottom: '1px solid var(--border)', 
+                                   cursor: 'pointer', 
+                                   background: selectedObsTitle === sub.title ? 'var(--primary-light, rgba(0, 112, 243, 0.1))' : 'transparent',
+                                   fontWeight: selectedObsTitle === sub.title ? 'bold' : 'normal',
+                                   color: selectedObsTitle === sub.title ? 'var(--primary)' : 'inherit'
+                                 }}>
+                              {sub.title}
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                          <button onClick={handleObsStep1Next} className={styles.btnPrimary} disabled={isGeneratingObs || !selectedObsTitle}>
+                            {isGeneratingObs ? 'Menganalisis AI (think-max)...' : 'Lanjut ke Definisi Konseptual'}
+                          </button>
+                        </div>
+                      </>
+                    )}
+
+                    {obsStep === 2 && (
+                      <>
+                        <h3 style={{ marginTop: 0 }}>Tahap 2: Definisi Konseptual</h3>
+                        <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>AI telah menyintesis definisi konseptual (abstrak) dari teori kajian pustaka Anda. Anda dapat mengeditnya sebelum lanjut.</p>
+                        <textarea 
+                          value={obsConceptualDef}
+                          onChange={(e) => setObsConceptualDef(e.target.value)}
+                          style={{ width: '100%', height: '150px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px', background: 'var(--surface-hover)', color: 'var(--on-surface)' }}
+                        />
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                          <button onClick={() => setObsStep(1)} className={styles.btnSecondary} disabled={isGeneratingObs}>Kembali</button>
+                          <button onClick={handleObsStep2Next} className={styles.btnPrimary} disabled={isGeneratingObs || !obsConceptualDef.trim()}>
+                            {isGeneratingObs ? 'Menganalisis AI (think-max)...' : 'Lanjut ke Definisi Operasional'}
+                          </button>
+                        </div>
+                      </>
+                    )}
+
+                    {obsStep === 3 && (
+                      <>
+                        <h3 style={{ marginTop: 0 }}>Tahap 3: Definisi Operasional</h3>
+                        <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>AI telah menerjemahkan ke definisi operasional yang dapat diamati. Silakan edit jika perlu.</p>
+                        <textarea 
+                          value={obsOperationalDef}
+                          onChange={(e) => setObsOperationalDef(e.target.value)}
+                          style={{ width: '100%', height: '150px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px', background: 'var(--surface-hover)', color: 'var(--on-surface)' }}
+                        />
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                          <button onClick={() => setObsStep(2)} className={styles.btnSecondary} disabled={isGeneratingObs}>Kembali</button>
+                          <button onClick={handleObsStep3Next} className={styles.btnPrimary} disabled={isGeneratingObs || !obsOperationalDef.trim()}>
+                            {isGeneratingObs ? 'Mengekstrak Aspek & Indikator...' : 'Generate Tabel Observasi'}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           ) : (
             !finalResult && (
@@ -874,7 +1071,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
             )
           )}
 
-          {((isChatComplete && !finalResult) || (activeInstrument === 'Tes Prestasi' && blueprintData && !finalResult)) && (
+          {((isChatComplete && !finalResult) || (activeInstData?.instrument_type === 'Tes Prestasi' && blueprintData && !finalResult)) && (
             <button 
               className={styles.btnPrimary} 
               onClick={generateFinal} 
@@ -901,7 +1098,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                     if(confirm('Yakin ingin merevisi? Draf final ini akan dihapus dan Anda bisa mengedit chat kembali.')){
                       setFinalResult('');
                       setIsChatComplete(false);
-                      saveState(activeInstrument, chatHistory, 'in_progress');
+                      if (activeInstrumentId) saveState(activeInstrumentId, chatHistory, 'in_progress');
                     }
                   }} className={styles.btnSecondary} style={{ color: '#ef4444' }}>
                     Revisi Chat
@@ -917,6 +1114,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
           </div>
         )}
       </div>
+
     </div>
   );
 }

@@ -202,16 +202,19 @@ Identifikasi **${gapType}** dari literatur-literatur SOTA di atas.
 Anda WAJIB memberikan **TEPAT 2** celah penelitian (Research Gap) yang berbeda untuk tipe ${gapType} ini. 
 
 Sajikan hasilnya HANYA dalam format tabel Markdown tanpa teks pengantar atau penutup apapun.
-Tabel harus memiliki tepat 2 kolom:
-| JENIS RESEARCH GAP | NOVELTY |
-|---|---|
+Tabel harus memiliki tepat 3 kolom:
+| JENIS RESEARCH GAP | NOVELTY | TOPIK BARU |
+|---|---|---|
 
 ATURAN SANGAT PENTING:
 1. Kolom "JENIS RESEARCH GAP": WAJIB diawali dengan teks "**${gapType}:** " lalu diikuti dengan deskripsi celah penelitiannya. Anda WAJIB menyertakan sitasi APA 7th edition (contoh: Smith et al., 2023). 
 2. Kolom "NOVELTY": TIDAK BOLEH KOSONG! WAJIB diisi dengan paragraf usulan ide kebaruan konkret untuk mengisi celah tersebut. PASTIKAN gagasan ini sangat relevan dan mengarah pada Topik: "${researchTopic}".
-3. STANDAR AKADEMIK: Bobot narasi kebaruan dan kedalaman analisis gap Anda HARUS sesuai dengan standar penyusunan tugas akhir tingkat **${educationLevel}** (Skripsi/Tesis/Disertasi). 
-4. PERINGATAN: "${educationLevel}" di sini BUKAN berarti sampel populasi/objek penelitian Anda harus berupa mahasiswa S1/S2/S3! Jangan membelokkan topik ke arah sana. Ini murni tentang TINGKAT KESULITAN TEORITIS DAN METODOLOGIS dari gap/novelty yang Anda usulkan.
-5. Anda WAJIB memberikan persis 2 baris isi tabel (artinya ada 2 pernyataan gap yang berbeda).
+3. Kolom "TOPIK BARU": WAJIB diisi dengan rumusan Topik Baru dalam bentuk frasa nominal yang murni berisi variabel/konsep (bukan kalimat lengkap). Topik ini merupakan integrasi konsep NOVELTY ke dalam Topik awal. SANGAT PENTING: TOPIK BUKANLAH JUDUL. DILARANG KERAS menggunakan kata-kata yang mencerminkan metodologi penelitian di awal frasa seperti "Analisis", "Pengaruh", "Efektivitas", "Hubungan", "Studi Kasus", dsb. 
+   - KHUSUS KOLOM INI, Anda WAJIB menyertakan Metadata Tersembunyi (Invisible Metadata) menggunakan format Komentar HTML tepat di awal teks. Formatnya harus persis seperti ini: <!-- var:[variabel 1, variabel 2]; ctx:[konteks] --> Teks Topik Natural. 
+   - Contoh yang BENAR: <!-- var:Project Based Learning, Motivasi Religius; ctx:Pembelajaran bahasa arab di pesantren --> Project Based Learning berbasis HOTS dan Metalinguistik pada pembelajaran bahasa arab di pesantren
+4. STANDAR AKADEMIK: Bobot narasi kebaruan dan kedalaman analisis gap Anda HARUS sesuai dengan standar penyusunan tugas akhir tingkat **${educationLevel}** (Skripsi/Tesis/Disertasi). 
+5. PERINGATAN: "${educationLevel}" di sini BUKAN berarti sampel populasi/objek penelitian Anda harus berupa mahasiswa S1/S2/S3! Jangan membelokkan topik ke arah sana. Ini murni tentang TINGKAT KESULITAN TEORITIS DAN METODOLOGIS dari gap/novelty yang Anda usulkan.
+6. Anda WAJIB memberikan persis 2 baris isi tabel (artinya ada 2 pernyataan gap yang berbeda).
     `;
 
     let attempts = 0;
@@ -237,14 +240,15 @@ ATURAN SANGAT PENTING:
         
         for (const line of dataLines) {
           const cols = line.split('|');
-          if (cols.length < 3) {
+          if (cols.length < 4) {
             throw new Error('Format kolom tabel tidak valid.');
           }
           const gapCol = cols[1].trim();
           const noveltyCol = cols[2].trim();
+          const topikBaruCol = cols[3].trim();
           
-          if (noveltyCol.length < 20) {
-            throw new Error('Kolom NOVELTY kosong atau terlalu singkat. AI gagal memberikan narasi novelty.');
+          if (noveltyCol.length < 20 || topikBaruCol.length < 10) {
+            throw new Error('Kolom NOVELTY atau TOPIK BARU kosong/terlalu singkat. AI gagal memberikan narasi.');
           }
           if (!gapCol.toLowerCase().includes(gapType.toLowerCase())) {
             // Force inject gapType prefix if AI forgot it but provided good novelty
@@ -319,6 +323,7 @@ ATURAN PENULISAN DAFTAR PUSTAKA:
 - Susun secara alfabetis (atau numerik jika IEEE).
 
 Berikan hasil akhirnya langsung dalam format Markdown yang rapi (paragraf naratif lalu daftar pustaka).
+DILARANG KERAS menggunakan kalimat pembuka, pengantar, atau basa-basi seperti "Berikut adalah Literature Review..." atau "Ini adalah hasilnya". Langsung keluarkan teks esai naratif pada baris pertama!
 `;
 
   try {

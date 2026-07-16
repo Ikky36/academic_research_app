@@ -9,10 +9,13 @@ export type ChatMessage = {
 
 export async function generateInstrumentQuestions(
   projectId: string,
+  instrumentId: string,
   instrumentType: string,
+  instrumentName: string,
   pendekatan: string,
   variables: string,
   gap: string,
+  methodologyContext?: string,
   userApiKey?: string,
   isPaidApi?: boolean
 ): Promise<{ questions?: string[], error?: string }> {
@@ -33,7 +36,7 @@ export async function generateInstrumentQuestions(
       .from('instrument_reference_chunks')
       .select('content, filename')
       .eq('project_id', projectId)
-      .eq('instrument_type', instrumentType)
+      .eq('instrument_id', instrumentId)
       .limit(10);
 
     let contextText = '';
@@ -55,6 +58,10 @@ export async function generateInstrumentQuestions(
         contextText += `- (File: ${chunk.filename}) ${chunk.content}\n`;
       });
     }
+    
+    if (methodologyContext && methodologyContext.trim() !== '') {
+      contextText += `\n\nHASIL RANCANGAN METODOLOGI PENELITIAN (JADIKAN ACUAN UTAMA):\n${methodologyContext.substring(0, 3000)}\n`;
+    }
 
     let specificInstructions = '';
     if (instrumentType.toLowerCase().includes('skala')) {
@@ -70,10 +77,12 @@ JANGAN menanyakan apa teorinya kepada mahasiswa. ANDA yang harus menemukannya.
 2. Tanyakan apakah ada pembagian kategori/bagian khusus dalam kuesioner tersebut.
 JANGAN meminta teori atau dimensi psikologis abstrak. Fokus pada pengumpulan data konkret.`;
     } else {
-       specificInstructions = `Contoh untuk Wawancara/Observasi/Dokumentasi: Tanyakan siapa subjek/informannya, konteks/setting, dan batasan hal yang ingin digali.`;
+       specificInstructions = `Contoh untuk instrumen ${instrumentType}: Tanyakan siapa subjek/informannya, konteks/setting, dan batasan hal yang ingin digali. 
+PENTING: Jika informasi ini SUDAH ADA di dalam Teks "HASIL RANCANGAN METODOLOGI" di atas, JANGAN TANYAKAN LAGI, melainkan gunakan informasi tersebut sebagai dasar, konfirmasikan, atau langsung gali detail teknis instrumen yang belum terjawab.`;
     }
 
-    const prompt = `Anda adalah dosen ahli metodologi penelitian psikologi dan sosial. Mahasiswa Anda sedang menyusun instrumen penelitian berupa "${instrumentType}".
+    const instrumentLabel = instrumentName || instrumentType;
+    const prompt = `Anda adalah dosen ahli metodologi penelitian psikologi dan sosial. Mahasiswa Anda sedang menyusun instrumen penelitian JENIS: "${instrumentType}" dengan nama/topik: "${instrumentLabel}".
 Pendekatan: ${pendekatan}
 Variabel: ${variables}
 Gap: ${gap}
@@ -114,10 +123,13 @@ Format wajib: ["pertanyaan 1", "pertanyaan 2"]`;
 
 export async function continueInstrumentChat(
   projectId: string,
+  instrumentId: string,
   instrumentType: string,
+  instrumentName: string,
   pendekatan: string,
   variables: string,
   chatHistory: ChatMessage[],
+  methodologyContext?: string,
   userApiKey?: string,
   isPaidApi?: boolean
 ): Promise<{ isComplete: boolean, nextQuestion?: string, summary?: string, error?: string }> {
@@ -137,7 +149,7 @@ export async function continueInstrumentChat(
       .from('instrument_reference_chunks')
       .select('content, filename')
       .eq('project_id', projectId)
-      .eq('instrument_type', instrumentType)
+      .eq('instrument_id', instrumentId)
       .limit(10);
 
     let contextText = '';
@@ -162,6 +174,10 @@ export async function continueInstrumentChat(
       });
     }
 
+    if (methodologyContext && methodologyContext.trim() !== '') {
+      contextText += `\n\nHASIL RANCANGAN METODOLOGI PENELITIAN (JADIKAN ACUAN UTAMA):\n${methodologyContext.substring(0, 3000)}\n`;
+    }
+
     const historyText = chatHistory.map(m => `${m.role === 'ai' ? 'Asisten' : 'Mahasiswa'}: ${m.text}`).join('\n');
 
     let specificChatInstructions = '';
@@ -175,11 +191,13 @@ export async function continueInstrumentChat(
 - Buatkan draft bagian-bagian kuesioner. 
 - Saat menyusun pertanyaan, pastikan setiap pertanyaan menggali informasi yang UNIK dan JELAS. JANGAN membuat pertanyaan yang redundant/tumpang tindih (jangan ikuti kaidah DeVellis untuk angket).`;
     } else {
-       specificChatInstructions = `- Berikan saran/pilihan konkret untuk instrumen ini, lalu tanyakan preferensi mereka.`;
+       specificChatInstructions = `- Berikan saran/pilihan konkret untuk instrumen ini, lalu tanyakan preferensi mereka.
+- PENTING: Jika subjek/konteks sudah dijelaskan di "HASIL RANCANGAN METODOLOGI", pastikan instrumen yang Anda tawarkan selaras dengan metodologi tersebut tanpa menanyakan ulang hal-hal dasar yang sudah pasti.`;
     }
 
+    const instrumentLabel = instrumentName || instrumentType;
     const prompt = `Anda adalah asisten ahli penyusunan instrumen penelitian.
-Tugas Anda: Mewawancarai mahasiswa untuk menyusun kisi-kisi atau rancangan butir instrumen "${instrumentType}" berdasarkan variabel "${variables}".
+Tugas Anda: Mewawancarai mahasiswa untuk menyusun kisi-kisi atau rancangan butir instrumen JENIS: "${instrumentType}" dengan nama/topik: "${instrumentLabel}" berdasarkan variabel "${variables}".
 
 Riwayat percakapan:
 ${historyText || '(Belum ada percakapan, mulai dengan pertanyaan pertama)'}
@@ -220,6 +238,7 @@ Untuk selesai:
 
 export async function generateFinalInstrument(
   instrumentType: string,
+  instrumentName: string,
   variables: string,
   summary: string,
   subject?: string,
@@ -270,8 +289,9 @@ Tugas:
 5. Sertakan petunjuk pengisian di bagian awal.
 6. Jangan tambahkan teks pengantar basa-basi. Langsung tulis isi kuesioner dengan format Markdown.`;
     } else {
+      const instrumentLabel = instrumentName || instrumentType;
       prompt = `Anda adalah ahli penyusunan instrumen penelitian. Buatlah draf final instrumen penelitian dalam format Markdown yang rapi (menggunakan tabel jika perlu).
-Jenis Instrumen: ${instrumentType}
+Jenis Instrumen: ${instrumentLabel}
 Variabel Utama: ${variables}
 
 Kesepakatan dan Rangkuman Diskusi:
@@ -356,7 +376,9 @@ Hasilkan HANYA teks paragraf sintesis definitif tanpa pendahuluan atau kesimpula
 
 export async function generateBlueprint(
   projectId: string,
+  instrumentId: string,
   instrumentType: string,
+  instrumentName: string,
   selectedDomains: string[],
   variables: string,
   gap: string,
@@ -383,7 +405,7 @@ export async function generateBlueprint(
       .from('instrument_reference_chunks')
       .select('content, filename')
       .eq('project_id', projectId)
-      .eq('instrument_type', instrumentType)
+      .eq('instrument_id', instrumentId)
       .limit(10);
 
     let contextText = '';
@@ -497,5 +519,139 @@ KEMBALIKAN OUTPUT HANYA DALAM BENTUK JSON ARRAY OBJECTS DENGAN STRUKTUR BERIKUT:
     const { logErrorToAdmin, FRIENDLY_ERROR_MESSAGE } = await import('@/utils/logger');
     await logErrorToAdmin('Instrumen_Blueprint', err);
     return { error: FRIENDLY_ERROR_MESSAGE };
+  }
+}
+
+export async function generateConceptualDef(
+  instrumentName: string,
+  theoreticalContext: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+): Promise<{ result?: string, error?: string }> {
+  try {
+    const { getGeminiApiKey, getActiveAiProvider } = await import('@/utils/apiKeyManager');
+    const role = isPaidApi ? 'pro' : 'free';
+    const { key: apiKey, modelName } = getGeminiApiKey(role, userApiKey);
+    const provider = await getActiveAiProvider();
+    
+    if (!apiKey) throw new Error('API Key is missing');
+    
+    const prompt = `Anda adalah Ahli Metodologi Penelitian. Tugas Anda adalah membaca, menganalisis, dan mensintesis Definisi Konseptual (batasan teoretis yang bersifat abstrak) berdasarkan Kajian Pustaka berikut.
+    
+Variabel/Fokus Utama: ${instrumentName}
+
+Teks Kajian Pustaka:
+${theoreticalContext}
+
+TUGAS:
+Sintesis semua informasi di atas menjadi satu paragraf Definisi Konseptual yang solid, padat, dan representatif untuk variabel/fokus penelitian tersebut. 
+JANGAN menambahkan pengantar atau kesimpulan basa-basi. Output HANYA teks paragraf Definisi Konseptual.`;
+
+    let finalMarkdown: string;
+    if (provider === 'deepseek' && isPaidApi) {
+      console.log('[Instrumen] Using DeepSeek (think-max) for conceptual def');
+      finalMarkdown = await callDeepSeekWithRetry(prompt, 'Anda adalah ahli metodologi penyusunan instrumen observasi.', 'think-max');
+    } else {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
+      finalMarkdown = result.response.text();
+    }
+    return { result: finalMarkdown.replace(/^```(markdown)?\s*/gi, '').replace(/```$/g, '').trim() };
+  } catch (err: any) {
+    console.error("Generate Conceptual Def Error:", err);
+    return { error: "Gagal membuat Definisi Konseptual." };
+  }
+}
+
+export async function generateOperationalDef(
+  instrumentName: string,
+  conceptualDef: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+): Promise<{ result?: string, error?: string }> {
+  try {
+    const { getGeminiApiKey, getActiveAiProvider } = await import('@/utils/apiKeyManager');
+    const role = isPaidApi ? 'pro' : 'free';
+    const { key: apiKey, modelName } = getGeminiApiKey(role, userApiKey);
+    const provider = await getActiveAiProvider();
+    
+    if (!apiKey) throw new Error('API Key is missing');
+    
+    const prompt = `Anda adalah Ahli Metodologi Penelitian. Tugas Anda adalah mengubah Definisi Konseptual (abstrak) berikut menjadi Definisi Operasional (kondisi/batasan operasional spesifik yang siap diukur/diamati) untuk keperluan pembuatan instrumen observasi.
+
+Variabel/Fokus Utama: ${instrumentName}
+
+Definisi Konseptual:
+${conceptualDef}
+
+TUGAS:
+Terjemahkan definisi konseptual di atas ke dalam paragraf Definisi Operasional yang mengarahkan pada hal-hal konkret yang bisa diamati.
+JANGAN menambahkan pengantar atau kesimpulan basa-basi. Output HANYA teks paragraf Definisi Operasional.`;
+
+    let finalMarkdown: string;
+    if (provider === 'deepseek' && isPaidApi) {
+      console.log('[Instrumen] Using DeepSeek (think-max) for operational def');
+      finalMarkdown = await callDeepSeekWithRetry(prompt, 'Anda adalah ahli metodologi penyusunan instrumen observasi.', 'think-max');
+    } else {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
+      finalMarkdown = result.response.text();
+    }
+    return { result: finalMarkdown.replace(/^```(markdown)?\s*/gi, '').replace(/```$/g, '').trim() };
+  } catch (err: any) {
+    console.error("Generate Operational Def Error:", err);
+    return { error: "Gagal membuat Definisi Operasional." };
+  }
+}
+
+export async function generateObservationTable(
+  instrumentName: string,
+  operationalDef: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+): Promise<{ result?: string, error?: string }> {
+  try {
+    const { getGeminiApiKey, getActiveAiProvider } = await import('@/utils/apiKeyManager');
+    const role = isPaidApi ? 'pro' : 'free';
+    const { key: apiKey, modelName } = getGeminiApiKey(role, userApiKey);
+    const provider = await getActiveAiProvider();
+    
+    if (!apiKey) throw new Error('API Key is missing');
+    
+    const prompt = `Anda adalah Ahli Metodologi Penelitian dan Observasi. Anda akan men-generate Tabel Instrumen Observasi berdasarkan Definisi Operasional.
+    
+Variabel: ${instrumentName}
+Definisi Operasional:
+${operationalDef}
+
+TUGAS ANDA:
+1. (Tahap 1) Identifikasi Dimensi/Aspek utama dari definisi operasional tersebut. (Level Kognisi: Tinggi)
+2. (Tahap 2) Ekstrak TEPAT 1 indikator perilaku umum dari setiap aspek/dimensi. (Level Kognisi: Menengah)
+3. (Tahap 3) Ekstrak TEPAT 2 deskriptor/aitem observasi (dinyatakan dalam kalimat aktif) untuk SETIAP indikator. (Level Kognisi: Menengah)
+4. Tulis hasil sintesis di atas secara BERSAMAAN HANYA ke dalam bentuk Tabel Markdown tunggal dengan 3 Kolom:
+   - Kolom 1: "Aspek"
+   - Kolom 2: "Indikator"
+   - Kolom 3: "Aitem Pernyataan" (Harus 2 aitem/baris untuk tiap indikator)
+   
+JANGAN menambahkan pengantar atau kesimpulan. Output HANYA Tabel Markdown.`;
+
+    let finalMarkdown: string;
+    if (provider === 'deepseek' && isPaidApi) {
+      // Sesuai instruksi: gabungan logic aspek (max) & indikator/deskriptor (medium).
+      // Kami panggil dengan think-max agar ia mampu mengekstrak aspek dengan benar lalu melanjutkannya ke pembuatan deskriptor dalam 1 pipeline chain-of-thought.
+      console.log('[Instrumen] Using DeepSeek (think-max) for observation table multi-step pipeline');
+      finalMarkdown = await callDeepSeekWithRetry(prompt, 'Anda adalah ahli metodologi penyusunan instrumen observasi.', 'think-max');
+    } else {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
+      finalMarkdown = result.response.text();
+    }
+    return { result: finalMarkdown.replace(/^```(markdown)?\s*/gi, '').replace(/```$/g, '').trim() };
+  } catch (err: any) {
+    console.error("Generate Observation Table Error:", err);
+    return { error: "Gagal membuat Tabel Instrumen Observasi." };
   }
 }

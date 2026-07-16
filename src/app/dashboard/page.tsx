@@ -104,7 +104,7 @@ export default async function DashboardPage({
             href={`/dashboard?tab=search&project=${activeProject?.id}`} 
             className={activeTab === 'search' ? styles.activeTab : styles.tab}
           >
-            Cari Jurnal
+            Penelitian Terdahulu
           </Link>
           <Link 
             href={`/dashboard?tab=sota&project=${activeProject?.id}`} 

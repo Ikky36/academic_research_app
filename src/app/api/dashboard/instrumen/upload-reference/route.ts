@@ -3,9 +3,9 @@ import { createClient } from '@/utils/supabase/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { text, fileName, projectId, instrumentType } = await req.json();
+    const { text, fileName, projectId, instrumentId } = await req.json();
 
-    if (!text || !fileName || !projectId || !instrumentType) {
+    if (!text || !fileName || !projectId || !instrumentId) {
       return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
     }
 
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       .from('instrument_reference_chunks')
       .select('*', { count: 'exact', head: true })
       .eq('project_id', projectId)
-      .eq('instrument_type', instrumentType);
+      .eq('instrument_id', instrumentId);
 
     if (countError) throw countError;
 
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       .from('instrument_reference_chunks')
       .insert({
         project_id: projectId,
-        instrument_type: instrumentType,
+        instrument_id: instrumentId,
         filename: fileName,
         content: chunkContent
       });

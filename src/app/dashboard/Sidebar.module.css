@@ -9,9 +9,14 @@
 }
 
 .brand {
-  padding: 1.5rem;
+  padding: 0 1.5rem;
   border-bottom: 1px solid var(--border);
   background: var(--surface-container-low);
+  height: 80px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .brand h1 {

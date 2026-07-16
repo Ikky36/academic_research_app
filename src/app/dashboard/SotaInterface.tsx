@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { getSavedReferencesAction, generateSotaChunkAction, clearReferencesAction, deleteReferenceAction, deleteReferencesBulkAction, logClientErrorAction } from './actions';
+import { saveProjectState, getProjectState } from '@/services/projectState';
 import styles from './SotaInterface.module.css';
 
 export default function SotaInterface({ projectId, isActive, limits, role, isPaidApi }: { projectId: string, isActive?: boolean, limits?: any, role?: string, isPaidApi?: boolean }) {
@@ -26,39 +27,41 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
   useEffect(() => {
     if (isActive !== false) {
       loadReferences();
-      // Load existing SOTA state from LocalStorage
-      const storedMarkdown = localStorage.getItem(`sota_markdown_${projectId}`);
-      if (storedMarkdown) setSotaMarkdown(storedMarkdown);
+      // Load existing SOTA state from Supabase
+      getProjectState(projectId, 'sota_markdown').then(storedMarkdown => {
+        if (storedMarkdown) setSotaMarkdown(storedMarkdown);
+      });
     }
   }, [projectId, isActive]);
 
   useEffect(() => {
-    const storedIds = localStorage.getItem(`sota_processed_${projectId}`);
-    let pIds: string[] = [];
-    if (storedIds) {
-      pIds = JSON.parse(storedIds);
-      setProcessedIds(pIds);
-    }
-    
-    // Auto-sync: If the table has fewer rows than processedIds, trim processedIds
-    // This fixes the bug where the LLM was stopped by quota but IDs were marked as processed
-    if (sotaMarkdown) {
-      const dataRows = sotaMarkdown.split('\n').filter(line => {
-        let trimmed = line.trim();
-        if (!trimmed.includes('|')) return false;
-        const lower = trimmed.toLowerCase();
-        if (lower.includes('penulis') && lower.includes('judul')) return false;
-        if (lower.includes('variabel') && lower.includes('metode')) return false;
-        if (trimmed.match(/^[|\-\s:]+$/)) return false; 
-        return true;
-      });
-      
-      if (dataRows.length < pIds.length && withAbstract.length > 0) {
-        const syncedIds = withAbstract.map(r => r.id).slice(0, dataRows.length);
-        setProcessedIds(syncedIds);
-        localStorage.setItem(`sota_processed_${projectId}`, JSON.stringify(syncedIds));
+    getProjectState(projectId, 'sota_processed').then(storedIds => {
+      let pIds: string[] = [];
+      if (storedIds) {
+        pIds = JSON.parse(storedIds);
+        setProcessedIds(pIds);
       }
-    }
+      
+      // Auto-sync: If the table has fewer rows than processedIds, trim processedIds
+      // This fixes the bug where the LLM was stopped by quota but IDs were marked as processed
+      if (sotaMarkdown) {
+        const dataRows = sotaMarkdown.split('\n').filter(line => {
+          let trimmed = line.trim();
+          if (!trimmed.includes('|')) return false;
+          const lower = trimmed.toLowerCase();
+          if (lower.includes('penulis') && lower.includes('judul')) return false;
+          if (lower.includes('variabel') && lower.includes('metode')) return false;
+          if (trimmed.match(/^[|\-\s:]+$/)) return false; 
+          return true;
+        });
+        
+        if (dataRows.length < pIds.length && withAbstract.length > 0) {
+          const syncedIds = withAbstract.map(r => r.id).slice(0, dataRows.length);
+          setProcessedIds(syncedIds);
+          saveProjectState(projectId, 'sota_processed', JSON.stringify(syncedIds));
+        }
+      }
+    });
   }, [projectId, sotaMarkdown, withAbstract]);
 
   const loadReferences = async () => {
@@ -168,8 +171,8 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
         currentProcessedIds = [...currentProcessedIds, ...chunkIds];
         setProcessedIds(currentProcessedIds);
         
-        localStorage.setItem(`sota_markdown_${projectId}`, accumulatedMarkdown);
-        localStorage.setItem(`sota_processed_${projectId}`, JSON.stringify(currentProcessedIds));
+        saveProjectState(projectId, 'sota_markdown', accumulatedMarkdown);
+        saveProjectState(projectId, 'sota_processed', JSON.stringify(currentProcessedIds));
       }
       
       // Enforce a cool-down delay if there are more chunks to process
@@ -185,8 +188,8 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
 
   const handleResetSota = () => {
     if (confirm('Apakah Anda yakin ingin MENGHAPUS tabel SOTA ini dan memulainya dari nol? (Artikel tetap aman di proyek)')) {
-      localStorage.removeItem(`sota_markdown_${projectId}`);
-      localStorage.removeItem(`sota_processed_${projectId}`);
+      saveProjectState(projectId, 'sota_markdown', '');
+      saveProjectState(projectId, 'sota_processed', '[]');
       setSotaMarkdown('');
       setProcessedIds([]);
     }
@@ -247,8 +250,8 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
     if (confirm('Apakah Anda yakin ingin menghapus SEMUA data artikel yang tersimpan di proyek ini? Data tidak dapat dikembalikan.')) {
       setLoadingRefs(true);
       await clearReferencesAction(projectId);
-      localStorage.removeItem(`sota_markdown_${projectId}`);
-      localStorage.removeItem(`sota_processed_${projectId}`);
+      saveProjectState(projectId, 'sota_markdown', '');
+      saveProjectState(projectId, 'sota_processed', '[]');
       await loadReferences();
       setSotaMarkdown('');
       setProcessedIds([]);
@@ -262,7 +265,7 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
       
       const newProcessedIds = processedIds.filter(pid => pid !== id);
       setProcessedIds(newProcessedIds);
-      localStorage.setItem(`sota_processed_${projectId}`, JSON.stringify(newProcessedIds));
+      saveProjectState(projectId, 'sota_processed', JSON.stringify(newProcessedIds));
 
       await loadReferences();
     }
@@ -283,7 +286,7 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
         lines.splice(lineIndex, 1);
         const newMarkdown = lines.join('\n');
         setSotaMarkdown(newMarkdown);
-        localStorage.setItem(`sota_markdown_${projectId}`, newMarkdown);
+        saveProjectState(projectId, 'sota_markdown', newMarkdown);
       }
     }
   };
@@ -350,7 +353,7 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
       // Update processedIds
       const newProcessedIds = processedIds.filter(pid => !idsToDelete.includes(pid));
       setProcessedIds(newProcessedIds);
-      localStorage.setItem(`sota_processed_${projectId}`, JSON.stringify(newProcessedIds));
+      saveProjectState(projectId, 'sota_processed', JSON.stringify(newProcessedIds));
 
       await loadReferences();
       alert('Artikel duplikat berhasil dihapus.');

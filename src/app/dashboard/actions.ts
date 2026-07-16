@@ -55,7 +55,7 @@ export async function continueMethodologyChatAction(
   chatHistory: ChatMessage[],
   userApiKey?: string,
   isPaidApi?: boolean
-): Promise<{ isComplete?: boolean, nextQuestion?: string, summary?: string, error?: string }> {
+): Promise<{ isComplete?: boolean, nextQuestion?: string, options?: string[], summary?: string, error?: string }> {
   try {
     const data = await continueMethodologyChat(pendekatan, gap, chatHistory, userApiKey, isPaidApi);
     return data;
@@ -284,14 +284,16 @@ export async function generateLiteratureReviewAction(
 
 export async function generateOutlineAction(
   approach: string,
-  variables: string,
+  variables: string[],
+  konteks: string,
   topic: string,
   gap: string,
   userApiKey?: string,
-  isPaidApi?: boolean
+  isPaidApi?: boolean,
+  additionalReferencesText?: string
 ) {
   try {
-    const data = await generateOutline(approach, variables, topic, gap, userApiKey, isPaidApi);
+    const data = await generateOutline(approach, variables, konteks, topic, gap, additionalReferencesText, userApiKey, isPaidApi);
     return { data };
   } catch (e: any) {
     return { error: e.message };
@@ -300,7 +302,8 @@ export async function generateOutlineAction(
 
 export async function generateKajianPustakaChunkAction(
   approach: string,
-  variables: string,
+  variables: string[],
+  konteks: string,
   citationStyle: string,
   topic: string,
   sota: string,
@@ -316,6 +319,7 @@ export async function generateKajianPustakaChunkAction(
     const data = await generateKajianPustakaChunk(
       approach,
       variables,
+      konteks,
       citationStyle,
       topic,
       sota,
@@ -430,6 +434,48 @@ export async function getAllAdditionalReferenceChunksAction(projectId: string) {
 
     if (error) throw error;
     return { data };
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
+export async function generateConceptualDefAction(
+  instrumentName: string,
+  theoreticalContext: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+): Promise<{ result?: string, error?: string }> {
+  try {
+    const { generateConceptualDef } = await import('@/services/instrumen');
+    return await generateConceptualDef(instrumentName, theoreticalContext, userApiKey, isPaidApi);
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
+export async function generateOperationalDefAction(
+  instrumentName: string,
+  conceptualDef: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+): Promise<{ result?: string, error?: string }> {
+  try {
+    const { generateOperationalDef } = await import('@/services/instrumen');
+    return await generateOperationalDef(instrumentName, conceptualDef, userApiKey, isPaidApi);
+  } catch (e: any) {
+    return { error: e.message };
+  }
+}
+
+export async function generateObservationTableAction(
+  instrumentName: string,
+  operationalDef: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+): Promise<{ result?: string, error?: string }> {
+  try {
+    const { generateObservationTable } = await import('@/services/instrumen');
+    return await generateObservationTable(instrumentName, operationalDef, userApiKey, isPaidApi);
   } catch (e: any) {
     return { error: e.message };
   }

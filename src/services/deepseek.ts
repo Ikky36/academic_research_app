@@ -1,5 +1,5 @@
 // src/services/deepseek.ts
-// Service layer untuk DeepSeek V4 Pro via OpenAI-compatible API
+// Service layer untuk DeepSeek V4 Flash via OpenAI-compatible API
 import OpenAI from 'openai';
 import fs from 'fs';
 import path from 'path';
@@ -45,16 +45,16 @@ export function getDeepSeekClient(): OpenAI {
  * Mengonfigurasi parameter reasoning_effort berdasarkan mode yang dipilih
  */
 function getReasoningConfig(mode: DeepSeekReasoningMode): {
-  thinking_enabled: boolean;
-  budget_tokens?: number;
+  thinking?: { type: 'enabled' | 'disabled' };
+  reasoning_effort?: 'low' | 'medium' | 'high';
 } {
   switch (mode) {
     case 'non-think':
-      return { thinking_enabled: false };
+      return { thinking: { type: 'disabled' } };
     case 'think-medium':
-      return { thinking_enabled: true, budget_tokens: 4000 };
+      return { thinking: { type: 'enabled' }, reasoning_effort: 'medium' };
     case 'think-max':
-      return { thinking_enabled: true, budget_tokens: 16000 };
+      return { thinking: { type: 'enabled' }, reasoning_effort: 'high' };
   }
 }
 
@@ -81,20 +81,17 @@ export async function callDeepSeek(
 
   // Build request params
   const params: any = {
-    model: 'deepseek-reasoner',
+    model: 'deepseek-v4-flash',
     messages,
     max_tokens: 8000,
+    ...reasoningConfig
   };
-
-  // DeepSeek Reasoner automatically thinks. Budget tokens parameter is not supported by DeepSeek API.
-
-
   // JSON mode
   if (jsonMode) {
     params.response_format = { type: 'json_object' };
   }
 
-  console.log(`[DeepSeek] Calling deepseek-v4-pro | mode: ${mode}`);
+  console.log(`[DeepSeek] Calling deepseek-v4-flash | mode: ${mode}`);
 
   try {
     const response = await client.chat.completions.create(params);
@@ -124,16 +121,14 @@ export async function streamDeepSeek(
   ];
 
   const params: any = {
-    model: 'deepseek-reasoner',
+    model: 'deepseek-v4-flash',
     messages,
     max_tokens: 8000,
     stream: true,
+    ...reasoningConfig
   };
 
-  // DeepSeek Reasoner automatically thinks. Budget tokens parameter is not supported by DeepSeek API.
-
-
-  console.log(`[DeepSeek] Streaming deepseek-v4-pro | mode: ${mode}`);
+  console.log(`[DeepSeek] Streaming deepseek-v4-flash | mode: ${mode}`);
 
   let fullText = '';
   const stream = await client.chat.completions.create(params);

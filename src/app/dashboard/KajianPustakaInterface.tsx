@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import styles from './KajianPustakaInterface.module.css';
+import { saveProjectState, getProjectState } from '@/services/projectState';
 import { generateOutlineAction, generateKajianPustakaChunkAction, generateDaftarPustakaAction, getAllAdditionalReferenceChunksAction, getSavedReferencesAction } from './actions';
 import AdditionalReferencesPanel from './AdditionalReferencesPanel';
 
@@ -26,12 +27,13 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
   // Custom setter to always persist step
   const setStep = (newStep: number) => {
     setStepState(newStep);
-    localStorage.setItem(`kp_step_${projectId}`, newStep.toString());
+    saveProjectState(projectId, 'kp_step', newStep.toString());
   };
   
   // Step 1 State
   const [approach, setApproach] = useState('Kuantitatif');
-  const [variables, setVariables] = useState('');
+  const [variables, setVariables] = useState<{id: number, value: string}[]>([{ id: Date.now(), value: '' }]);
+  const [konteks, setKonteks] = useState('');
   const [citationStyle, setCitationStyle] = useState('APA 7th Edition');
   
   // Step 2 State
@@ -54,79 +56,129 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
 
   useEffect(() => {
     if (isActive && projectId) {
-      const savedSota = localStorage.getItem(`sota_markdown_${projectId}`);
-      if (savedSota) setSotaMarkdown(savedSota);
-      
-      const savedTopic = localStorage.getItem(`research_topic_${projectId}`);
-      if (savedTopic) setResearchTopic(savedTopic);
+      // Load existing state from Supabase
+      Promise.all([
+        getProjectState(projectId, 'sota_markdown'),
+        getProjectState(projectId, 'research_topic'),
+        getProjectState(projectId, 'selected_gap'),
+        getProjectState(projectId, 'kp_approach'),
+        getProjectState(projectId, 'kp_variables'),
+        getProjectState(projectId, 'kp_konteks'),
+        getProjectState(projectId, 'kp_style'),
+        getProjectState(projectId, 'kp_outline'),
+        getProjectState(projectId, 'kp_result'),
+        getProjectState(projectId, 'kp_completed'),
+        getProjectState(projectId, 'kp_step')
+      ]).then(([savedSota, savedTopic, savedGap, savedApproach, savedVariables, savedKonteks, savedStyle, savedOutline, savedKp, savedCompleted, savedStep]) => {
+        if (savedSota) setSotaMarkdown(savedSota);
+        if (savedTopic) setResearchTopic(savedTopic);
+        
+        if (savedGap) {
+          setSelectedGap(savedGap);
+          try {
+            const gapData = JSON.parse(savedGap);
+            if (gapData.topikBaru) {
+              const match = gapData.topikBaru.match(/<!--\s*var:\s*(.*?);\s*ctx:\s*(.*?)\s*-->/);
+              if (match) {
+                 const extractedVars = match[1].replace(/[\[\]]/g, '').split(',').map((v: string) => v.trim()).filter((v: string) => v);
+                 const extractedCtx = match[2].replace(/[\[\]]/g, '').trim();
+                 
+                 if (!savedVariables && extractedVars.length > 0) {
+                   setVariables(extractedVars.map((v: string, i: number) => ({ id: Date.now() + i, value: v })));
+                 }
+                 if (!savedKonteks && extractedCtx) {
+                   setKonteks(extractedCtx);
+                 }
+              }
+            }
+          } catch (e) {}
+        }
 
-      const savedGap = localStorage.getItem(`selected_gap_${projectId}`);
-      if (savedGap) setSelectedGap(savedGap);
-
-      // Load saved state for this tab
-      const savedApproach = localStorage.getItem(`kp_approach_${projectId}`);
-      if (savedApproach) setApproach(savedApproach);
-      
-      const savedVariables = localStorage.getItem(`kp_variables_${projectId}`);
-      if (savedVariables) setVariables(savedVariables);
-      
-      const savedStyle = localStorage.getItem(`kp_style_${projectId}`);
-      if (savedStyle) setCitationStyle(savedStyle);
-      
-      const savedOutline = localStorage.getItem(`kp_outline_${projectId}`);
-      if (savedOutline) {
-        try { 
-          const parsed = JSON.parse(savedOutline);
-          if (Array.isArray(parsed)) {
-            const mapped = parsed.map(item => {
-              if (typeof item === 'string') return { title: item, subChapters: [] };
-              return item;
+        if (savedApproach) setApproach(savedApproach);
+        if (savedVariables) {
+          if (savedVariables.includes('<!--')) {
+             saveProjectState(projectId, 'kp_variables', '');
+          } else {
+            try {
+              setVariables(JSON.parse(savedVariables));
+            } catch (e) {
+              if (typeof savedVariables === 'string' && !savedVariables.startsWith('[')) {
+                 setVariables([{ id: Date.now(), value: savedVariables }]);
+              }
+            }
+          }
+        }
+        
+        if (savedKonteks) setKonteks(savedKonteks);
+        if (savedStyle) setCitationStyle(savedStyle);
+        if (savedOutline) {
+          try { 
+            const parsed = JSON.parse(savedOutline);
+            if (Array.isArray(parsed)) {
+              const mapped = parsed.map((item: any) => {
+                if (typeof item === 'string') return { title: item, subChapters: [] };
+                return item;
+              });
+              setOutline(mapped);
+            }
+          } catch(e) {}
+        }
+        if (savedKp) setKajianPustaka(savedKp);
+        
+        let completedCount = savedCompleted ? parseInt(savedCompleted, 10) : 0;
+        
+        if (savedKp && savedOutline) {
+          try {
+            const parsedOutline = JSON.parse(savedOutline);
+            let detectedCount = 0;
+            parsedOutline.forEach((item: any, idx: number) => {
+               if (savedKp.includes(`2.${idx + 1}`)) {
+                 detectedCount++;
+               }
             });
-            setOutline(mapped);
-          }
-        } catch(e) {}
-      }
-      
-      const savedKp = localStorage.getItem(`kp_result_${projectId}`);
-      if (savedKp) setKajianPustaka(savedKp);
-      
-      const savedCompleted = localStorage.getItem(`kp_completed_${projectId}`);
-      let completedCount = savedCompleted ? parseInt(savedCompleted, 10) : 0;
-      
-      if (savedKp && savedOutline) {
-        try {
-          const parsedOutline = JSON.parse(savedOutline);
-          let detectedCount = 0;
-          parsedOutline.forEach((item: any, idx: number) => {
-             if (savedKp.includes(`2.${idx + 1}`)) {
-               detectedCount++;
-             }
-          });
-          if (detectedCount > completedCount) {
-             completedCount = detectedCount;
-          }
-        } catch(e) {}
-      }
-      setCompletedSubBabs(completedCount);
-      const savedStep = localStorage.getItem(`kp_step_${projectId}`);
-      if (savedStep) setStepState(parseInt(savedStep, 10));
+            if (detectedCount > completedCount) {
+               completedCount = detectedCount;
+            }
+          } catch(e) {}
+        }
+        setCompletedSubBabs(completedCount);
+        if (savedStep) setStepState(parseInt(savedStep, 10));
+      });
     }
   }, [isActive, projectId]);
 
   // Handlers for Step 1
   const handleApproachChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setApproach(e.target.value);
-    localStorage.setItem(`kp_approach_${projectId}`, e.target.value);
+    saveProjectState(projectId, 'kp_approach', e.target.value);
   };
 
-  const handleVariablesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setVariables(e.target.value);
-    localStorage.setItem(`kp_variables_${projectId}`, e.target.value);
+  const handleVariableChange = (id: number, value: string) => {
+    const newVars = variables.map(v => v.id === id ? { ...v, value } : v);
+    setVariables(newVars);
+    saveProjectState(projectId, 'kp_variables', JSON.stringify(newVars));
+  };
+
+  const handleAddVariable = () => {
+    const newVars = [...variables, { id: Date.now(), value: '' }];
+    setVariables(newVars);
+    saveProjectState(projectId, 'kp_variables', JSON.stringify(newVars));
+  };
+
+  const handleRemoveVariable = (id: number) => {
+    const newVars = variables.filter(v => v.id !== id);
+    setVariables(newVars);
+    saveProjectState(projectId, 'kp_variables', JSON.stringify(newVars));
+  };
+
+  const handleKonteksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setKonteks(e.target.value);
+    saveProjectState(projectId, 'kp_konteks', e.target.value);
   };
 
   const handleStyleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setCitationStyle(e.target.value);
-    localStorage.setItem(`kp_style_${projectId}`, e.target.value);
+    saveProjectState(projectId, 'kp_style', e.target.value);
   };
 
   // Step 1 -> 2
@@ -144,26 +196,52 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
     setError('');
     
     // Save current values to local storage before generating just in case they were never changed via onChange
-    localStorage.setItem(`kp_approach_${projectId}`, approach);
-    localStorage.setItem(`kp_variables_${projectId}`, variables);
-    localStorage.setItem(`kp_style_${projectId}`, citationStyle);
+    saveProjectState(projectId, 'kp_approach', approach);
+    saveProjectState(projectId, 'kp_variables', JSON.stringify(variables));
+    saveProjectState(projectId, 'kp_konteks', konteks);
+    saveProjectState(projectId, 'kp_style', citationStyle);
+    
+    const varStrings = variables.map(v => v.value.trim()).filter(v => v);
+    if (varStrings.length === 0) {
+      setError('Harap isi minimal 1 Variabel/Fokus Penelitian.');
+      setIsGeneratingOutline(false);
+      return;
+    }
     
     try {
       const userKey = localStorage.getItem('gemini_api_key') || undefined;
+      
+      // Fetch additional references chunks for outline context
+      let additionalReferencesText = '';
+      try {
+        const refsRes = await getAllAdditionalReferenceChunksAction(projectId);
+        if (refsRes.data && refsRes.data.length > 0) {
+          const formattedRefs = refsRes.data.map((chunk: any) => {
+             const ref = chunk.additional_references;
+             return `Judul: ${ref?.title || 'Unknown'} | Topik: ${chunk.topic_category}\nIsi Konsep/Teori:\n${chunk.content}`;
+          }).join('\n\n---\n\n');
+          additionalReferencesText = formattedRefs;
+        }
+      } catch (e) {
+        console.error("Gagal memuat referensi tambahan untuk outline", e);
+      }
+
       const res = await generateOutlineAction(
         approach,
-        variables,
+        varStrings,
+        konteks,
         researchTopic,
         selectedGap,
         userKey,
-        isPaidApi
+        isPaidApi,
+        additionalReferencesText
       );
       
       if (res.error) throw new Error(res.error);
       
       if (res.data) {
         setOutline(res.data);
-        localStorage.setItem(`kp_outline_${projectId}`, JSON.stringify(res.data));
+        saveProjectState(projectId, 'kp_outline', JSON.stringify(res.data));
         setStep(2);
       }
     } catch (err: any) {
@@ -178,7 +256,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
     const newOutline = [...outline];
     newOutline[index] = { ...newOutline[index], title: value };
     setOutline(newOutline);
-    localStorage.setItem(`kp_outline_${projectId}`, JSON.stringify(newOutline));
+    saveProjectState(projectId, 'kp_outline', JSON.stringify(newOutline));
   };
 
   const handleSubOutlineChange = (parentIndex: number, subIndex: number, value: string) => {
@@ -187,13 +265,13 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
     newSubChapters[subIndex] = value;
     newOutline[parentIndex] = { ...newOutline[parentIndex], subChapters: newSubChapters };
     setOutline(newOutline);
-    localStorage.setItem(`kp_outline_${projectId}`, JSON.stringify(newOutline));
+    saveProjectState(projectId, 'kp_outline', JSON.stringify(newOutline));
   };
 
   const handleDeleteOutline = (index: number) => {
     const newOutline = outline.filter((_, i) => i !== index);
     setOutline(newOutline);
-    localStorage.setItem(`kp_outline_${projectId}`, JSON.stringify(newOutline));
+    saveProjectState(projectId, 'kp_outline', JSON.stringify(newOutline));
   };
 
   const handleDeleteSubOutline = (parentIndex: number, subIndex: number) => {
@@ -201,13 +279,13 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
     const newSubChapters = (newOutline[parentIndex].subChapters || []).filter((_, i) => i !== subIndex);
     newOutline[parentIndex] = { ...newOutline[parentIndex], subChapters: newSubChapters };
     setOutline(newOutline);
-    localStorage.setItem(`kp_outline_${projectId}`, JSON.stringify(newOutline));
+    saveProjectState(projectId, 'kp_outline', JSON.stringify(newOutline));
   };
 
   const handleAddOutline = () => {
     const newOutline = [...outline, { title: 'Judul Sub-Bab Baru', subChapters: [] }];
     setOutline(newOutline);
-    localStorage.setItem(`kp_outline_${projectId}`, JSON.stringify(newOutline));
+    saveProjectState(projectId, 'kp_outline', JSON.stringify(newOutline));
   };
 
   const handleAddSubOutline = (parentIndex: number) => {
@@ -217,7 +295,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
       subChapters: [...(newOutline[parentIndex].subChapters || []), 'Sub-sub Bab Baru'] 
     };
     setOutline(newOutline);
-    localStorage.setItem(`kp_outline_${projectId}`, JSON.stringify(newOutline));
+    saveProjectState(projectId, 'kp_outline', JSON.stringify(newOutline));
   };
 
   // Step 2 -> 3
@@ -244,7 +322,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
     if (!resume) {
       setKajianPustaka('');
       setCompletedSubBabs(0);
-      localStorage.setItem(`kp_completed_${projectId}`, '0');
+      saveProjectState(projectId, 'kp_completed', '0');
     }
     setStep(3); // Pindah ke langkah 3 untuk melihat proses secara real-time
     
@@ -269,18 +347,27 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
       const userKey = localStorage.getItem('gemini_api_key') || undefined;
       
       let enhancedBooksData = booksData;
+      
+      // ALWAYS fetch additional references chunks to ensure they are never lost on resume
+      try {
+        const refsRes = await getAllAdditionalReferenceChunksAction(projectId);
+        if (refsRes.data && refsRes.data.length > 0) {
+          const formattedRefs = refsRes.data.map((chunk: any) => {
+             const ref = chunk.additional_references;
+             return `Sumber Referensi Tambahan (User Upload):\nJudul: ${ref?.title || 'Unknown'}\nPenulis: ${ref?.author || 'Unknown'}\nTahun: ${ref?.year || 'Unknown'}\nKategori Topik: ${chunk.topic_category}\nIsi Konsep/Teori/Karakteristik/Hasil:\n${chunk.content}`;
+          }).join('\n\n---\n\n');
+          // Replace any existing user upload section to prevent duplicates
+          if (enhancedBooksData.includes('--- REFERENSI TAMBAHAN DARI PENGGUNA ---')) {
+            enhancedBooksData = enhancedBooksData.replace(/--- REFERENSI TAMBAHAN DARI PENGGUNA ---[\s\S]*?(?=--- Referensi Tambahan dari Google Books ---|--- Referensi Tambahan dari Buku ---|$)/, '');
+          }
+          enhancedBooksData = `--- REFERENSI TAMBAHAN DARI PENGGUNA ---\n${formattedRefs}\n\n${enhancedBooksData ? enhancedBooksData : ''}`;
+        }
+      } catch (e) {
+        console.error("Gagal memuat referensi tambahan:", e);
+      }
+
       if (!resume) {
         try {
-          // Fetch additional references chunks
-          const refsRes = await getAllAdditionalReferenceChunksAction(projectId);
-          if (refsRes.data && refsRes.data.length > 0) {
-            const formattedRefs = refsRes.data.map((chunk: any) => {
-               const ref = chunk.additional_references;
-               return `Sumber Referensi Tambahan (User Upload):\nJudul: ${ref?.title || 'Unknown'}\nPenulis: ${ref?.author || 'Unknown'}\nTahun: ${ref?.year || 'Unknown'}\nKategori Topik: ${chunk.topic_category}\nIsi Konsep/Teori/Karakteristik/Hasil:\n${chunk.content}`;
-            }).join('\n\n---\n\n');
-            enhancedBooksData = `--- REFERENSI TAMBAHAN DARI PENGGUNA ---\n${formattedRefs}\n\n${enhancedBooksData ? enhancedBooksData : ''}`;
-          }
-
           const query = encodeURIComponent(researchTopic);
           let fetchedBooks = false;
           // Mengambil 5 buku relevan dari Google Books berbahasa Indonesia (jika ada) atau umum
@@ -324,16 +411,24 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
               console.error("Gagal mengambil data dari API Crossref:", e);
             }
           }
+          
+          // Always save the updated books data to state
+          setBooksData(enhancedBooksData);
         } catch (e) {
           console.error("Gagal saat memproses Referensi Tambahan:", e);
         }
+      } else {
+        // If resuming, make sure we save the freshly fetched user uploads to state
+        setBooksData(enhancedBooksData);
       }
 
       for (let i = startIndex; i < outline.length; i++) {
         // Call action chunk by chunk
+        const varStrings = variables.map(v => v.value.trim()).filter(v => v);
         const res = await generateKajianPustakaChunkAction(
           approach,
-          variables,
+          varStrings,
+          konteks,
           citationStyle,
           researchTopic,
           projectMetadata,
@@ -351,10 +446,10 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
         if (res.data) {
           currentText += res.data + '\n\n';
           setKajianPustaka(currentText);
-          localStorage.setItem(`kp_result_${projectId}`, currentText);
+          saveProjectState(projectId, 'kp_result', currentText);
           successCount++;
           setCompletedSubBabs(successCount);
-          localStorage.setItem(`kp_completed_${projectId}`, successCount.toString());
+          saveProjectState(projectId, 'kp_completed', successCount.toString());
         }
       }
       
@@ -373,7 +468,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
       if (dpRes.data) {
         currentText += '\n\n' + dpRes.data;
         setKajianPustaka(currentText);
-        localStorage.setItem(`kp_result_${projectId}`, currentText);
+        saveProjectState(projectId, 'kp_result', currentText);
       }
 
     } catch (err: any) {
@@ -417,11 +512,11 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
           <div className={styles.stepLabel}>Smart Outline</div>
         </div>
         <div 
-          className={`${styles.stepIndicator} ${step === 3 ? styles.active : ''} ${step === 3 ? styles.current : ''}`}
+          className={`${styles.stepIndicator} ${step === 3 ? styles.active : ''} ${(kajianPustaka && !isGeneratingKajian && (kajianPustaka.toLowerCase().includes('daftar pustaka') || kajianPustaka.toLowerCase().includes('referensi'))) ? styles.completed : ''} ${step === 3 ? styles.current : ''}`}
           onClick={() => kajianPustaka.length > 0 && setStep(3)}
           style={{cursor: kajianPustaka.length > 0 ? 'pointer' : 'default'}}
         >
-          <div className={styles.stepNumber}>3</div>
+          <div className={styles.stepNumber}>{(kajianPustaka && !isGeneratingKajian && (kajianPustaka.toLowerCase().includes('daftar pustaka') || kajianPustaka.toLowerCase().includes('referensi'))) ? '✓' : '3'}</div>
           <div className={styles.stepLabel}>Hasil Akhir</div>
         </div>
       </div>
@@ -464,16 +559,50 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
 
           <div className={styles.formGroup}>
             <label>Variabel / Fokus Penelitian</label>
+            {variables.map((v, index) => (
+              <div key={v.id} style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                <input 
+                  type="text" 
+                  value={v.value} 
+                  onChange={(e) => handleVariableChange(v.id, e.target.value)} 
+                  className={styles.input}
+                  placeholder={`Variabel ${index + 1} (Contoh: Motivasi Belajar)`}
+                  style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#111827', color: 'white' }}
+                />
+                {variables.length > 1 && (
+                  <button 
+                    onClick={() => handleRemoveVariable(v.id)}
+                    style={{ padding: '0 15px', background: '#374151', border: 'none', borderRadius: '8px', color: '#f87171', cursor: 'pointer' }}
+                    title="Hapus variabel"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+            <button 
+              onClick={handleAddVariable}
+              style={{ marginTop: '12px', background: 'transparent', border: '1px dashed #4b5563', color: '#9ca3af', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', width: '100%' }}
+            >
+              + Tambah Variabel
+            </button>
+            <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '8px' }}>
+              *Isi dengan variabel terikat/bebas (jika Kuantitatif) atau fokus fenomena/teori (jika Kualitatif).
+            </p>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label>Konteks Penelitian (Latar/Subjek/Tempat)</label>
             <input 
               type="text" 
-              value={variables} 
-              onChange={handleVariablesChange} 
+              value={konteks} 
+              onChange={handleKonteksChange} 
               className={styles.input}
-              placeholder="Contoh: Motivasi Belajar (Y), Problem Based Learning (X)"
+              placeholder="Contoh: Pada pembelajaran bahasa Arab di pesantren"
               style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#111827', color: 'white', marginTop: '4px' }}
             />
             <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '8px' }}>
-              *Isi dengan variabel terikat/bebas (jika Kuantitatif) atau fokus fenomena/teori (jika Kualitatif). Bisa lebih dari satu.
+              *Isi dengan tempat, demografi, subjek, atau latar belakang khusus dari topik Anda.
             </p>
           </div>
 
@@ -481,9 +610,12 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
             <label>Gaya Sitasi (Citation Style)</label>
             <select value={citationStyle} onChange={handleStyleChange} className={styles.select}>
               <option value="APA 7th Edition">APA 7th Edition (Sangat Disarankan)</option>
-              <option value="IEEE">IEEE</option>
-              <option value="Harvard">Harvard</option>
+              <option value="MLA">MLA</option>
               <option value="Chicago">Chicago</option>
+              <option value="Turabian">Turabian</option>
+              <option value="Harvard">Harvard</option>
+              <option value="IEEE">IEEE</option>
+              <option value="AMA">AMA</option>
             </select>
           </div>
 

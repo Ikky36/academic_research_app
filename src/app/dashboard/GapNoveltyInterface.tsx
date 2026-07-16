@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { saveProjectState, getProjectState } from '@/services/projectState';
 import styles from './GapNoveltyInterface.module.css';
 
 interface GapNoveltyInterfaceProps {
@@ -25,43 +26,41 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
   useEffect(() => {
     if (isActive && projectId) {
       // Load existing data
-      const savedSota = localStorage.getItem(`sota_markdown_${projectId}`);
-      if (savedSota) {
-        setSotaMarkdown(savedSota);
-      }
-      
-      const savedTopic = localStorage.getItem(`research_topic_${projectId}`);
-      if (savedTopic) {
-        setResearchTopic(savedTopic);
-      }
-
-      const savedGap = localStorage.getItem(`gap_novelty_${projectId}`);
-      if (savedGap) {
-        setGapMarkdown(savedGap);
-      }
-
-      const savedLevel = localStorage.getItem(`education_level_${projectId}`);
-      if (savedLevel) {
-        setEducationLevel(savedLevel);
-      }
-
-      const savedSelected = localStorage.getItem(`selected_gap_${projectId}`);
-      if (savedSelected) {
-        setSelectedGap(savedSelected);
-      }
+      getProjectState(projectId, 'sota_markdown').then(savedSota => {
+        if (savedSota) setSotaMarkdown(savedSota);
+      });
+      getProjectState(projectId, 'research_topic').then(savedTopic => {
+        if (savedTopic) setResearchTopic(savedTopic);
+      });
+      getProjectState(projectId, 'gap_novelty').then(savedGap => {
+        if (savedGap) setGapMarkdown(savedGap);
+      });
+      getProjectState(projectId, 'education_level').then(savedLevel => {
+        if (savedLevel) setEducationLevel(savedLevel);
+      });
+      getProjectState(projectId, 'selected_gap').then(savedSelected => {
+        if (savedSelected) {
+          try {
+            const parsed = JSON.parse(savedSelected);
+            if (parsed.gap) setSelectedGap(parsed.gap);
+          } catch (e) {
+            setSelectedGap(savedSelected);
+          }
+        }
+      });
     }
   }, [isActive, projectId]);
 
   const handleTopicChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setResearchTopic(value);
-    localStorage.setItem(`research_topic_${projectId}`, value);
+    saveProjectState(projectId, 'research_topic', value);
   };
 
   const handleLevelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setEducationLevel(value);
-    localStorage.setItem(`education_level_${projectId}`, value);
+    saveProjectState(projectId, 'education_level', value);
   };
 
   const handleGenerate = async (retryOnly: boolean = false) => {
@@ -88,7 +87,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
       "Population Gap"
     ];
 
-    let currentMarkdown = retryOnly ? gapMarkdown : `| JENIS RESEARCH GAP | NOVELTY |\n|---|---|\n`;
+    let currentMarkdown = retryOnly ? gapMarkdown : `| JENIS RESEARCH GAP | NOVELTY | TOPIK BARU |\n|---|---|---|\n`;
     
     if (retryOnly) {
       // Hapus baris yang mengandung error agar bisa di-fetch ulang
@@ -160,7 +159,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
       }
 
     
-      localStorage.setItem(`gap_novelty_${projectId}`, currentMarkdown);
+      saveProjectState(projectId, 'gap_novelty', currentMarkdown);
       
     } catch (err: any) {
       setError(err.message || 'Terjadi kesalahan sistem saat komunikasi dengan server.');
@@ -173,18 +172,18 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
     if (confirm('Apakah Anda yakin ingin mereset hasil Research GAP & Novelty ini?')) {
       setGapMarkdown('');
       setSelectedGap(null);
-      localStorage.removeItem(`gap_novelty_${projectId}`);
-      localStorage.removeItem(`selected_gap_${projectId}`);
+      saveProjectState(projectId, 'gap_novelty', '');
+      saveProjectState(projectId, 'selected_gap', '');
     }
   };
 
-  const handleSelectGap = (gapText: string) => {
+  const handleSelectGap = (gapText: string, topikBaruText?: string) => {
     if (selectedGap === gapText) {
       setSelectedGap(null);
-      localStorage.removeItem(`selected_gap_${projectId}`);
+      saveProjectState(projectId, 'selected_gap', '');
     } else {
       setSelectedGap(gapText);
-      localStorage.setItem(`selected_gap_${projectId}`, gapText);
+      saveProjectState(projectId, 'selected_gap', JSON.stringify({ gap: gapText, topikBaru: topikBaruText }));
     }
   };
 
@@ -288,6 +287,20 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
                     <table {...props} className={styles.modernTable} />
                   </div>
                 ),
+                td: ({node, children, ...props}) => {
+                  let cleanedChildren = children;
+                  if (Array.isArray(children)) {
+                    cleanedChildren = children.map(child => {
+                      if (typeof child === 'string') {
+                        return child.replace(/<!--[\s\S]*?-->/g, '').replace(/&lt;!--[\s\S]*?--&gt;/g, '');
+                      }
+                      return child;
+                    });
+                  } else if (typeof children === 'string') {
+                    cleanedChildren = children.replace(/<!--[\s\S]*?-->/g, '').replace(/&lt;!--[\s\S]*?--&gt;/g, '');
+                  }
+                  return <td {...props}>{cleanedChildren}</td>;
+                },
                 tr: ({node, children, ...props}) => {
                   const isHeader = (node as any)?.children?.some((child: any) => child.tagName === 'th');
                   
@@ -301,8 +314,9 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
                   }
 
                   // Extract full text from the first cell (Research Gap) to use as unique ID and data for AI
-                  const gapCell = (node as any)?.children?.find((c: any) => c.tagName === 'td');
+                  const tdCells = (node as any)?.children?.filter((c: any) => c.tagName === 'td');
                   let gapText = '';
+                  let topikBaruText = '';
                   
                   const extractText = (n: any): string => {
                     if (n.type === 'text') return n.value || '';
@@ -310,8 +324,11 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
                     return '';
                   };
 
-                  if (gapCell) {
-                    gapText = extractText(gapCell).trim();
+                  if (tdCells && tdCells.length > 0) {
+                    gapText = extractText(tdCells[0]).trim();
+                    if (tdCells.length >= 3) {
+                      topikBaruText = extractText(tdCells[2]).trim();
+                    }
                   }
                   
                   // Fallback if extraction fails
@@ -326,7 +343,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
                       {children}
                       <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
                         <button 
-                          onClick={() => handleSelectGap(gapText)}
+                          onClick={() => handleSelectGap(gapText, topikBaruText)}
                           style={{
                             background: isSelected ? 'var(--primary)' : 'var(--surface-container-high)',
                             color: 'var(--on-surface)',

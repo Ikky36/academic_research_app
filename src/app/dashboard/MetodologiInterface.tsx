@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import styles from './KajianPustakaInterface.module.css'; // Reuse styles
+import { saveProjectState, getProjectState } from '@/services/projectState';
 import { generateMetodologiAction, continueMethodologyChatAction } from './actions';
 import { ChatMessage } from '@/services/metodologi';
 
@@ -31,22 +32,22 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
   // Helpers to persist state
   const updateChatHistory = (newHistory: ChatMessage[]) => {
     setChatHistory(newHistory);
-    localStorage.setItem(`metodologi_chat_${projectId}`, JSON.stringify(newHistory));
+    saveProjectState(projectId, 'metodologi_chat', JSON.stringify(newHistory));
   };
   
   const updateWizardStep = (newStep: number) => {
     setWizardStep(newStep);
-    localStorage.setItem(`metodologi_wizard_${projectId}`, newStep.toString());
+    saveProjectState(projectId, 'metodologi_wizard', newStep.toString());
   };
   
   const updateIsChatComplete = (isComplete: boolean) => {
     setIsChatComplete(isComplete);
-    localStorage.setItem(`metodologi_chatComplete_${projectId}`, isComplete.toString());
+    saveProjectState(projectId, 'metodologi_chatComplete', isComplete.toString());
   };
   
   const updateChatSummary = (summary: string) => {
     setChatSummary(summary);
-    localStorage.setItem(`metodologi_summary_${projectId}`, summary);
+    saveProjectState(projectId, 'metodologi_summary', summary);
   };
 
   const [metodologiResult, setMetodologiResult] = useState('');
@@ -56,31 +57,29 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
 
   useEffect(() => {
     if (isActive && projectId) {
-      // Load prerequisites from local storage
-      const savedApproach = localStorage.getItem(`kp_approach_${projectId}`);
-      if (savedApproach) setApproach(savedApproach);
-      
-      const savedGap = localStorage.getItem(`selected_gap_${projectId}`);
-      if (savedGap) setGap(savedGap);
-      
-      // We assume novelty is derived from gap or stored similarly. Let's just use gap if novelty isn't explicitly saved, or try to load novelty if it exists.
-      // For now, we'll just pass gap as novelty or use it combined.
-      setNovelty(savedGap || '');
+      // Load prerequisites from Supabase
+      Promise.all([
+        getProjectState(projectId, 'kp_approach'),
+        getProjectState(projectId, 'selected_gap'),
+        getProjectState(projectId, 'metodologi_result'),
+        getProjectState(projectId, 'metodologi_chat'),
+        getProjectState(projectId, 'metodologi_wizard'),
+        getProjectState(projectId, 'metodologi_chatComplete'),
+        getProjectState(projectId, 'metodologi_summary')
+      ]).then(([savedApproach, savedGap, savedResult, savedChatHistory, savedStep, savedChatComplete, savedSummary]) => {
+        if (savedApproach) setApproach(savedApproach);
+        if (savedGap) setGap(savedGap);
+        
+        // We assume novelty is derived from gap or stored similarly. Let's just use gap if novelty isn't explicitly saved, or try to load novelty if it exists.
+        // For now, we'll just pass gap as novelty or use it combined.
+        setNovelty(savedGap || '');
 
-      const savedResult = localStorage.getItem(`metodologi_result_${projectId}`);
-      if (savedResult) setMetodologiResult(savedResult);
-      
-      const savedChatHistory = localStorage.getItem(`metodologi_chat_${projectId}`);
-      if (savedChatHistory) setChatHistory(JSON.parse(savedChatHistory));
-      
-      const savedStep = localStorage.getItem(`metodologi_wizard_${projectId}`);
-      if (savedStep) setWizardStep(parseInt(savedStep));
-      
-      const savedChatComplete = localStorage.getItem(`metodologi_chatComplete_${projectId}`);
-      if (savedChatComplete) setIsChatComplete(savedChatComplete === 'true');
-      
-      const savedSummary = localStorage.getItem(`metodologi_summary_${projectId}`);
-      if (savedSummary) setChatSummary(savedSummary);
+        if (savedResult) setMetodologiResult(savedResult);
+        if (savedChatHistory) setChatHistory(JSON.parse(savedChatHistory));
+        if (savedStep) setWizardStep(parseInt(savedStep, 10));
+        if (savedChatComplete) setIsChatComplete(savedChatComplete === 'true');
+        if (savedSummary) setChatSummary(savedSummary);
+      });
     }
   }, [isActive, projectId]);
 
@@ -103,14 +102,15 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
       return;
     }
     
-    updateChatHistory([{ role: 'ai', text: res.nextQuestion || 'Halo, mari kita mulai merumuskan metodologi Anda.' }]);
+    updateChatHistory([{ role: 'ai', text: res.nextQuestion || 'Halo, mari kita mulai merumuskan metodologi Anda.', options: res.options }]);
     setIsAiThinking(false);
   };
 
-  const sendChatMessage = async () => {
-    if (!chatInput.trim() || isAiThinking) return;
+  const sendChatMessage = async (overrideText?: string) => {
+    const textToSend = typeof overrideText === 'string' ? overrideText : chatInput;
+    if (!textToSend.trim() || isAiThinking) return;
     
-    const newHistory: ChatMessage[] = [...chatHistory, { role: 'user', text: chatInput }];
+    const newHistory: ChatMessage[] = [...chatHistory, { role: 'user', text: textToSend }];
     updateChatHistory(newHistory);
     setChatInput('');
     setIsAiThinking(true);
@@ -129,7 +129,7 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
       updateChatSummary(res.summary || '');
       updateChatHistory([...newHistory, { role: 'ai', text: 'Terima kasih, informasi sudah cukup lengkap! Anda sekarang dapat mulai membuat Metodologi.' }]);
     } else {
-      updateChatHistory([...newHistory, { role: 'ai', text: res.nextQuestion || 'Mohon jelaskan lebih detail.' }]);
+      updateChatHistory([...newHistory, { role: 'ai', text: res.nextQuestion || 'Mohon jelaskan lebih detail.', options: res.options }]);
     }
     setIsAiThinking(false);
   };
@@ -150,7 +150,7 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
     
     if (!res.error && res.result) {
       setMetodologiResult(res.result);
-      localStorage.setItem(`metodologi_result_${projectId}`, res.result);
+      saveProjectState(projectId, 'metodologi_result', res.result);
       updateWizardStep(3);
     } else {
       setError(res.error || 'Terjadi kesalahan saat menyusun Metodologi.');
@@ -173,7 +173,7 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
       updateChatHistory([]);
       updateIsChatComplete(false);
       updateChatSummary('');
-      localStorage.removeItem(`metodologi_result_${projectId}`);
+      saveProjectState(projectId, 'metodologi_result', '');
     }
   };
 
@@ -197,7 +197,7 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
               value={approach}
               onChange={(e) => {
                 setApproach(e.target.value);
-                localStorage.setItem(`kp_approach_${projectId}`, e.target.value);
+                saveProjectState(projectId, 'kp_approach', e.target.value);
               }}
               style={{ marginBottom: '10px', padding: '8px', width: '100%', borderRadius: '6px', border: '1px solid var(--border)', backgroundColor: 'var(--surface-container-high)', color: 'var(--on-surface)' }}
             >
@@ -248,6 +248,30 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
                 <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ p: ({node, ...props}) => <p style={{margin: 0}} {...props} /> }}>
                   {msg.text}
                 </ReactMarkdown>
+                {msg.options && msg.options.length > 0 && index === chatHistory.length - 1 && !isAiThinking && (
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
+                    {msg.options.map((opt, i) => (
+                      <button 
+                        key={i} 
+                        onClick={() => sendChatMessage(opt)}
+                        className={styles.btnSecondary}
+                        style={{ padding: '6px 12px', fontSize: '0.85rem', borderRadius: '20px', border: '1px solid var(--primary)', backgroundColor: 'var(--surface)', color: 'var(--primary)', cursor: 'pointer' }}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                    <button 
+                        onClick={() => { 
+                          const inputEl = document.getElementById('chat-input');
+                          if (inputEl) inputEl.focus(); 
+                        }}
+                        className={styles.btnSecondary}
+                        style={{ padding: '6px 12px', fontSize: '0.85rem', borderRadius: '20px', border: '1px solid var(--border)', backgroundColor: 'transparent', color: 'var(--on-surface-variant)', cursor: 'pointer' }}
+                      >
+                        Lainnya (Ketik Sendiri)
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
             {isAiThinking && (
@@ -260,6 +284,7 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
           {!isChatComplete ? (
             <div style={{ display: 'flex', gap: '10px' }}>
               <input
+                id="chat-input"
                 type="text"
                 className={styles.input}
                 style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', backgroundColor: 'var(--surface)', color: 'var(--on-surface)' }}
@@ -272,7 +297,7 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
                 disabled={isAiThinking}
               />
               <button 
-                onClick={sendChatMessage} 
+                onClick={() => sendChatMessage()} 
                 disabled={isAiThinking || !chatInput.trim()}
                 className={styles.generateButton}
                 style={{ width: 'auto', padding: '0 20px' }}

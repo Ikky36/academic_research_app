@@ -183,6 +183,7 @@ Format wajib: ["pertanyaan 1", "pertanyaan 2"]`;
 export type ChatMessage = {
   role: 'ai' | 'user';
   text: string;
+  options?: string[];
 };
 
 export async function continueMethodologyChat(
@@ -191,7 +192,7 @@ export async function continueMethodologyChat(
   chatHistory: ChatMessage[],
   userApiKey?: string,
   isPaidApi?: boolean
-): Promise<{ isComplete: boolean, nextQuestion?: string, summary?: string, error?: string }> {
+): Promise<{ isComplete: boolean, nextQuestion?: string, options?: string[], summary?: string, error?: string }> {
   try {
     // 1. Setup Gemini AI
     const { getGeminiApiKey, getActiveAiProvider } = await import('@/utils/apiKeyManager');
@@ -258,9 +259,10 @@ INSTRUKSI WAJIB:
 - JIKA SUDAH LENGKAP: Buatlah paragraf rangkuman komprehensif dari semua elemen metodologi tersebut.
 - OUTPUT WAJIB FORMAT JSON SEPERTI BERIKUT tanpa tambahan markdown (TIDAK BOLEH ADA \`\`\`json):
 Untuk melanjutkan (belum selesai):
-{"isComplete": false, "nextQuestion": "Pertanyaan Anda di sini", "summary": ""}
+{"isComplete": false, "nextQuestion": "Pertanyaan Anda di sini", "options": ["Pilihan A", "Pilihan B"], "summary": ""}
+*(Catatan: Isikan array string pada "options" JIKA DAN HANYA JIKA Anda memberikan pilihan kepada mahasiswa. Kosongkan array jika pertanyaan bersifat terbuka).*
 Untuk selesai:
-{"isComplete": true, "nextQuestion": "", "summary": "Rangkuman hasil diskusi..."}
+{"isComplete": true, "nextQuestion": "", "options": [], "summary": "Rangkuman hasil diskusi..."}
 `;
 
     let text: string;

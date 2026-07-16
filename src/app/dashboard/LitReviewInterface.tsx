@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import styles from './GapNoveltyInterface.module.css'; // Reuse styles
+import { saveProjectState, getProjectState } from '@/services/projectState';
 import { generateLiteratureReviewAction } from './actions';
 
 interface LitReviewInterfaceProps {
@@ -29,36 +30,35 @@ export default function LitReviewInterface({ projectId, isActive, limits, role, 
 
   useEffect(() => {
     if (isActive && projectId) {
-      const savedSota = localStorage.getItem(`sota_markdown_${projectId}`);
-      if (savedSota) setSotaMarkdown(savedSota);
-      
-      const savedTopic = localStorage.getItem(`research_topic_${projectId}`);
-      if (savedTopic) setResearchTopic(savedTopic);
-
-      const savedGap = localStorage.getItem(`selected_gap_${projectId}`);
-      if (savedGap) setSelectedGap(savedGap);
-
-      const savedReview = localStorage.getItem(`lit_review_${projectId}`);
-      if (savedReview) setLitReview(savedReview);
-      
-      const savedParagraphs = localStorage.getItem(`lit_review_paragraphs_${projectId}`);
-      if (savedParagraphs) setParagraphs(savedParagraphs);
-      
-      const savedStyle = localStorage.getItem(`lit_review_style_${projectId}`);
-      if (savedStyle) setCitationStyle(savedStyle);
+      // Load prerequisites from Supabase
+      Promise.all([
+        getProjectState(projectId, 'sota_markdown'),
+        getProjectState(projectId, 'research_topic'),
+        getProjectState(projectId, 'selected_gap'),
+        getProjectState(projectId, 'lit_review'),
+        getProjectState(projectId, 'lit_review_paragraphs'),
+        getProjectState(projectId, 'lit_review_style')
+      ]).then(([savedSota, savedTopic, savedGap, savedReview, savedParagraphs, savedStyle]) => {
+        if (savedSota) setSotaMarkdown(savedSota);
+        if (savedTopic) setResearchTopic(savedTopic);
+        if (savedGap) setSelectedGap(savedGap);
+        if (savedReview) setLitReview(savedReview);
+        if (savedParagraphs) setParagraphs(savedParagraphs);
+        if (savedStyle) setCitationStyle(savedStyle);
+      });
     }
   }, [isActive, projectId]);
 
   const handleParagraphsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setParagraphs(value);
-    localStorage.setItem(`lit_review_paragraphs_${projectId}`, value);
+    saveProjectState(projectId, 'lit_review_paragraphs', value);
   };
 
   const handleStyleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setCitationStyle(value);
-    localStorage.setItem(`lit_review_style_${projectId}`, value);
+    saveProjectState(projectId, 'lit_review_style', value);
   };
 
   const handleGenerate = async () => {
@@ -97,7 +97,7 @@ export default function LitReviewInterface({ projectId, isActive, limits, role, 
       
       if (res.data) {
         setLitReview(res.data);
-        localStorage.setItem(`lit_review_${projectId}`, res.data);
+        saveProjectState(projectId, 'lit_review', res.data);
       }
     } catch (err: any) {
       setError(err.message || 'Terjadi kesalahan sistem saat komunikasi dengan server.');
@@ -109,7 +109,7 @@ export default function LitReviewInterface({ projectId, isActive, limits, role, 
   const handleReset = () => {
     if (confirm('Apakah Anda yakin ingin menghapus draft Literature Review ini?')) {
       setLitReview('');
-      localStorage.removeItem(`lit_review_${projectId}`);
+      saveProjectState(projectId, 'lit_review', '');
     }
   };
 

@@ -218,7 +218,6 @@ const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uplo
 
 export default function SearchInterface({ projectId, limits, role }: { projectId: string, limits?: any, role?: string }) {
   const [topic, setTopic] = useState('');
-  const [problem, setProblem] = useState('');
   const [booleanQuery, setBooleanQuery] = useState('');
   const [generatingAI, setGeneratingAI] = useState(false);
   
@@ -238,7 +237,6 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
       try {
         const parsed = JSON.parse(savedState);
         setTopic(parsed.topic || '');
-        setProblem(parsed.problem || '');
         setBooleanQuery(parsed.booleanQuery || '');
         setSource(parsed.source || 'semantic-scholar');
         setResults(parsed.results || []);
@@ -252,10 +250,10 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
 
   useEffect(() => {
     if (isInitialized) {
-      const stateToSave = { topic, problem, booleanQuery, source, results, totalResults, page, limit };
+      const stateToSave = { topic, booleanQuery, source, results, totalResults, page, limit };
       localStorage.setItem(`search_state_${projectId}`, JSON.stringify(stateToSave));
     }
-  }, [isInitialized, projectId, topic, problem, booleanQuery, source, results, totalResults, page, limit]);
+  }, [isInitialized, projectId, topic, booleanQuery, source, results, totalResults, page, limit]);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -269,15 +267,15 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
 
   const handleGenerateAI = async () => {
-    if (!topic && !problem) {
-      alert('Harap isi minimal Topik Riset atau Masalah Riset terlebih dahulu.');
+    if (!topic) {
+      alert('Harap isi Topik Riset terlebih dahulu.');
       return;
     }
 
     setGeneratingAI(true);
     try {
       const userKey = localStorage.getItem('groqApiKey') || undefined;
-      const res = await generateAIQueryAction(topic, problem, userKey);
+      const res = await generateAIQueryAction(topic, '', userKey);
       if (res.error) {
         setError(res.error);
       } else if (res.query) {
@@ -480,23 +478,13 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
               className={styles.searchInput}
             />
           </div>
-          <div className={styles.fieldGroup}>
-            <label>Masalah Penelitian</label>
-            <input 
-              type="text" 
-              value={problem} 
-              onChange={(e) => setProblem(e.target.value)} 
-              placeholder="Contoh: Kesulitan pemahaman siswa..." 
-              className={styles.searchInput}
-            />
-          </div>
         </div>
 
         <div className={styles.aiActionRow}>
           <button 
             type="button" 
             onClick={handleGenerateAI} 
-            disabled={generatingAI || (!topic && !problem)} 
+            disabled={generatingAI || !topic} 
             className={styles.aiButton}
           >
             {generatingAI ? 'Meracik Query...' : 'Generate Query dengan AI'}
