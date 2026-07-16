@@ -952,7 +952,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
               <div className={styles.chatHeader}>
                 <h3>Merancang Instrumen Observasi</h3>
               </div>
-              <div style={{ padding: '20px' }}>
+              <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
                 {!kpResult ? (
                   <div style={{ color: '#ef4444' }}>Data Kajian Pustaka (Bab 2) kosong. AI membutuhkan teori untuk menyusun observasi. Silakan isi terlebih dahulu di tab Kajian Pustaka.</div>
                 ) : obsSubBabs.length === 0 ? (
