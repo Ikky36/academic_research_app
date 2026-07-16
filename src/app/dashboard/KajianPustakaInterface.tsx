@@ -282,6 +282,42 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
     saveProjectState(projectId, 'kp_outline', JSON.stringify(newOutline));
   };
 
+  const handleMoveOutline = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === outline.length - 1) return;
+    
+    const newOutline = [...outline];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    const temp = newOutline[index];
+    newOutline[index] = newOutline[targetIndex];
+    newOutline[targetIndex] = temp;
+    
+    setOutline(newOutline);
+    saveProjectState(projectId, 'kp_outline', JSON.stringify(newOutline));
+  };
+
+  const handleMoveSubOutline = (parentIndex: number, subIndex: number, direction: 'up' | 'down') => {
+    const parent = outline[parentIndex];
+    if (!parent.subChapters) return;
+    
+    if (direction === 'up' && subIndex === 0) return;
+    if (direction === 'down' && subIndex === parent.subChapters.length - 1) return;
+    
+    const newOutline = [...outline];
+    const newSubChapters = [...parent.subChapters];
+    const targetIndex = direction === 'up' ? subIndex - 1 : subIndex + 1;
+    
+    const temp = newSubChapters[subIndex];
+    newSubChapters[subIndex] = newSubChapters[targetIndex];
+    newSubChapters[targetIndex] = temp;
+    
+    newOutline[parentIndex] = { ...parent, subChapters: newSubChapters };
+    
+    setOutline(newOutline);
+    saveProjectState(projectId, 'kp_outline', JSON.stringify(newOutline));
+  };
+
   const handleAddOutline = () => {
     const newOutline = [...outline, { title: 'Judul Sub-Bab Baru', subChapters: [] }];
     setOutline(newOutline);
@@ -665,7 +701,13 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
                     onChange={(e) => handleOutlineChange(index, e.target.value)}
                     className={styles.outlineInput}
                   />
-                  <div className={styles.outlineActions}>
+                  <div className={styles.outlineActions} style={{ display: 'flex', gap: '4px' }}>
+                    <button className={`${styles.iconBtn}`} onClick={() => handleMoveOutline(index, 'up')} disabled={index === 0} title="Geser ke Atas" style={{ opacity: index === 0 ? 0.3 : 1 }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                    </button>
+                    <button className={`${styles.iconBtn}`} onClick={() => handleMoveOutline(index, 'down')} disabled={index === outline.length - 1} title="Geser ke Bawah" style={{ opacity: index === outline.length - 1 ? 0.3 : 1 }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
                     <button className={`${styles.iconBtn} ${styles.delete}`} onClick={() => handleDeleteOutline(index)} title="Hapus Sub-Bab">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
@@ -683,7 +725,13 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
                         className={styles.outlineInput}
                         style={{ fontSize: '13px', padding: '6px 10px' }}
                       />
-                      <div className={styles.outlineActions}>
+                      <div className={styles.outlineActions} style={{ display: 'flex', gap: '4px' }}>
+                        <button className={`${styles.iconBtn}`} onClick={() => handleMoveSubOutline(index, subIndex, 'up')} disabled={subIndex === 0} title="Geser ke Atas" style={{ width: '28px', height: '28px', opacity: subIndex === 0 ? 0.3 : 1 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                        </button>
+                        <button className={`${styles.iconBtn}`} onClick={() => handleMoveSubOutline(index, subIndex, 'down')} disabled={subIndex === (item.subChapters?.length || 0) - 1} title="Geser ke Bawah" style={{ width: '28px', height: '28px', opacity: subIndex === (item.subChapters?.length || 0) - 1 ? 0.3 : 1 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
                         <button className={`${styles.iconBtn} ${styles.delete}`} onClick={() => handleDeleteSubOutline(index, subIndex)} title="Hapus Sub-sub Bab" style={{ width: '28px', height: '28px' }}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
