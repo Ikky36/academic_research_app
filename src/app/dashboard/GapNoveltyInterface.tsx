@@ -319,7 +319,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
                   let topikBaruText = '';
                   
                   const extractText = (n: any): string => {
-                    if (n.type === 'text') return n.value || '';
+                    if (n.type === 'text' || n.type === 'html') return n.value || '';
                     if (n.children) return n.children.map(extractText).join('');
                     return '';
                   };
