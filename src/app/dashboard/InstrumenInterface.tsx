@@ -312,7 +312,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
            
            // Restore state for Observasi
            const obsStepData = data.chat_history.find((m: any) => m.role === 'obs_step');
-           if (obsStepData && obsStepData.text) setObsStep(parseInt(obsStepData.text));
+           if (obsStepData && obsStepData.text) setObsStep(parseInt(obsStepData.text) as 1 | 2 | 3 | 4);
            const obsTitleData = data.chat_history.find((m: any) => m.role === 'obs_title');
            if (obsTitleData && obsTitleData.text) setSelectedObsTitle(obsTitleData.text);
            const obsContentData = data.chat_history.find((m: any) => m.role === 'obs_content');
