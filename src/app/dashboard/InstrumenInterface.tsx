@@ -21,7 +21,7 @@ interface InstrumenInterfaceProps {
 }
 
 const INSTRUMENT_TYPES = [
-  'Wawancara', 'Kuesioner / Angket', 'Observasi', 'Dokumentasi', 'Tes', 'Tes Prestasi', 'Skala'
+  'Wawancara', 'Angket', 'Observasi', 'Dokumentasi', 'Tes', 'Tes Prestasi', 'Skala'
 ];
 
 export default function InstrumenInterface({ projectId, isActive, limits, role, isPaidApi }: InstrumenInterfaceProps) {
