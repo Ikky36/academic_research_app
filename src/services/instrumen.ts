@@ -628,13 +628,17 @@ ${operationalDef}
 
 TUGAS ANDA:
 1. (Tahap 1) Identifikasi Dimensi/Aspek utama dari definisi operasional tersebut. (Level Kognisi: Tinggi)
-2. (Tahap 2) Ekstrak TEPAT 2 indikator perilaku umum dari setiap aspek/dimensi. (Level Kognisi: Menengah)
-3. (Tahap 3) Ekstrak TEPAT 1 deskriptor/aitem observasi (dinyatakan dalam kalimat aktif) untuk SETIAP indikator. (Level Kognisi: Menengah)
+2. (Tahap 2) Ekstrak TEPAT 1 indikator perilaku umum dari setiap aspek/dimensi. (Level Kognisi: Menengah)
+3. (Tahap 3) Ekstrak TEPAT 2 deskriptor/aitem observasi (dinyatakan dalam kalimat aktif) untuk SETIAP indikator. (Level Kognisi: Menengah)
 4. Tulis hasil sintesis di atas secara BERSAMAAN HANYA ke dalam bentuk Tabel Markdown tunggal dengan 3 Kolom:
-   - Kolom 1: "Aspek" (SANGAT PENTING: Tulis teks aspek HANYA pada baris pertama untuk aspek tersebut. Kosongkan sel aspek pada baris indikator kedua agar teksnya tidak berulang)
+   - Kolom 1: "Aspek"
    - Kolom 2: "Indikator"
    - Kolom 3: "Aitem Pernyataan"
    
+SANGAT PENTING (FORMAT TABEL): 
+Karena 1 Indikator memiliki 2 Aitem Pernyataan, Anda WAJIB memisahkannya menjadi 2 baris (row) tabel yang berbeda (bukan digabung dengan tag <br>). 
+Untuk baris kedua dari indikator yang sama, KOSONGKAN sel pada Kolom "Aspek" dan Kolom "Indikator" agar teksnya tidak berulang (mensimulasikan efek rowspan).
+
 JANGAN menambahkan pengantar atau kesimpulan. Output HANYA Tabel Markdown.`;
 
     let finalMarkdown: string;
