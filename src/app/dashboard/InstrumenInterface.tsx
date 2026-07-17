@@ -77,6 +77,8 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
   const [obsConceptualDef, setObsConceptualDef] = useState('');
   const [obsOperationalDef, setObsOperationalDef] = useState('');
   const [isGeneratingObs, setIsGeneratingObs] = useState(false);
+  const [isEditingConceptual, setIsEditingConceptual] = useState(false);
+  const [isEditingOperational, setIsEditingOperational] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -1033,12 +1035,23 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                     {obsStep >= 2 && (
                       <div style={{ paddingBottom: obsStep > 2 ? '24px' : '0', borderBottom: obsStep > 2 ? '1px solid var(--border)' : 'none', marginBottom: obsStep > 2 ? '24px' : '0' }}>
                         <h3 style={{ marginTop: 0 }}>Tahap 2: Definisi Konseptual</h3>
-                        <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>AI telah menyintesis definisi konseptual (abstrak) dari teori kajian pustaka Anda. Anda dapat mengeditnya sebelum lanjut.</p>
-                        <textarea 
-                          value={obsConceptualDef}
-                          onChange={(e) => setObsConceptualDef(e.target.value)}
-                          style={{ width: '100%', height: '150px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px', background: 'var(--surface-hover)', color: 'var(--on-surface)' }}
-                        />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                          <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>AI telah menyintesis definisi konseptual (abstrak) dari teori kajian pustaka Anda. Anda dapat mengeditnya sebelum lanjut.</p>
+                          <button onClick={() => setIsEditingConceptual(!isEditingConceptual)} className={styles.btnSecondary} style={{ padding: '4px 12px', fontSize: '12px' }}>
+                            {isEditingConceptual ? 'Selesai Edit' : 'Edit Manual'}
+                          </button>
+                        </div>
+                        {isEditingConceptual ? (
+                          <textarea 
+                            value={obsConceptualDef}
+                            onChange={(e) => setObsConceptualDef(e.target.value)}
+                            style={{ width: '100%', height: '150px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px', background: 'var(--surface-hover)', color: 'var(--on-surface)' }}
+                          />
+                        ) : (
+                          <div style={{ width: '100%', minHeight: '150px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px', background: 'var(--surface-hover)', color: 'var(--on-surface)', overflowY: 'auto' }}>
+                            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{obsConceptualDef}</ReactMarkdown>
+                          </div>
+                        )}
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                           <button onClick={handleObsStep2Next} className={styles.btnPrimary} disabled={isGeneratingObs || !obsConceptualDef.trim()}>
                             {isGeneratingObs && obsStep === 2 ? 'Menganalisis AI (think-max)...' : obsStep > 2 ? 'Generate Ulang Definisi Operasional' : 'Lanjut ke Definisi Operasional'}
@@ -1050,12 +1063,23 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                     {obsStep >= 3 && (
                       <div>
                         <h3 style={{ marginTop: 0 }}>Tahap 3: Definisi Operasional</h3>
-                        <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>AI telah menerjemahkan ke definisi operasional yang dapat diamati. Silakan edit jika perlu.</p>
-                        <textarea 
-                          value={obsOperationalDef}
-                          onChange={(e) => setObsOperationalDef(e.target.value)}
-                          style={{ width: '100%', height: '150px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px', background: 'var(--surface-hover)', color: 'var(--on-surface)' }}
-                        />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                          <p style={{ fontSize: '14px', color: '#6b7280', margin: 0 }}>AI telah menerjemahkan ke definisi operasional yang dapat diamati. Silakan edit jika perlu.</p>
+                          <button onClick={() => setIsEditingOperational(!isEditingOperational)} className={styles.btnSecondary} style={{ padding: '4px 12px', fontSize: '12px' }}>
+                            {isEditingOperational ? 'Selesai Edit' : 'Edit Manual'}
+                          </button>
+                        </div>
+                        {isEditingOperational ? (
+                          <textarea 
+                            value={obsOperationalDef}
+                            onChange={(e) => setObsOperationalDef(e.target.value)}
+                            style={{ width: '100%', height: '150px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px', background: 'var(--surface-hover)', color: 'var(--on-surface)' }}
+                          />
+                        ) : (
+                          <div style={{ width: '100%', minHeight: '150px', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px', background: 'var(--surface-hover)', color: 'var(--on-surface)', overflowY: 'auto' }}>
+                            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{obsOperationalDef}</ReactMarkdown>
+                          </div>
+                        )}
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                           <button onClick={handleObsStep3Next} className={styles.btnPrimary} disabled={isGeneratingObs || !obsOperationalDef.trim()}>
                             {isGeneratingObs && obsStep === 3 ? 'Mengekstrak Aspek & Indikator...' : 'Generate Tabel Observasi'}
