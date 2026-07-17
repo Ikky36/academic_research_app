@@ -227,7 +227,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
   const handleObsStep2Next = async () => {
     if (!obsConceptualDef.trim()) return;
     setIsGeneratingObs(true);
-    const res = await generateOperationalDefAction(selectedObsTitle, obsConceptualDef, undefined, isPaidApi);
+    const res = await generateOperationalDefAction(selectedObsTitle, obsConceptualDef, selectedObsContent, undefined, isPaidApi);
     setIsGeneratingObs(false);
     if (res.result) {
       setObsOperationalDef(res.result);
@@ -252,7 +252,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
     if (!obsOperationalDef.trim()) return;
     setIsGeneratingObs(true);
     // As per instruction, this step runs generateObservationTableAction which does the max->medium pipeline
-    const res = await generateObservationTableAction(selectedObsTitle, obsOperationalDef, undefined, isPaidApi);
+    const res = await generateObservationTableAction(selectedObsTitle, obsConceptualDef, obsOperationalDef, selectedObsContent, undefined, isPaidApi);
     setIsGeneratingObs(false);
     if (res.result) {
       const newHistory = [

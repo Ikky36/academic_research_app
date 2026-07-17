@@ -456,12 +456,13 @@ export async function generateConceptualDefAction(
 export async function generateOperationalDefAction(
   instrumentName: string,
   conceptualDef: string,
+  theoreticalContext?: string,
   userApiKey?: string,
   isPaidApi?: boolean
 ): Promise<{ result?: string, error?: string }> {
   try {
     const { generateOperationalDef } = await import('@/services/instrumen');
-    return await generateOperationalDef(instrumentName, conceptualDef, userApiKey, isPaidApi);
+    return await generateOperationalDef(instrumentName, conceptualDef, theoreticalContext, userApiKey, isPaidApi);
   } catch (e: any) {
     return { error: e.message };
   }
@@ -469,13 +470,15 @@ export async function generateOperationalDefAction(
 
 export async function generateObservationTableAction(
   instrumentName: string,
+  conceptualDef: string,
   operationalDef: string,
+  theoreticalContext?: string,
   userApiKey?: string,
   isPaidApi?: boolean
 ): Promise<{ result?: string, error?: string }> {
   try {
     const { generateObservationTable } = await import('@/services/instrumen');
-    return await generateObservationTable(instrumentName, operationalDef, userApiKey, isPaidApi);
+    return await generateObservationTable(instrumentName, conceptualDef, operationalDef, theoreticalContext, userApiKey, isPaidApi);
   } catch (e: any) {
     return { error: e.message };
   }

@@ -567,6 +567,7 @@ JANGAN menambahkan pengantar atau kesimpulan basa-basi. Output HANYA teks paragr
 export async function generateOperationalDef(
   instrumentName: string,
   conceptualDef: string,
+  theoreticalContext?: string,
   userApiKey?: string,
   isPaidApi?: boolean
 ): Promise<{ result?: string, error?: string }> {
@@ -585,8 +586,12 @@ Variabel/Fokus Utama: ${instrumentName}
 Definisi Konseptual:
 ${conceptualDef}
 
+Konteks Kajian Pustaka:
+${theoreticalContext || '(Tidak ada konteks spesifik)'}
+
 TUGAS:
-Terjemahkan definisi konseptual di atas ke dalam paragraf Definisi Operasional yang mengarahkan pada hal-hal konkret yang bisa diamati.
+Terjemahkan definisi konseptual di atas ke dalam paragraf Definisi Operasional yang mengarahkan pada hal-hal konkret yang bisa diamati. 
+SANGAT PENTING: Gunakan informasi dan konteks dari teks Kajian Pustaka di atas sebagai panduan agar definisi operasional yang dihasilkan akurat dan kontekstual sesuai dengan landasan teorinya!
 JANGAN menambahkan pengantar atau kesimpulan basa-basi. Output HANYA teks paragraf Definisi Operasional.`;
 
     let finalMarkdown: string;
@@ -608,7 +613,9 @@ JANGAN menambahkan pengantar atau kesimpulan basa-basi. Output HANYA teks paragr
 
 export async function generateObservationTable(
   instrumentName: string,
+  conceptualDef: string,
   operationalDef: string,
+  theoreticalContext?: string,
   userApiKey?: string,
   isPaidApi?: boolean
 ): Promise<{ result?: string, error?: string }> {
@@ -620,11 +627,17 @@ export async function generateObservationTable(
     
     if (!apiKey) throw new Error('API Key is missing');
     
-    const prompt = `Anda adalah Ahli Metodologi Penelitian dan Observasi. Anda akan men-generate Tabel Instrumen Observasi berdasarkan Definisi Operasional.
+    const prompt = `Anda adalah Ahli Metodologi Penelitian dan Observasi. Anda akan men-generate Tabel Instrumen Observasi berdasarkan Definisi Operasional dan Konseptual.
     
 Variabel: ${instrumentName}
+Definisi Konseptual:
+${conceptualDef}
+
 Definisi Operasional:
 ${operationalDef}
+
+Konteks Kajian Pustaka:
+${theoreticalContext || '(Tidak ada konteks spesifik)'}
 
 TUGAS ANDA:
 1. (Tahap 1) Identifikasi Dimensi/Aspek utama dari definisi operasional tersebut. (Level Kognisi: Tinggi)
@@ -635,6 +648,9 @@ TUGAS ANDA:
    - Kolom 2: "Indikator"
    - Kolom 3: "Aitem Pernyataan"
    
+SANGAT PENTING (INSTRUKSI KONTEN):
+Saat membuat indikator dan aitem pernyataan, Anda WAJIB merujuk dan menyelaraskannya dengan batasan-batasan di Definisi Konseptual dan konteks pada Kajian Pustaka di atas untuk masing-masing aspek!
+
 SANGAT PENTING (FORMAT TABEL): 
 Karena 1 Indikator memiliki 2 Aitem Pernyataan, Anda WAJIB memisahkannya menjadi 2 baris (row) tabel yang berbeda (bukan digabung dengan tag <br>). 
 Untuk baris kedua dari indikator yang sama, KOSONGKAN sel pada Kolom "Aspek" dan Kolom "Indikator" agar teksnya tidak berulang (mensimulasikan efek rowspan).
