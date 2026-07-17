@@ -545,6 +545,7 @@ ${theoreticalContext}
 
 TUGAS:
 Sintesis semua informasi di atas menjadi satu paragraf Definisi Konseptual yang solid, padat, dan representatif untuk variabel/fokus penelitian tersebut. 
+SANGAT PENTING: Anda WAJIB menebalkan (bold) menggunakan markdown ** kata atau frasa kunci yang menjadi dimensi/fokus teoritis/aspek utama dari variabel tersebut.
 JANGAN menambahkan pengantar atau kesimpulan basa-basi. Output HANYA teks paragraf Definisi Konseptual.`;
 
     let finalMarkdown: string;
@@ -591,7 +592,8 @@ ${theoreticalContext || '(Tidak ada konteks spesifik)'}
 
 TUGAS:
 Terjemahkan definisi konseptual di atas ke dalam paragraf Definisi Operasional yang mengarahkan pada hal-hal konkret yang bisa diamati. 
-SANGAT PENTING: Gunakan informasi dan konteks dari teks Kajian Pustaka di atas sebagai panduan agar definisi operasional yang dihasilkan akurat dan kontekstual sesuai dengan landasan teorinya!
+SANGAT PENTING (KONSISTENSI ISTILAH): Gunakan kembali dan tebalkan (bold) **tepat frasa kunci yang sama** yang sebelumnya telah ditebalkan di Definisi Konseptual sebagai label untuk setiap aspek/dimensinya, lalu jelaskan ukuran konkretnya.
+SANGAT PENTING (KONTEKS): Gunakan informasi dari teks Kajian Pustaka di atas sebagai panduan konteks observasinya!
 JANGAN menambahkan pengantar atau kesimpulan basa-basi. Output HANYA teks paragraf Definisi Operasional.`;
 
     let finalMarkdown: string;
@@ -640,14 +642,17 @@ Konteks Kajian Pustaka:
 ${theoreticalContext || '(Tidak ada konteks spesifik)'}
 
 TUGAS ANDA:
-1. (Tahap 1) Identifikasi Dimensi/Aspek utama dari definisi operasional tersebut. (Level Kognisi: Tinggi)
-2. (Tahap 2) Ekstrak TEPAT 1 indikator perilaku umum dari setiap aspek/dimensi. (Level Kognisi: Menengah)
+1. (Tahap 1) Identifikasi Dimensi/Aspek utama yang bercetak tebal (bold) pada Definisi Operasional dan Konseptual tersebut. (Level Kognisi: Tinggi)
+2. (Tahap 2) Ekstrak TEPAT 1 indikator perilaku umum dari setiap aspek/dimensi tersebut. (Level Kognisi: Menengah)
 3. (Tahap 3) Ekstrak TEPAT 2 deskriptor/aitem observasi (dinyatakan dalam kalimat aktif) untuk SETIAP indikator. (Level Kognisi: Menengah)
 4. Tulis hasil sintesis di atas secara BERSAMAAN HANYA ke dalam bentuk Tabel Markdown tunggal dengan 3 Kolom:
    - Kolom 1: "Aspek"
    - Kolom 2: "Indikator"
    - Kolom 3: "Aitem Pernyataan"
    
+SANGAT PENTING (KONSISTENSI ASPEK):
+Nama "Aspek" yang Anda tulis di kolom pertama tabel WAJIB berupa frasa yang dicetak tebal pada definisi operasional/konseptual tersebut! Dilarang menggunakan sinonim atau membuat nama aspek baru.
+
 SANGAT PENTING (INSTRUKSI KONTEN):
 Saat membuat indikator dan aitem pernyataan, Anda WAJIB merujuk dan menyelaraskannya dengan batasan-batasan di Definisi Konseptual dan konteks pada Kajian Pustaka di atas untuk masing-masing aspek!
 
