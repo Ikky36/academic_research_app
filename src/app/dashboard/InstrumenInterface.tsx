@@ -60,6 +60,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
   const [manualTopics, setManualTopics] = useState('');
   const [subject, setSubject] = useState('');
   const [subjectDescription, setSubjectDescription] = useState('');
+  const [projectContext, setProjectContext] = useState('');
 
   // Skala Latent Variable State
   const [skalaLatentVarName, setSkalaLatentVarName] = useState('');
@@ -150,6 +151,10 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
     if (savedKp) {
        setKpResult(savedKp);
     }
+    const savedKonteks = await getProjectState(projectId, 'kp_konteks');
+    if (savedKonteks) {
+       setProjectContext(savedKonteks);
+    }
   };
 
   const loadInstruments = async () => {
@@ -227,7 +232,8 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
   const handleObsStep2Next = async () => {
     if (!obsConceptualDef.trim()) return;
     setIsGeneratingObs(true);
-    const res = await generateOperationalDefAction(selectedObsTitle, obsConceptualDef, selectedObsContent, undefined, isPaidApi);
+    const combinedContext = projectContext ? `Konteks Penelitian (Latar/Subjek/Tempat): ${projectContext}\n\nTeks Kajian Pustaka:\n${selectedObsContent}` : selectedObsContent;
+    const res = await generateOperationalDefAction(selectedObsTitle, obsConceptualDef, combinedContext, undefined, isPaidApi);
     setIsGeneratingObs(false);
     if (res.result) {
       setObsOperationalDef(res.result);
@@ -251,8 +257,9 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
   const handleObsStep3Next = async () => {
     if (!obsOperationalDef.trim()) return;
     setIsGeneratingObs(true);
+    const combinedContext = projectContext ? `Konteks Penelitian (Latar/Subjek/Tempat): ${projectContext}\n\nTeks Kajian Pustaka:\n${selectedObsContent}` : selectedObsContent;
     // As per instruction, this step runs generateObservationTableAction which does the max->medium pipeline
-    const res = await generateObservationTableAction(selectedObsTitle, obsConceptualDef, obsOperationalDef, selectedObsContent, undefined, isPaidApi);
+    const res = await generateObservationTableAction(selectedObsTitle, obsConceptualDef, obsOperationalDef, combinedContext, undefined, isPaidApi);
     setIsGeneratingObs(false);
     if (res.result) {
       const newHistory = [
