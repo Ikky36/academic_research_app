@@ -9,7 +9,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkBreaks from 'remark-breaks'
 import { generateInstrumentQuestionsAction, continueInstrumentChatAction, generateFinalInstrumentAction, generateBlueprintAction, generateLatentVariableDefinitionAction } from './instrumenActions'
-import { generateConceptualDefAction, generateOperationalDefAction, generateObservationTableAction } from './actions'
+import { generateConceptualDefAction, generateOperationalDefAction, generateObservationTableAction, generateSkalaV2ConceptualDefAction, generateSkalaV2OperationalDefAction, generateSkalaV2TableAction } from './actions'
 import { ChatMessage } from '@/services/instrumen'
 
 interface InstrumenInterfaceProps {
@@ -21,7 +21,7 @@ interface InstrumenInterfaceProps {
 }
 
 const INSTRUMENT_TYPES = [
-  'Wawancara', 'Angket', 'Observasi', 'Dokumentasi', 'Tes', 'Tes Prestasi', 'Skala'
+  'Wawancara', 'Angket', 'Observasi', 'Dokumentasi', 'Tes', 'Tes Prestasi', 'Skala', 'Skala V2'
 ];
 
 export default function InstrumenInterface({ projectId, isActive, limits, role, isPaidApi }: InstrumenInterfaceProps) {
@@ -80,6 +80,17 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
   const [isEditingConceptual, setIsEditingConceptual] = useState(false);
   const [isEditingOperational, setIsEditingOperational] = useState(false);
 
+  // Skala V2 State
+  const [skalaV2Step, setSkalaV2Step] = useState<1 | 2 | 3 | 4>(1);
+  const [selectedSkalaV2Title, setSelectedSkalaV2Title] = useState('');
+  const [selectedSkalaV2Content, setSelectedSkalaV2Content] = useState('');
+  const [skalaV2ConceptualDef, setSkalaV2ConceptualDef] = useState('');
+  const [skalaV2OperationalDef, setSkalaV2OperationalDef] = useState('');
+  const [isGeneratingSkalaV2, setIsGeneratingSkalaV2] = useState(false);
+  const [isEditingSkalaV2Conceptual, setIsEditingSkalaV2Conceptual] = useState(false);
+  const [isEditingSkalaV2Operational, setIsEditingSkalaV2Operational] = useState(false);
+
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const activeInstData = instruments.find(i => i.id === activeInstrumentId);
@@ -96,7 +107,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
   }, [chatHistory, isChatting]);
 
   useEffect(() => {
-    if (activeInstData?.instrument_type === 'Observasi' && !isChatComplete) {
+    if ((activeInstData?.instrument_type === 'Observasi' || activeInstData?.instrument_type === 'Skala V2') && !isChatComplete) {
       if (kpResult) {
         const babs = parseKpForSubBabs(kpResult);
         setObsSubBabs(babs);
@@ -282,6 +293,81 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
     }
   };
 
+  
+  // --- Skala V2 Multi-Step Handlers ---
+  const handleSkalaV2Step1Next = async () => {
+    if (!selectedSkalaV2Title) return;
+    setIsGeneratingSkalaV2(true);
+    const combinedContext = projectContext ? `Konteks Penelitian (Latar/Subjek/Tempat): ${projectContext}\n\nTeks Kajian Pustaka:\n${selectedSkalaV2Content}` : selectedSkalaV2Content;
+    const res = await generateSkalaV2ConceptualDefAction(combinedContext, undefined, isPaidApi);
+    setIsGeneratingSkalaV2(false);
+    if (res.result) {
+      setSkalaV2ConceptualDef(res.result);
+      setSkalaV2Step(2);
+      if (activeInstrumentId) {
+        const newHistory = [
+          { role: 'skalav2_step', text: '2' },
+          { role: 'skalav2_title', text: selectedSkalaV2Title },
+          { role: 'skalav2_content', text: selectedSkalaV2Content },
+          { role: 'skalav2_conceptual', text: res.result }
+        ];
+        setChatHistory(newHistory as ChatMessage[]);
+        saveState(activeInstrumentId, newHistory as ChatMessage[], 'in_progress');
+      }
+    } else {
+      alert(res.error || 'Gagal mensintesis definisi konseptual.');
+    }
+  };
+
+  const handleSkalaV2Step2Next = async () => {
+    if (!skalaV2ConceptualDef.trim()) return;
+    setIsGeneratingSkalaV2(true);
+    const combinedContext = projectContext ? `Konteks Penelitian (Latar/Subjek/Tempat): ${projectContext}\n\nTeks Kajian Pustaka:\n${selectedSkalaV2Content}` : selectedSkalaV2Content;
+    const res = await generateSkalaV2OperationalDefAction(skalaV2ConceptualDef, combinedContext, undefined, isPaidApi);
+    setIsGeneratingSkalaV2(false);
+    if (res.result) {
+      setSkalaV2OperationalDef(res.result);
+      setSkalaV2Step(3);
+      if (activeInstrumentId) {
+        const newHistory = [
+          { role: 'skalav2_step', text: '3' },
+          { role: 'skalav2_title', text: selectedSkalaV2Title },
+          { role: 'skalav2_content', text: selectedSkalaV2Content },
+          { role: 'skalav2_conceptual', text: skalaV2ConceptualDef },
+          { role: 'skalav2_operational', text: res.result }
+        ];
+        setChatHistory(newHistory as ChatMessage[]);
+        saveState(activeInstrumentId, newHistory as ChatMessage[], 'in_progress');
+      }
+    } else {
+      alert(res.error || 'Gagal mensintesis definisi operasional.');
+    }
+  };
+
+  const handleSkalaV2Step3Next = async () => {
+    if (!skalaV2OperationalDef.trim()) return;
+    setIsGeneratingSkalaV2(true);
+    const res = await generateSkalaV2TableAction(skalaV2ConceptualDef, skalaV2OperationalDef, undefined, isPaidApi);
+    setIsGeneratingSkalaV2(false);
+    if (res.result) {
+      const newHistory = [
+        { role: 'skalav2_step', text: '3' },
+        { role: 'skalav2_title', text: selectedSkalaV2Title },
+        { role: 'skalav2_content', text: selectedSkalaV2Content },
+        { role: 'skalav2_conceptual', text: skalaV2ConceptualDef },
+        { role: 'skalav2_operational', text: skalaV2OperationalDef }
+      ];
+      setChatHistory(newHistory as ChatMessage[]);
+      if (activeInstrumentId) await saveState(activeInstrumentId, newHistory as ChatMessage[], 'completed', res.result);
+      setFinalResult(res.result);
+      setIsChatComplete(true);
+      setInstruments(instruments.map(inst => inst.id === activeInstrumentId ? { ...inst, status: 'completed', final_result: res.result } : inst));
+    } else {
+      alert(res.error || 'Gagal mengekstrak matriks skala.');
+    }
+  };
+
+
   const handleRemoveInstrument = async (id: string) => {
     if (confirm('Yakin ingin menghapus instrumen ini? Data chat akan hilang.')) {
       const supabase = createClient();
@@ -305,6 +391,11 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
     setSkalaLatentVarName('');
     setSkalaConcepts([{ name: '', definition: '' }]);
     setSkalaSynthesizedDef('');
+    setSkalaV2Step(1);
+    setSelectedSkalaV2Title('');
+    setSelectedSkalaV2Content('');
+    setSkalaV2ConceptualDef('');
+    setSkalaV2OperationalDef('');
     
     const supabase = createClient();
     const { data } = await supabase.from('project_instruments').select('*').eq('id', id).single();
@@ -312,7 +403,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
     if (data) {
       setChatHistory(data.chat_history || []);
       
-      if ((type === 'Tes Prestasi' || type === 'Skala' || type === 'Observasi') && data.chat_history) {
+      if ((type === 'Tes Prestasi' || type === 'Skala' || type === 'Observasi' || type === 'Skala V2') && data.chat_history) {
          try {
            const bpData = data.chat_history.find((m: any) => m.role === 'blueprint_data');
            if (bpData && bpData.text) setBlueprintData(JSON.parse(bpData.text));
@@ -336,6 +427,19 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
            if (obsConceptualData && obsConceptualData.text) setObsConceptualDef(obsConceptualData.text);
            const obsOperationalData = data.chat_history.find((m: any) => m.role === 'obs_operational');
            if (obsOperationalData && obsOperationalData.text) setObsOperationalDef(obsOperationalData.text);
+
+           // Restore state for Skala V2
+           const skalaV2StepData = data.chat_history.find((m: any) => m.role === 'skalav2_step');
+           if (skalaV2StepData && skalaV2StepData.text) setSkalaV2Step(parseInt(skalaV2StepData.text) as 1 | 2 | 3 | 4);
+           const skalaV2TitleData = data.chat_history.find((m: any) => m.role === 'skalav2_title');
+           if (skalaV2TitleData && skalaV2TitleData.text) setSelectedSkalaV2Title(skalaV2TitleData.text);
+           const skalaV2ContentData = data.chat_history.find((m: any) => m.role === 'skalav2_content');
+           if (skalaV2ContentData && skalaV2ContentData.text) setSelectedSkalaV2Content(skalaV2ContentData.text);
+           const skalaV2ConceptualData = data.chat_history.find((m: any) => m.role === 'skalav2_conceptual');
+           if (skalaV2ConceptualData && skalaV2ConceptualData.text) setSkalaV2ConceptualDef(skalaV2ConceptualData.text);
+           const skalaV2OperationalData = data.chat_history.find((m: any) => m.role === 'skalav2_operational');
+           if (skalaV2OperationalData && skalaV2OperationalData.text) setSkalaV2OperationalDef(skalaV2OperationalData.text);
+
          } catch(e) {}
       }
 
@@ -345,7 +449,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
       } else {
         setFinalResult('');
         setIsChatComplete(false);
-        if (type !== 'Tes Prestasi' && type !== 'Skala' && type !== 'Observasi' && (!data.chat_history || data.chat_history.length === 0)) {
+        if (type !== 'Tes Prestasi' && type !== 'Skala' && type !== 'Observasi' && type !== 'Skala V2' && (!data.chat_history || data.chat_history.length === 0)) {
           initChat(id, type, data.name);
         }
       }
@@ -1005,7 +1109,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
               </div>
             </div>
           </div>
-          ) : (activeInstData?.instrument_type === 'Observasi' || activeInstData?.instrument_type?.trim() === 'Observasi') ? (
+          ) : ((activeInstData?.instrument_type === 'Observasi' || activeInstData?.instrument_type === 'Skala V2') || activeInstData?.instrument_type?.trim() === 'Observasi') ? (
             <div className={styles.chatContainer}>
               <div className={styles.chatHeader}>
                 <h3>Merancang Instrumen Observasi</h3>
