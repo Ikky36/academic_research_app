@@ -293,6 +293,19 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
 
   const handleStartInstrument = async (id: string, type: string) => {
     setActiveInstrumentId(id);
+    
+    // Reset states to prevent data leakage between instruments
+    setObsStep(1);
+    setSelectedObsTitle('');
+    setSelectedObsContent('');
+    setObsConceptualDef('');
+    setObsOperationalDef('');
+    setBlueprintData(null);
+    setSelectedDomains([]);
+    setSkalaLatentVarName('');
+    setSkalaConcepts([{ name: '', definition: '' }]);
+    setSkalaSynthesizedDef('');
+    
     const supabase = createClient();
     const { data } = await supabase.from('project_instruments').select('*').eq('id', id).single();
     
