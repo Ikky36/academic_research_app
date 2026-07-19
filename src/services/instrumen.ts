@@ -733,16 +733,16 @@ export async function generateSkalaV2OperationalDef(
     
     if (!apiKey) throw new Error('API Key is missing');
     
-    const prompt = `Berdasarkan Definisi Konseptual dan Teks Sub-bab (sebagai acuan teori) berikut:
+    const prompt = `Berdasarkan Definisi Konseptual dan Konteks Penelitian berikut:
 
 Definisi Konseptual:
 ${conceptualDef}
 
-Teks Sub-bab Acuan:
+Konteks Penelitian:
 ${theoreticalContext}
 
 Tugas Anda:
-Turunkan definisi konseptual tersebut menjadi sebuah Definisi Operasional. Definisi operasional adalah operasionalisasi dari definisi konseptual yang menjelaskan bagaimana konstruk abstrak tersebut dapat diukur secara konkret dan logis, dengan mengambil ciri-ciri atau dimensi yang tertulis di dalam Teks Sub-bab Acuan.
+Turunkan definisi konseptual tersebut menjadi sebuah Definisi Operasional. Definisi operasional adalah operasionalisasi dari definisi konseptual yang menjelaskan bagaimana konstruk abstrak tersebut dapat diukur secara konkret dan logis, dengan mengambil ciri-ciri atau dimensi dari Definisi Konseptual dan disesuaikan dengan kondisi pada Konteks Penelitian.
 Keluarkan output hanya berupa paragraf definisi operasional tanpa basa-basi.`;
 
     let finalMarkdown: string;

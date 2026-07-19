@@ -322,7 +322,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
   const handleSkalaV2Step2Next = async () => {
     if (!skalaV2ConceptualDef.trim()) return;
     setIsGeneratingSkalaV2(true);
-    const combinedContext = projectContext ? `Konteks Penelitian (Latar/Subjek/Tempat): ${projectContext}\n\nTeks Kajian Pustaka:\n${selectedSkalaV2Content}` : selectedSkalaV2Content;
+    const combinedContext = projectContext ? `Konteks Penelitian (Latar/Subjek/Tempat): ${projectContext}` : '(Tidak ada konteks spesifik yang diberikan pengguna)';
     const res = await generateSkalaV2OperationalDefAction(skalaV2ConceptualDef, combinedContext, undefined, isPaidApi);
     setIsGeneratingSkalaV2(false);
     if (res.result) {
