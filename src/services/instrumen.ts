@@ -786,14 +786,13 @@ ${operationalDef}
 
 Tugas Anda:
 1. Ekstrak Aspek-aspek utama dari Definisi Konseptual.
-2. Dari tiap Aspek, turunkan masing-masing tepat menjadi DUA (2) Indikator berdasarkan Definisi Operasional.
-3. Untuk tiap Indikator, buatlah tepat DUA (2) Aitem Pernyataan: 1 Aitem Favorable (mendukung) dan 1 Aitem Unfavorable (tidak mendukung). 
+2. SANGAT PENTING: Dari tiap Aspek, turunkan masing-masing TEPAT DUA (2) Indikator berdasarkan Definisi Operasional. JANGAN HANYA SATU. Setiap aspek WAJIB memiliki 2 indikator.
+3. Untuk tiap Indikator, buatlah TEPAT DUA (2) Aitem Pernyataan. KEDUA aitem tersebut WAJIB bersifat Favorable (Mendukung/Positif). JANGAN membuat aitem unfavorable.
    SANGAT PENTING: Aitem WAJIB menggunakan sudut pandang orang pertama (menggunakan subjek "Saya" / "Aku") agar responden bisa menilai dirinya sendiri secara langsung.
-4. Tulis hasil sintesis HANYA ke dalam bentuk Tabel Markdown tunggal dengan 4 Kolom:
+4. Tulis hasil sintesis HANYA ke dalam bentuk Tabel Markdown tunggal dengan 3 Kolom:
    - Kolom 1: "Aspek"
    - Kolom 2: "Indikator"
-   - Kolom 3: "Arah Aitem" (Isi dengan "Favorable" atau "Unfavorable")
-   - Kolom 4: "Aitem Pernyataan"
+   - Kolom 3: "Aitem Pernyataan"
 
 SANGAT PENTING (FORMAT TABEL & COPY PASTE):
 - Karena 1 Aspek memiliki 2 Indikator, dan 1 Indikator memiliki 2 Aitem (Total 4 Aitem per Aspek), Anda WAJIB memisahkan setiap Aitem menjadi baris (row) tabel yang berbeda.
@@ -806,8 +805,8 @@ SANGAT PENTING (FORMAT TABEL & COPY PASTE):
       finalMarkdown = await callDeepSeekWithRetry(prompt, 'Anda adalah ahli penyusunan Skala Psikologi/Kuesioner.', 'think-medium');
     } else {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const jsonModel = genAI.getGenerativeModel({ model: modelName, generationConfig: { responseMimeType: "application/json" } });
-      const result = await jsonModel.generateContent(prompt);
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
       finalMarkdown = result.response.text();
     }
     
