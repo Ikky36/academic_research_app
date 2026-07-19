@@ -794,10 +794,21 @@ Tugas Anda:
    - Kolom 2: "Indikator"
    - Kolom 3: "Aitem Pernyataan"
 
-SANGAT PENTING (FORMAT TABEL & COPY PASTE):
-- Karena 1 Aspek memiliki 2 Indikator, dan 1 Indikator memiliki 2 Aitem (Total 4 Aitem per Aspek), Anda WAJIB memisahkan setiap Aitem menjadi baris (row) tabel yang berbeda.
-- KOSONGKAN sel pada Kolom "Aspek" dan "Indikator" untuk baris aitem berikutnya yang masih berada di bawah Aspek/Indikator yang sama. Ini berguna agar mensimulasikan efek rowspan (merge cell) dan tabel terlihat rapi saat disalin (copy-paste) pengguna ke Microsoft Word.
-- JANGAN menambahkan pengantar, penjelasan, atau kesimpulan apa pun. Output HANYA berisi Tabel Markdown secara langsung.`;
+SANGAT PENTING (CONTOH FORMAT TABEL & STRUKTUR ROWSPAN):
+Anda WAJIB mengikuti pola Markdown persis seperti contoh di bawah ini. Perhatikan bahwa Aspek 1 memiliki tepat 2 Indikator, dan tiap Indikator memiliki tepat 2 Aitem Favorable bersubjek "Saya". Sel Aspek dan Indikator yang berulang DIBIARKAN KOSONG untuk efek rowspan:
+
+| Aspek | Indikator | Aitem Pernyataan |
+|---|---|---|
+| Nama Aspek 1 | Teks Indikator 1.1 | Saya merasa... (Aitem Favorable 1) |
+| | | Saya selalu... (Aitem Favorable 2) |
+| | Teks Indikator 1.2 | Saya suka... (Aitem Favorable 1) |
+| | | Saya rajin... (Aitem Favorable 2) |
+| Nama Aspek 2 | Teks Indikator 2.1 | Saya sering... (Aitem Favorable 1) |
+| | | Saya yakin... (Aitem Favorable 2) |
+| | Teks Indikator 2.2 | Saya antusias... (Aitem Favorable 1) |
+| | | Saya aktif... (Aitem Favorable 2) |
+
+JANGAN menambahkan pengantar, penjelasan, atau kesimpulan apa pun. Output HANYA berisi Tabel Markdown secara langsung.`;
 
     let finalMarkdown: string;
     if (provider === 'deepseek' && isPaidApi) {
