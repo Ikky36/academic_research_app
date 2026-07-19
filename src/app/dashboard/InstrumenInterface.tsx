@@ -1112,7 +1112,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
           ) : ((activeInstData?.instrument_type === 'Observasi' || activeInstData?.instrument_type === 'Skala V2') || activeInstData?.instrument_type?.trim() === 'Observasi') ? (
             <div className={styles.chatContainer}>
               <div className={styles.chatHeader}>
-                <h3>Merancang Instrumen Observasi</h3>
+                <h3>Merancang Instrumen {activeInstData?.instrument_type === 'Skala V2' ? 'Skala' : 'Observasi'}</h3>
               </div>
               <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
                 {!kpResult ? (
