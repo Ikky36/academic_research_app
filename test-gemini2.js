@@ -2,12 +2,15 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
-const apiKey = process.env.GEMINI_API_KEY;
+const paidKeys = process.env.GEMINI_PAID_API_KEYS.split(',').map(k => k.trim()).filter(Boolean);
+const apiKey = paidKeys[0]; // Use first paid key
+
 const genAI = new GoogleGenerativeAI(apiKey);
 
 async function run() {
   const modelName = "gemini-2.5-flash-lite";
-  console.log("Testing model:", modelName);
+  console.log("Testing model:", modelName, "with key ending in:", apiKey.slice(-4));
+  
   const model = genAI.getGenerativeModel({ 
     model: modelName,
     systemInstruction: "Anda adalah ahli penyusunan Skala Psikologi/Kuesioner. Anda HARUS SANGAT KETAT mematuhi aturan jumlah (2 indikator per aspek, 2 aitem per indikator) dan SELALU gunakan subjek 'Saya'."
@@ -24,11 +27,15 @@ ${conceptualDef}
 Definisi Operasional:
 ${operationalDef}
 
-ATURAN WAJIB (DILARANG DILANGGAR):
-1. Setiap Aspek HARUS memiliki TEPAT 2 Indikator. (Buat indikator baru jika perlu).
-2. Setiap Indikator HARUS memiliki TEPAT 2 Aitem Pernyataan Favorable (positif/mendukung).
-3. KATA GANTI: Semua aitem pernyataan HARUS dimulai dengan subjek "Saya" atau "Aku". Dilarang keras menggunakan kata "Santri", "Siswa", atau subjek lain!
-4. Hasil akhir HANYA berupa SATU Tabel Markdown dengan 3 kolom: "Aspek", "Indikator", "Aitem Pernyataan". Kosongkan sel Aspek/Indikator yang berulang.
+TUGAS ANDA:
+1. (Tahap 1) Ekstrak Aspek-aspek utama dari Definisi Konseptual.
+2. (Tahap 2) PERATURAN MUTLAK: Untuk SETIAP 1 Aspek, Anda WAJIB membuat TEPAT DUA (2) Indikator berdasarkan Definisi Operasional. JANGAN HANYA SATU. Jika teks kurang, improvisasi logis agar jumlahnya pas 2.
+3. (Tahap 3) PERATURAN MUTLAK: Untuk SETIAP 1 Indikator, Anda WAJIB membuat TEPAT DUA (2) Aitem Pernyataan Favorable (Positif). Jangan membuat aitem unfavorable.
+4. (Tahap 4) PERATURAN MUTLAK KATA GANTI: Seluruh aitem WAJIB menggunakan sudut pandang orang pertama ("Saya" atau "Aku"). DILARANG KERAS menggunakan kata "Santri", "Siswa", "Peserta", dll. Ganti semua subjek menjadi "Saya".
+5. (Tahap 5) Susun hasil akhir HANYA ke dalam bentuk Tabel Markdown tunggal dengan 3 Kolom:
+   - Kolom 1: "Aspek"
+   - Kolom 2: "Indikator"
+   - Kolom 3: "Aitem Pernyataan"
 
 Kerjakan sekarang. Output HANYA Tabel Markdown tanpa teks tambahan apa pun.`;
 

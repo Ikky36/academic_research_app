@@ -776,39 +776,34 @@ export async function generateSkalaV2Table(
     
     if (!apiKey) throw new Error('API Key is missing');
     
-    const prompt = `Anda adalah ahli penyusunan Skala Psikologi/Kuesioner. Anda diberikan dua buah definisi dari sebuah variabel:
+    const prompt = `Anda ditugaskan menyusun Tabel Skala Kuesioner berdasarkan data berikut.
 
-Definisi Konseptual (Abstrak):
+Definisi Konseptual:
 ${conceptualDef}
 
-Definisi Operasional (Konkret):
+Definisi Operasional:
 ${operationalDef}
 
-TUGAS ANDA:
-1. (Tahap 1) Ekstrak Aspek-aspek utama dari Definisi Konseptual.
-2. (Tahap 2) PERATURAN MUTLAK: Untuk SETIAP 1 Aspek, Anda WAJIB membuat TEPAT DUA (2) Indikator berdasarkan Definisi Operasional. JANGAN HANYA SATU. Jika teks kurang, improvisasi logis agar jumlahnya pas 2.
-3. (Tahap 3) PERATURAN MUTLAK: Untuk SETIAP 1 Indikator, Anda WAJIB membuat TEPAT DUA (2) Aitem Pernyataan Favorable (Positif). Jangan membuat aitem unfavorable.
-4. (Tahap 4) PERATURAN MUTLAK KATA GANTI: Seluruh aitem WAJIB menggunakan sudut pandang orang pertama ("Saya" atau "Aku"). DILARANG KERAS menggunakan kata "Santri", "Siswa", "Peserta", dll. Ganti semua subjek menjadi "Saya".
-5. (Tahap 5) Susun hasil akhir HANYA ke dalam bentuk Tabel Markdown tunggal dengan 3 Kolom:
-   - Kolom 1: "Aspek"
-   - Kolom 2: "Indikator"
-   - Kolom 3: "Aitem Pernyataan"
+ATURAN WAJIB (DILARANG DILANGGAR):
+1. Setiap Aspek HARUS memiliki TEPAT 2 Indikator. (Buat indikator baru jika perlu).
+2. Setiap Indikator HARUS memiliki TEPAT 2 Aitem Pernyataan Favorable (positif/mendukung).
+3. KATA GANTI: Semua aitem pernyataan HARUS dimulai dengan subjek "Saya" atau "Aku". Dilarang keras menggunakan kata "Santri", "Siswa", atau subjek lain!
+4. Hasil akhir HANYA berupa SATU Tabel Markdown dengan 3 kolom: "Aspek", "Indikator", "Aitem Pernyataan". Kosongkan sel Aspek/Indikator yang berulang.
+5. SANGAT PENTING: Anda WAJIB memproses SEMUA Aspek yang ada di Definisi Konseptual tanpa terkecuali. Jika ada 8 Aspek, buat tabel untuk 8 Aspek secara lengkap!
 
-SANGAT PENTING (CONTOH FORMAT TABEL & STRUKTUR ROWSPAN):
-Anda WAJIB mengikuti pola Markdown persis seperti contoh di bawah ini. Perhatikan bahwa Aspek 1 memiliki tepat 2 Indikator, dan tiap Indikator memiliki tepat 2 Aitem Favorable bersubjek "Saya". Sel Aspek dan Indikator yang berulang DIBIARKAN KOSONG untuk efek rowspan:
-
+CONTOH OUTPUT YANG BENAR:
 | Aspek | Indikator | Aitem Pernyataan |
 |---|---|---|
-| Nama Aspek 1 | Teks Indikator 1.1 | Saya merasa... (Aitem Favorable 1) |
-| | | Saya selalu... (Aitem Favorable 2) |
-| | Teks Indikator 1.2 | Saya suka... (Aitem Favorable 1) |
-| | | Saya rajin... (Aitem Favorable 2) |
-| Nama Aspek 2 | Teks Indikator 2.1 | Saya sering... (Aitem Favorable 1) |
-| | | Saya yakin... (Aitem Favorable 2) |
-| | Teks Indikator 2.2 | Saya antusias... (Aitem Favorable 1) |
-| | | Saya aktif... (Aitem Favorable 2) |
+| Nama Aspek 1 | Teks Indikator 1.1 | Saya merasa... |
+| | | Saya selalu... |
+| | Teks Indikator 1.2 | Saya suka... |
+| | | Saya rajin... |
+| Nama Aspek 2 | Teks Indikator 2.1 | Saya sangat... |
+| | | Saya yakin... |
+| | Teks Indikator 2.2 | Saya antusias... |
+| | | Saya aktif... |
 
-JANGAN menambahkan pengantar, penjelasan, atau kesimpulan apa pun. Output HANYA berisi Tabel Markdown secara langsung.`;
+Kerjakan sekarang. Output HANYA Tabel Markdown tanpa teks tambahan apa pun.`;
 
     let finalMarkdown: string;
     if (provider === 'deepseek' && isPaidApi) {
