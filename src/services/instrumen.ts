@@ -784,12 +784,12 @@ ${conceptualDef}
 Definisi Operasional (Konkret):
 ${operationalDef}
 
-Tugas Anda:
-1. Ekstrak Aspek-aspek utama dari Definisi Konseptual.
-2. PERATURAN MUTLAK 1 (JUMLAH INDIKATOR): Anda WAJIB menurunkan/membuat TEPAT DUA (2) Indikator untuk SETIAP 1 Aspek. Tidak boleh kurang, tidak boleh lebih. Harus pas 2. Jika informasi di teks kurang, Anda bebas mengimprovisasi indikator yang masuk akal agar jumlahnya pas 2.
-3. PERATURAN MUTLAK 2 (JUMLAH & ARAH AITEM): Untuk setiap 1 Indikator, Anda WAJIB membuat TEPAT DUA (2) Aitem Pernyataan. KEDUA aitem tersebut WAJIB bersifat Favorable (Mendukung/Positif). JANGAN membuat aitem unfavorable.
-4. PERATURAN MUTLAK 3 (KATA GANTI "SAYA"): Seluruh aitem pernyataan WAJIB menggunakan sudut pandang orang pertama (subjek "Saya" atau "Aku"). JANGAN gunakan kata ganti orang ketiga seperti "Santri", "Siswa", "Responden", dll. Ganti semua subjek tersebut menjadi "Saya".
-5. Tulis hasil sintesis HANYA ke dalam bentuk Tabel Markdown tunggal dengan 3 Kolom:
+TUGAS ANDA:
+1. (Tahap 1) Ekstrak Aspek-aspek utama dari Definisi Konseptual.
+2. (Tahap 2) PERATURAN MUTLAK: Untuk SETIAP 1 Aspek, Anda WAJIB membuat TEPAT DUA (2) Indikator berdasarkan Definisi Operasional. JANGAN HANYA SATU. Jika teks kurang, improvisasi logis agar jumlahnya pas 2.
+3. (Tahap 3) PERATURAN MUTLAK: Untuk SETIAP 1 Indikator, Anda WAJIB membuat TEPAT DUA (2) Aitem Pernyataan Favorable (Positif). Jangan membuat aitem unfavorable.
+4. (Tahap 4) PERATURAN MUTLAK KATA GANTI: Seluruh aitem WAJIB menggunakan sudut pandang orang pertama ("Saya" atau "Aku"). DILARANG KERAS menggunakan kata "Santri", "Siswa", "Peserta", dll. Ganti semua subjek menjadi "Saya".
+5. (Tahap 5) Susun hasil akhir HANYA ke dalam bentuk Tabel Markdown tunggal dengan 3 Kolom:
    - Kolom 1: "Aspek"
    - Kolom 2: "Indikator"
    - Kolom 3: "Aitem Pernyataan"
@@ -813,10 +813,13 @@ JANGAN menambahkan pengantar, penjelasan, atau kesimpulan apa pun. Output HANYA 
     let finalMarkdown: string;
     if (provider === 'deepseek' && isPaidApi) {
       console.log('[Instrumen] Using DeepSeek (think-medium) for Skala V2 table');
-      finalMarkdown = await callDeepSeekWithRetry(prompt, 'Anda adalah ahli penyusunan Skala Psikologi/Kuesioner.', 'think-medium');
+      finalMarkdown = await callDeepSeekWithRetry(prompt, 'Anda adalah ahli penyusunan Skala Psikologi/Kuesioner yang SANGAT KETAT mematuhi aturan jumlah indikator, aitem, dan subjek "Saya".', 'think-medium');
     } else {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: modelName });
+      const model = genAI.getGenerativeModel({ 
+        model: modelName,
+        systemInstruction: "Anda adalah ahli penyusunan Skala Psikologi/Kuesioner. Anda HARUS SANGAT KETAT mematuhi aturan jumlah (2 indikator per aspek, 2 aitem per indikator) dan SELALU gunakan subjek 'Saya'."
+      });
       const result = await model.generateContent(prompt);
       finalMarkdown = result.response.text();
     }
