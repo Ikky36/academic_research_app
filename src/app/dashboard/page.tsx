@@ -110,7 +110,7 @@ export default async function DashboardPage({
             href={`/dashboard?tab=sota&project=${activeProject?.id}`} 
             className={activeTab === 'sota' ? styles.activeTab : styles.tab}
           >
-            Tabel SOTA & Analisis
+            Tabel SOTA
           </Link>
           <Link 
             href={`/dashboard?tab=gap-novelty&project=${activeProject?.id}`} 

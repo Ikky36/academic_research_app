@@ -63,7 +63,7 @@ export default function LitReviewInterface({ projectId, isActive, limits, role, 
 
   const handleGenerate = async () => {
     if (!sotaMarkdown) {
-      setError('Tabel SOTA masih kosong. Silakan kembali ke tab Tabel SOTA & Analisis terlebih dahulu.');
+      setError('Tabel SOTA masih kosong. Silakan kembali ke tab Tabel SOTA terlebih dahulu.');
       return;
     }
     if (!researchTopic) {

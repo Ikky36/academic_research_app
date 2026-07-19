@@ -87,7 +87,7 @@ export default function Home() {
             <div className={styles.iconWrapper}>
               <Table size={32} />
             </div>
-            <h3>Tabel SOTA & Analisis</h3>
+            <h3>Tabel SOTA</h3>
             <p>Sistem secara otomatis mengekstrak metode, hasil, dan kesimpulan untuk membangun matriks perbandingan State-of-the-Art (SOTA) secara instan.</p>
             <p className={styles.en}>Automatically extract methods and results to build comparative State-of-the-Art (SOTA) matrices instantly.</p>
           </div>

@@ -378,26 +378,28 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2>Analisis State-of-the-Art (SOTA)</h2>
+        <h2>State-of-the-Art (SOTA)</h2>
         <p>Anda memiliki <strong>{references.length}</strong> data artikel yang tersimpan di proyek ini.</p>
         <div className={styles.abstractStats}>
           <span className={styles.statGreen}>✅ {withAbstract.length} data artikel memiliki abstrak (akan dianalisis)</span>
           <span className={styles.statRed}>❌ {withoutAbstract.length} data artikel tidak memiliki abstrak (akan diabaikan)</span>
         </div>
         <div className={styles.buttonGroup}>
-          <button 
-            onClick={handleGenerateSota} 
-            disabled={isGenerating || (withAbstract.length - processedIds.length === 0)}
-            className={styles.generateButton}
-          >
-            {isGenerating 
-              ? 'Membaca dan Menyintesis...' 
-              : sotaMarkdown !== '' 
-                ? 'Lanjutkan' 
-                : 'Buat Tabel SOTA'}
-          </button>
+          {withAbstract.length - processedIds.length > 0 && (
+            <button 
+              onClick={handleGenerateSota} 
+              disabled={isGenerating}
+              className={styles.generateButton}
+            >
+              {isGenerating 
+                ? 'Membaca dan Menyintesis...' 
+                : sotaMarkdown !== '' 
+                  ? 'Lanjutkan' 
+                  : 'Buat Tabel SOTA'}
+            </button>
+          )}
 
-          {sotaMarkdown !== '' && (
+          {processedIds.length > 0 && (
             <>
               <button 
                 onClick={handleResetSota} 
@@ -452,13 +454,14 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
             <ReactMarkdown 
               remarkPlugins={[remarkGfm]}
               components={{
+                th: ({node, ...props}) => <th style={{ textAlign: 'center' }} {...props} />,
                 tr: ({node, children, ...props}) => {
                   const isHeader = (node as any)?.children?.some((child: any) => child.tagName === 'th');
                   return (
                     <tr {...props}>
                       {children}
                       {isHeader ? (
-                        <th>Aksi</th>
+                        <th style={{ textAlign: 'center' }}>Aksi</th>
                       ) : (
                         <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
                           <button 
