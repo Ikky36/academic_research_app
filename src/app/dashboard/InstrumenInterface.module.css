@@ -327,6 +327,7 @@
 
 .markdownContent th {
   background: var(--surface-variant);
+  text-align: center;
 }
 
 /* Animations */
