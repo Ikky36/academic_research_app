@@ -674,7 +674,12 @@ JANGAN menambahkan pengantar atau kesimpulan. Output HANYA Tabel Markdown.`;
       const result = await model.generateContent(prompt);
       finalMarkdown = result.response.text();
     }
-    return { result: finalMarkdown.replace(/^```(markdown)?\s*/gi, '').replace(/```$/g, '').trim() };
+    let text = finalMarkdown.replace(/^```(markdown)?\s*/gi, '').replace(/```$/g, '').trim();
+    // Fix common AI hallucination where it adds an extra column in the separator row
+    text = text.replace(/\|---\|---\|---\|---\|/g, '|---|---|---|');
+    text = text.replace(/\|---\|---\|---\|---\s*\|/g, '|---|---|---|');
+    
+    return { result: text };
   } catch (err: any) {
     console.error("Generate Observation Table Error:", err);
     return { error: "Gagal membuat Tabel Instrumen Observasi." };
@@ -820,6 +825,10 @@ Kerjakan sekarang. Output HANYA Tabel Markdown tanpa teks tambahan apa pun.`;
     }
     
     let text = finalMarkdown.replace(/^\`\`(markdown)?\s*/gi, '').replace(/\`\`\`$/g, '').trim();
+    
+    // Fix common AI hallucination where it adds an extra column in the separator row
+    text = text.replace(/\|---\|---\|---\|---\|/g, '|---|---|---|');
+    text = text.replace(/\|---\|---\|---\|---\s*\|/g, '|---|---|---|');
     
     return { result: text };
   } catch (err: any) {
