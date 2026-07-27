@@ -124,7 +124,7 @@ export default function Home() {
           </div>
         </section>
         <footer className={styles.footer}>
-          <p>&copy; {new Date().getFullYear()} Academic Research Assistant. Dibuat dengan Next.js, Supabase, dan integrasi AI Mutakhir.</p>
+          <p>&copy; {new Date().getFullYear()} Academic Research Assistant.</p>
         </footer>
       </div>
     </main>
