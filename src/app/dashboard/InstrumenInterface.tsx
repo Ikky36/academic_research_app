@@ -730,11 +730,11 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
         <div className={styles.content}>
           <div className={styles.formGroup}>
             <label>Tambah Instrumen Baru</label>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '8px' }}>
-               <select className={styles.chatInput} value={newInstrumentType} onChange={e => setNewInstrumentType(e.target.value)} style={{ padding: '8px', borderRadius: '8px' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '8px', flexWrap: 'wrap' }}>
+               <select className={styles.chatInput} value={newInstrumentType} onChange={e => setNewInstrumentType(e.target.value)} style={{ padding: '8px', borderRadius: '8px', flex: '1 1 auto', minWidth: '150px' }}>
                  {INSTRUMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                </select>
-               <input className={styles.chatInput} type="text" placeholder="Nama Spesifik (Misal: Kuesioner Siswa)" value={newInstrumentName} onChange={e => setNewInstrumentName(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: '8px' }} />
+               <input className={styles.chatInput} type="text" placeholder="Nama Spesifik (Misal: Kuesioner Siswa)" value={newInstrumentName} onChange={e => setNewInstrumentName(e.target.value)} style={{ flex: '2 1 auto', padding: '8px', borderRadius: '8px', minWidth: '200px' }} />
                <button className={styles.btnPrimary} onClick={handleAddInstrument}>Tambah</button>
             </div>
           </div>
@@ -743,9 +743,9 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
             <div className={styles.instrumentList}>
               <h3 style={{ marginBottom: '8px' }}>Instrumen Proyek Ini</h3>
               {instruments.map(inst => (
-                <div key={inst.id} className={styles.instrumentCard} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div key={inst.id} className={styles.instrumentCard} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                  <div style={{ flex: '1 1 min-content' }}>
+                    <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                        {inst.name || inst.instrument_type} 
                        <span style={{ fontSize: '12px', fontWeight: 'normal', color: '#666', background: '#eee', padding: '2px 6px', borderRadius: '4px' }}>{inst.instrument_type}</span>
                     </h3>
