@@ -5,7 +5,7 @@ import { Sparkles, ArrowRight, BrainCircuit, Search, Table, ShieldCheck, FileTex
 export default function Home() {
   return (
     <main className={styles.main}>
-      <div className={styles.leftColumn}>
+      <div className={styles.sectionWhite}>
         {/* Hero Section */}
         <header className={styles.hero}>
           <div className={styles.badge}>
@@ -59,7 +59,7 @@ export default function Home() {
         </section>
       </div>
 
-      <div className={styles.rightColumn}>
+      <div className={styles.sectionGreen}>
         {/* Features Section */}
         <section className={styles.features}>
           <div className={styles.featuresHeader}>

@@ -1,27 +1,28 @@
 .main {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
   width: 100%;
   overflow-x: hidden;
   background-color: #ffffff;
 }
 
-.leftColumn {
-  flex: 1;
+.sectionWhite {
+  width: 100%;
   background-color: #ffffff;
-  padding: 4rem 5rem;
+  padding: 5rem 2rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  align-items: center;
 }
 
-.rightColumn {
-  flex: 1;
+.sectionGreen {
+  width: 100%;
   background-color: #064e3b; /* Dark Green */
-  padding: 4rem 5rem;
+  padding: 6rem 2rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  align-items: center;
 }
 
 /* Badge */
@@ -117,6 +118,8 @@
 /* How It Works */
 .howItWorks {
   text-align: center;
+  width: 100%;
+  max-width: 1100px;
 }
 
 .sectionTitle {
@@ -136,6 +139,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
+  width: 100%;
 }
 
 .stepCard {
@@ -182,7 +186,15 @@
   line-height: 1.6;
 }
 
-/* Right Column Features */
+/* Right Column Features -> Bottom Features */
+.features {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .featuresHeader {
   text-align: center;
   margin-bottom: 3.5rem;
@@ -204,6 +216,7 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.5rem;
+  width: 100%;
 }
 
 .bentoCard {
@@ -260,10 +273,7 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .main {
-    flex-direction: column;
-  }
-  .leftColumn, .rightColumn {
+  .sectionWhite, .sectionGreen {
     padding: 3rem 2rem;
   }
 }
