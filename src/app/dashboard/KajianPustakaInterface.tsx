@@ -603,12 +603,13 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
                   onChange={(e) => handleVariableChange(v.id, e.target.value)} 
                   className={styles.input}
                   placeholder={`Variabel ${index + 1} (Contoh: Motivasi Belajar)`}
-                  style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#111827', color: 'white' }}
+                  style={{ flex: 1 }}
                 />
                 {variables.length > 1 && (
                   <button 
                     onClick={() => handleRemoveVariable(v.id)}
-                    style={{ padding: '0 15px', background: '#374151', border: 'none', borderRadius: '8px', color: '#f87171', cursor: 'pointer' }}
+                    className={styles.actionButton}
+                    style={{ padding: '0 15px', color: '#ef4444', height: '100%' }}
                     title="Hapus variabel"
                   >
                     ✕
@@ -618,7 +619,8 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
             ))}
             <button 
               onClick={handleAddVariable}
-              style={{ marginTop: '12px', background: 'transparent', border: '1px dashed #4b5563', color: '#9ca3af', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', width: '100%' }}
+              className={styles.addOutlineBtn}
+              style={{ marginTop: '12px', width: '100%' }}
             >
               + Tambah Variabel
             </button>
@@ -635,7 +637,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
               onChange={handleKonteksChange} 
               className={styles.input}
               placeholder="Contoh: Pada pembelajaran bahasa Arab di pesantren"
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #374151', background: '#111827', color: 'white', marginTop: '4px' }}
+              style={{ marginTop: '4px' }}
             />
             <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '8px' }}>
               *Isi dengan tempat, demografi, subjek, atau latar belakang khusus dari topik Anda.
@@ -716,7 +718,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
 
                 <div style={{ paddingLeft: '40px', marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {item.subChapters && item.subChapters.map((subItem, subIndex) => (
-                    <div key={subIndex} className={styles.outlineItem} style={{ background: 'rgba(255,255,255,0.02)', padding: '8px 12px', minHeight: 'auto' }}>
+                    <div key={subIndex} className={styles.outlineItem} style={{ background: 'rgba(0,0,0,0.02)', padding: '8px 12px', minHeight: 'auto' }}>
                       <div className={styles.outlineNumber} style={{ fontSize: '13px', width: 'auto', marginRight: '10px' }}>2.{index + 1}.{subIndex + 1}</div>
                       <input 
                         type="text" 
@@ -741,7 +743,7 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
                   <button 
                     className={styles.addOutlineBtn} 
                     onClick={() => handleAddSubOutline(index)}
-                    style={{ padding: '6px 12px', fontSize: '12px', width: 'fit-content', background: 'transparent', border: '1px dashed rgba(255,255,255,0.2)', color: '#9ca3af', marginTop: '4px' }}
+                    style={{ padding: '6px 12px', fontSize: '12px', width: 'fit-content', marginTop: '4px' }}
                   >
                     + Tambah Sub-sub Bab Manual
                   </button>

@@ -458,16 +458,55 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
                 th: ({node, ...props}) => <th style={{ textAlign: 'center' }} {...props} />,
                 tr: ({node, children, ...props}) => {
                   const isHeader = (node as any)?.children?.some((child: any) => child.tagName === 'th');
+                  
+                  let modifiedChildren = children;
+                  if (!isHeader && Array.isArray(children)) {
+                    let tdIndex = 0;
+                    modifiedChildren = React.Children.map(children, (child) => {
+                      if (React.isValidElement(child) && (child.props as any).node?.tagName === 'td') {
+                        const currentIndex = tdIndex;
+                        tdIndex++;
+                        
+                        if (currentIndex === 3) {
+                          const content = (child.props as any).children;
+                          
+                          let textContent = '';
+                          const extractText = (c: any) => {
+                            if (typeof c === 'string') textContent += c;
+                            else if (Array.isArray(c)) c.forEach(extractText);
+                            else if (c && c.props && c.props.children) extractText(c.props.children);
+                          };
+                          extractText(content);
+                          
+                          if (textContent) {
+                            const badges = textContent.split(';').map((t: string) => t.trim()).filter((t: string) => t);
+                            return React.cloneElement(child, {
+                              ...child.props,
+                              children: (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  {badges.map((b, i) => (
+                                    <span key={i} className={styles.variableBadge}>{b}</span>
+                                  ))}
+                                </div>
+                              )
+                            } as any);
+                          }
+                        }
+                      }
+                      return child;
+                    });
+                  }
+
                   return (
                     <tr {...props}>
-                      {children}
+                      {modifiedChildren}
                       {isHeader ? (
                         <th style={{ textAlign: 'center' }}>Aksi</th>
                       ) : (
                         <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
                           <button 
                             onClick={() => handleDeleteSotaRow(node)} 
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}
+                            className={styles.deleteButtonGreen}
                             title="Hapus baris ini dari tabel"
                           >
                             Hapus
