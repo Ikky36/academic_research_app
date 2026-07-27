@@ -13,6 +13,7 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
   const [isCreating, setIsCreating] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     // Check Google Auth Status
@@ -84,7 +85,17 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
   };
 
   return (
-    <aside className={styles.sidebar}>
+    <>
+      <button className={styles.toggleBtn} onClick={() => setIsOpen(!isOpen)} aria-label="Toggle Menu">
+        {isOpen ? '✕' : '☰'}
+      </button>
+      
+      <div 
+        className={`${styles.overlay} ${isOpen ? styles.open : ''}`} 
+        onClick={() => setIsOpen(false)}
+      ></div>
+
+      <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
       
       <div className={styles.brand}>
         <Link href="/" style={{ textDecoration: 'none', display: 'block' }}>
@@ -193,5 +204,6 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
       </div>
 
     </aside>
+    </>
   );
 }
