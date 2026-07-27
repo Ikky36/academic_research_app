@@ -63,6 +63,16 @@
   border-radius: var(--radius);
   border: 1px solid var(--border);
   overflow-x: auto;
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .sotaResult {
+    padding: 1rem;
+  }
+  .header {
+    padding: 1.5rem 1rem;
+  }
 }
 
 .markdownWrapper table {
@@ -142,6 +152,7 @@
   display: flex;
   gap: 1rem;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .clearButton {

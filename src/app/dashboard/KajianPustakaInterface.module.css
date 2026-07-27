@@ -155,7 +155,9 @@
 
 .buttonGroup {
   display: flex;
-  justify-content: space-between;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
   margin-top: 32px;
 }
 

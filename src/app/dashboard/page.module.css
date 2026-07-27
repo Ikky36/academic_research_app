@@ -237,6 +237,7 @@
   overflow-y: auto;
   position: relative;
   background-color: var(--background);
+  min-width: 0;
 }
 
 .headerSpacer {
