@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { getSavedReferencesAction, generateSotaChunkAction, clearReferencesAction, deleteReferenceAction, deleteReferencesBulkAction, logClientErrorAction } from './actions';
@@ -480,8 +480,8 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
                           
                           if (textContent) {
                             const badges = textContent.split(';').map((t: string) => t.trim()).filter((t: string) => t);
-                            return React.cloneElement(child, {
-                              ...child.props,
+                            return React.cloneElement(child as any, {
+                              ...(child as any).props,
                               children: (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                   {badges.map((b, i) => (
