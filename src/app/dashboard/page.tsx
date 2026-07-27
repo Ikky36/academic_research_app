@@ -84,7 +84,6 @@ export default async function DashboardPage({
         <header className={styles.header}>
           <div className={styles.headerSpacer}></div>
           <div className={styles.headerRightControls}>
-            <ThemeToggle />
             {canUseByok && <SettingsButton />}
           {role === 'admin' && (
             <Link href="/admin" className={styles.adminButton}>Admin Dashboard</Link>

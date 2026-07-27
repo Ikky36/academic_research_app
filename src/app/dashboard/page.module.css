@@ -22,7 +22,6 @@
 /* Modern App Bar / Header */
 .header {
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
   padding: 0 2.5rem;
   display: flex;
   justify-content: space-between;
@@ -30,7 +29,6 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   height: 80px;
   box-sizing: border-box;
 }
