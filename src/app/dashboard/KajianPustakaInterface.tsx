@@ -532,6 +532,10 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
 
       <div className={styles.wizardHeader}>
         <div 
+          className={styles.progressLine} 
+          style={{ width: `${(step - 1) * 33.34}%` }}
+        />
+        <div 
           className={`${styles.stepIndicator} ${step >= 1 ? styles.active : ''} ${outline.length > 0 ? styles.completed : ''} ${step === 1 ? styles.current : ''}`} 
           onClick={() => setStep(1)} 
           style={{cursor: 'pointer'}}

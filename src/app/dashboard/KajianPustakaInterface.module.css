@@ -46,11 +46,21 @@
   content: '';
   position: absolute;
   top: 15px;
-  left: 30px;
-  right: 30px;
+  left: 16.66%;
+  right: 16.66%;
   height: 2px;
   background: var(--border);
   z-index: 0;
+}
+
+.progressLine {
+  position: absolute;
+  top: 15px;
+  left: 16.66%;
+  height: 2px;
+  background: #22c55e;
+  z-index: 0;
+  transition: width 0.3s ease;
 }
 
 .stepIndicator {
@@ -66,47 +76,41 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--surface-container-high);
+  background: white;
   border: 2px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  color: var(--on-surface-variant);
   margin-bottom: 8px;
   transition: all 0.3s ease;
 }
 
-.stepIndicator.active .stepNumber {
-  background: var(--primary);
-  border-color: var(--primary-container);
-  box-shadow: 0 0 15px rgba(22, 163, 74, 0.5);
+.stepIndicator.completed .stepNumber {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: white;
 }
 
-.stepIndicator.completed .stepNumber {
-  background: var(--primary-container);
-  border-color: var(--primary-dark);
+.stepIndicator.current .stepNumber {
+  background: white;
+  border: 2px solid #22c55e;
+  color: transparent; /* hide text if needed, we'll draw a dot */
+  box-shadow: inset 0 0 0 4px white, inset 0 0 0 16px #22c55e; /* Inner green dot */
 }
 
 .stepLabel {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--on-surface-variant);
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
-.stepIndicator.active .stepLabel,
-.stepIndicator.completed .stepLabel {
-  color: var(--on-surface);
-}
-
-.stepIndicator.current .stepNumber {
-  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.15), 0 0 20px rgba(22, 163, 74, 0.5);
-  transform: scale(1.15);
-}
-
+.stepIndicator.completed .stepLabel,
 .stepIndicator.current .stepLabel {
-  color: var(--primary);
-  font-weight: 700;
+  color: var(--on-surface);
+  font-weight: 600;
 }
 
 .stepContent {
