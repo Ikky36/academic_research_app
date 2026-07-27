@@ -21,9 +21,7 @@
 
 /* Modern App Bar / Header */
 .header {
-  background: var(--surface-container);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
   padding: 0 2.5rem;
   display: flex;
@@ -79,9 +77,9 @@
 }
 
 .logoutButton {
-  background: transparent;
-  border: 1px solid rgba(239, 68, 68, 0.5);
-  color: #f87171;
+  background: #ffffff;
+  border: 1px solid #ef4444;
+  color: #ef4444;
   padding: 0.5rem 1.25rem;
   border-radius: 6px;
   font-size: 0.85rem;
@@ -91,8 +89,7 @@
 }
 
 .logoutButton:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: #ef4444;
+  background: #fef2f2;
   transform: translateY(-1px);
 }
 

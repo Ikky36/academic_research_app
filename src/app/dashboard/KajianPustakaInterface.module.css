@@ -26,9 +26,7 @@
   font-size: 24px;
   font-weight: 700;
   margin: 0 0 8px 0;
-  background: linear-gradient(135deg, #60a5fa, #a78bfa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--primary-dark);
 }
 
 .header p {
@@ -79,14 +77,14 @@
 }
 
 .stepIndicator.active .stepNumber {
-  background: #3b82f6;
-  border-color: #60a5fa;
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+  background: var(--primary);
+  border-color: var(--primary-container);
+  box-shadow: 0 0 15px rgba(22, 163, 74, 0.5);
 }
 
 .stepIndicator.completed .stepNumber {
-  background: #10b981;
-  border-color: #34d399;
+  background: var(--primary-container);
+  border-color: var(--primary-dark);
 }
 
 .stepLabel {
@@ -102,12 +100,12 @@
 }
 
 .stepIndicator.current .stepNumber {
-  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.15), 0 0 20px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.15), 0 0 20px rgba(22, 163, 74, 0.5);
   transform: scale(1.15);
 }
 
 .stepIndicator.current .stepLabel {
-  color: #60a5fa;
+  color: var(--primary);
   font-weight: 700;
 }
 
@@ -174,14 +172,14 @@
 }
 
 .btnPrimary {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: var(--primary);
   color: white;
   border: none;
 }
 
 .btnPrimary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  background: var(--primary-container);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
 .btnPrimary:disabled {
@@ -230,7 +228,7 @@
 
 .outlineNumber {
   font-weight: bold;
-  color: #60a5fa;
+  color: var(--primary);
   margin-right: 16px;
   min-width: 24px;
 }

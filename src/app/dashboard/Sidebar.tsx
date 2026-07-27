@@ -99,7 +99,9 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
       
       <div className={styles.brand}>
         <Link href="/" style={{ textDecoration: 'none', display: 'block' }}>
-          <h1>Pusat Riset Akademik</h1>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '1.4rem', color: 'var(--primary-dark)' }}>P</span> Pusat Riset Akademik
+          </h1>
           <p>AI THESIS ASSISTANT</p>
         </Link>
       </div>
@@ -158,7 +160,7 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
           style={{
             width: '100%',
             padding: '10px',
-            backgroundColor: isGoogleConnected ? '#10b981' : '#1a73e8',
+            backgroundColor: isGoogleConnected ? 'var(--primary-dark)' : 'var(--primary-dark)',
             color: 'white',
             border: 'none',
             borderRadius: '6px',

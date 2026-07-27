@@ -11,12 +11,14 @@
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  text-align: center;
+  text-align: left;
 }
 
 .header h2 {
   margin-bottom: 0.5rem;
-  color: var(--primary);
+  color: var(--primary-dark);
+  border-left: 6px solid var(--primary);
+  padding-left: 12px;
 }
 
 .header p {
@@ -27,7 +29,7 @@
 
 .generateButton {
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: var(--primary);
   color: white;
   border: none;
   border-radius: 8px;
@@ -35,12 +37,12 @@
   font-weight: bold;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
 }
 
 .generateButton:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.6);
 }
 
 .generateButton:disabled {
@@ -90,9 +92,9 @@
 }
 
 .markdownWrapper th {
-  background: rgba(99, 102, 241, 0.05);
-  color: var(--primary);
-  font-weight: 600;
+  background: var(--primary-light-bg);
+  color: var(--primary-dark);
+  font-weight: 700;
 }
 
 .markdownWrapper tr:nth-child(even) {
@@ -158,8 +160,8 @@
 .clearButton {
   padding: 1rem 1.5rem;
   background: transparent;
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: var(--on-surface-variant);
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
   font-weight: bold;
@@ -168,8 +170,7 @@
 }
 
 .clearButton:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: #ef4444;
+  background: var(--surface-variant);
 }
 
 .clearButton:disabled {

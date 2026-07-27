@@ -1,67 +1,54 @@
 :root {
   /* LIGHT MODE - Foundation */
-  --background: #f8f9ff;
-  --on-background: #0b1c30;
+  --background: #f8fafc; /* Very light slate/gray background */
+  --on-background: #0f172a;
   --foreground: var(--on-background);
   
-  --surface: #f8f9ff;
-  --surface-dim: #cbdbf5;
-  --surface-bright: #f8f9ff;
+  --surface: #ffffff;
+  --surface-dim: #e2e8f0;
+  --surface-bright: #ffffff;
   --surface-container-lowest: #ffffff;
-  --surface-container-low: #eff4ff;
-  --surface-container: #e5eeff;
-  --surface-container-high: #dce9ff;
-  --surface-container-highest: #d3e4fe;
-  --on-surface: #0b1c30;
-  --on-surface-variant: #434655;
-  --surface-variant: #d3e4fe;
+  --surface-container-low: #f8fafc;
+  --surface-container: #f1f5f9;
+  --surface-container-high: #e2e8f0;
+  --surface-container-highest: #cbd5e1;
   
-  --inverse-surface: #213145;
-  --inverse-on-surface: #eaf1ff;
+  --on-surface: #0f172a;
+  --on-surface-variant: #475569;
+  --surface-variant: #f1f5f9;
   
-  --outline: #737686;
-  --outline-variant: #c3c6d7;
+  --inverse-surface: #1e293b;
+  --inverse-on-surface: #f8fafc;
   
-  --surface-tint: #0053db;
+  --outline: #94a3b8;
+  --outline-variant: #cbd5e1;
+  
+  --surface-tint: #16a34a;
 
-  /* LIGHT MODE - Primary */
-  --primary: #004ac6;
+  /* NEW GREEN THEME - Primary (Green 600) */
+  --primary: #16a34a;
   --on-primary: #ffffff;
-  --primary-container: #2563eb;
-  --on-primary-container: #eeefff;
-  --inverse-primary: #b4c5ff;
-  --primary-fixed: #dbe1ff;
-  --primary-fixed-dim: #b4c5ff;
-  --on-primary-fixed: #00174b;
-  --on-primary-fixed-variant: #003ea8;
-
-  /* LIGHT MODE - Secondary */
-  --secondary: #006c49;
-  --on-secondary: #ffffff;
-  --secondary-container: #6cf8bb;
-  --on-secondary-container: #00714d;
-  --secondary-fixed: #6ffbbe;
-  --secondary-fixed-dim: #4edea3;
-  --on-secondary-fixed: #002113;
-  --on-secondary-fixed-variant: #005236;
-
-  /* LIGHT MODE - Tertiary */
-  --tertiary: #3e3fcc;
-  --on-tertiary: #ffffff;
-  --tertiary-container: #585be6;
-  --on-tertiary-container: #f1eeff;
-  --tertiary-fixed: #e1e0ff;
-  --tertiary-fixed-dim: #c0c1ff;
-  --on-tertiary-fixed: #07006c;
-  --on-tertiary-fixed-variant: #2f2ebe;
-
-  /* LIGHT MODE - Error */
-  --error: #ba1a1a;
-  --on-error: #ffffff;
-  --error-container: #ffdad6;
-  --on-error-container: #93000a;
+  --primary-container: #15803d; /* Green 700 */
+  --on-primary-container: #f0fdf4;
+  --inverse-primary: #86efac;
   
-  /* Legacy app variables mapped to new design system */
+  /* Primary variants for dark elements like Sidebar Buttons */
+  --primary-dark: #14532d; /* Green 900 */
+  --primary-light-bg: #dcfce7; /* Green 100 */
+
+  /* Secondary */
+  --secondary: #0ea5e9;
+  --on-secondary: #ffffff;
+  --secondary-container: #0284c7;
+  --on-secondary-container: #f0f9ff;
+
+  /* Error */
+  --error: #ef4444;
+  --on-error: #ffffff;
+  --error-container: #fecaca;
+  --on-error-container: #991b1b;
+  
+  /* Legacy app variables mapped */
   --primary-hover: var(--primary-container);
   --border: var(--outline-variant);
 
@@ -69,70 +56,10 @@
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-glass: 0 24px 48px -12px rgba(0, 83, 219, 0.04);
+  --shadow-glass: 0 24px 48px -12px rgba(22, 163, 74, 0.08);
 }
 
-[data-theme="dark"] {
-  /* DARK MODE - Derived to match "Deep Slate #0F172A" */
-  --background: #0f172a;
-  --on-background: #f8f9ff;
-  --foreground: var(--on-background);
-  
-  --surface: #0f172a;
-  --surface-dim: #0b1121;
-  --surface-bright: #1e293b;
-  --surface-container-lowest: #020617;
-  --surface-container-low: #0b1121;
-  --surface-container: #0f172a;
-  --surface-container-high: #1e293b;
-  --surface-container-highest: #334155;
-  --on-surface: #f8f9ff;
-  --on-surface-variant: #cbd5e1;
-  --surface-variant: #334155;
-  
-  --inverse-surface: #f1f5f9;
-  --inverse-on-surface: #0f172a;
-  
-  --outline: #64748b;
-  --outline-variant: #334155;
-  
-  --surface-tint: #60a5fa;
-
-  /* DARK MODE - Primary */
-  --primary: #3b82f6; /* Lighter academic blue */
-  --on-primary: #ffffff;
-  --primary-container: #1d4ed8;
-  --on-primary-container: #dbeafe;
-  --inverse-primary: #004ac6;
-
-  /* DARK MODE - Secondary (Emerald) */
-  --secondary: #10b981;
-  --on-secondary: #ffffff;
-  --secondary-container: #059669;
-  --on-secondary-container: #d1fae5;
-
-  /* DARK MODE - Tertiary (Indigo) */
-  --tertiary: #6366f1;
-  --on-tertiary: #ffffff;
-  --tertiary-container: #4f46e5;
-  --on-tertiary-container: #e0e7ff;
-
-  /* DARK MODE - Error */
-  --error: #ef4444;
-  --on-error: #ffffff;
-  --error-container: #7f1d1d;
-  --on-error-container: #fecaca;
-  
-  /* Legacy app variables mapped */
-  --primary-hover: var(--primary-container);
-  --border: var(--outline-variant);
-
-  /* Elevation / Depth Dark Mode */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-  --shadow-glass: 0 24px 48px -12px rgba(59, 130, 246, 0.12);
-}
+/* We force light mode always now, so we don't define [data-theme="dark"] anymore. */
 
 * {
   box-sizing: border-box;

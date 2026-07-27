@@ -414,7 +414,7 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
                 onClick={handleExportCSV} 
                 disabled={isGenerating}
                 className={styles.clearButton}
-                style={{ backgroundColor: '#10b981', color: 'white' }}
+                style={{ backgroundColor: 'var(--primary)', color: 'white', borderColor: 'var(--primary)' }}
               >
                 Unduh Excel (CSV)
               </button>
@@ -425,7 +425,7 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
             onClick={handleCheckDuplicates} 
             disabled={isGenerating || references.length === 0}
             className={styles.clearButton}
-            style={{ backgroundColor: '#6366f1', color: 'white', borderColor: '#6366f1' }}
+            style={{ backgroundColor: 'var(--primary)', color: 'white', borderColor: 'var(--primary)' }}
           >
             Cek Duplikat
           </button>
@@ -434,6 +434,7 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
             onClick={handleClearData} 
             disabled={isGenerating || references.length === 0}
             className={styles.clearButton}
+            style={{ backgroundColor: '#ef4444', color: 'white', borderColor: '#ef4444' }}
           >
             Kosongkan Proyek
           </button>

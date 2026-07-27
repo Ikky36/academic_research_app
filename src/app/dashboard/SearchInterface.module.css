@@ -58,9 +58,9 @@
 .aiButton {
   padding: 0.5rem 1rem;
   border-radius: 6px;
-  border: 1px solid rgba(139, 92, 246, 0.5);
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
+  border: 1px solid var(--primary);
+  background: var(--surface-container);
+  color: var(--primary-dark);
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
@@ -71,7 +71,7 @@
 }
 
 .aiButton:hover:not(:disabled) {
-  background: rgba(139, 92, 246, 0.2);
+  background: var(--primary-light-bg);
 }
 
 .aiButton:disabled {
@@ -117,8 +117,8 @@
 
 .booleanTextarea:focus {
   outline: none;
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
 }
 
 .copyBtn {
@@ -251,12 +251,12 @@
   font-size: 1.15rem;
   font-weight: 600;
   line-height: 1.4;
-  color: var(--primary);
+  color: var(--primary-dark);
 }
 
 .yearBadge {
-  background: rgba(67, 97, 238, 0.1);
-  color: var(--primary);
+  background: var(--primary-light-bg);
+  color: var(--primary-dark);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.85rem;
@@ -367,9 +367,9 @@
 
 .driveButton {
   padding: 0.5rem 1rem;
-  background: rgba(14, 165, 233, 0.1);
-  color: #0ea5e9;
-  border: 1px solid rgba(14, 165, 233, 0.2);
+  background: var(--surface-container);
+  color: var(--primary-dark);
+  border: 1px solid var(--primary);
   border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 600;
@@ -378,7 +378,7 @@
 }
 
 .driveButton:hover:not(:disabled) {
-  background: rgba(14, 165, 233, 0.2);
+  background: var(--primary-light-bg);
 }
 
 .driveButton:disabled {
