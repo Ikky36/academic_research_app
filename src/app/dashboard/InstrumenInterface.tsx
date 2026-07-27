@@ -1373,7 +1373,7 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
         {finalResult && (
           <div style={{ flex: 1 }}>
             <div className={styles.resultContainer} style={{ margin: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
                 <h3 style={{ margin: 0 }}>Draf Instrumen Final</h3>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button onClick={copyToClipboard} className={styles.btnSecondary}>

@@ -296,6 +296,8 @@
 .markdownContent {
   color: var(--on-surface);
   line-height: 1.6;
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .markdownContent h1, .markdownContent h2, .markdownContent h3 {
