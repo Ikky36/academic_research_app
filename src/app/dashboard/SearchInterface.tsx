@@ -487,7 +487,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
             disabled={generatingAI || !topic} 
             className={styles.aiButton}
           >
-            {generatingAI ? 'Meracik Query...' : 'Generate Query dengan AI'}
+            {generatingAI ? 'Meracik Query...' : 'Generate Query'}
           </button>
         </div>
 
