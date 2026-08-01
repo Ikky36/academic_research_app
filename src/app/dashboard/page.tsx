@@ -8,6 +8,7 @@ import LitReviewInterface from './LitReviewInterface'
 import KajianPustakaInterface from './KajianPustakaInterface'
 import MetodologiInterface from './MetodologiInterface'
 import InstrumenInterface from './InstrumenInterface'
+import PraPenelitianInterface from './PraPenelitianInterface'
 import Sidebar from './Sidebar'
 import styles from './page.module.css'
 
@@ -46,7 +47,7 @@ export default async function DashboardPage({
   }
 
   const params = await searchParams;
-  const activeTab = params.tab || 'search';
+  const activeTab = params.tab || 'pra-penelitian';
   const activeProjectId = params.project || (projects.length > 0 ? projects[0].id : '');
   
   const activeProject = projects?.find(p => p.id === activeProjectId) || projects?.[0];
@@ -100,6 +101,12 @@ export default async function DashboardPage({
       <div className={styles.mainLayout}>
         <div className={styles.tabs}>
           <Link 
+            href={`/dashboard?tab=pra-penelitian&project=${activeProject?.id}`} 
+            className={activeTab === 'pra-penelitian' ? styles.activeTab : styles.tab}
+          >
+            Pra Penelitian
+          </Link>
+          <Link 
             href={`/dashboard?tab=search&project=${activeProject?.id}`} 
             className={activeTab === 'search' ? styles.activeTab : styles.tab}
           >
@@ -146,6 +153,9 @@ export default async function DashboardPage({
         <main className={styles.main}>
           {activeProject && (
             <>
+              <div style={{ display: activeTab === 'pra-penelitian' ? 'block' : 'none' }}>
+                <PraPenelitianInterface key={`pra-${activeProject.id}`} projectId={activeProject.id} />
+              </div>
               <div style={{ display: activeTab === 'search' ? 'block' : 'none' }}>
                 <SearchInterface key={`search-${activeProject.id}`} projectId={activeProject.id} limits={limits} role={role} />
               </div>
