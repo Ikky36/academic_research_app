@@ -1,13 +1,7 @@
-import Groq from 'groq-sdk';
+import { callDeepSeekWithRetry } from './deepseek';
+import { logErrorToAdmin, FRIENDLY_ERROR_MESSAGE } from '@/utils/logger';
 
 export async function generateBooleanQuery(topic: string, problem: string, userApiKey?: string) {
-  const apiKey = userApiKey || process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    throw new Error('Groq API Key is missing. Please configure it in .env.local or enter your own key in Settings.');
-  }
-
-  const groq = new Groq({ apiKey });
-
   const prompt = `
 You are an expert academic librarian. Your task is to create a highly optimized Boolean search query for databases like Scopus or Crossref.
 
@@ -27,19 +21,13 @@ Instructions:
 `;
 
   try {
-    const result = await groq.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }],
-      model: 'llama-3.1-8b-instant',
-      temperature: 0.1,
-    });
-    let generatedText = result.choices[0]?.message?.content || "";
+    const generatedText = await callDeepSeekWithRetry(prompt, 'Anda adalah asisten peneliti akademik yang ahli dalam merumuskan query pencarian database.', 'think-medium', false, 3);
     
     // Clean up any accidental markdown or newlines
-    generatedText = generatedText.replace(/```/g, '').replace(/\n/g, ' ').trim();
-    return generatedText;
+    const cleanedText = generatedText.replace(/```/g, '').replace(/\n/g, ' ').trim();
+    return cleanedText;
   } catch (err) {
-    console.error('Gemini API Error:', err);
-    const { logErrorToAdmin, FRIENDLY_ERROR_MESSAGE } = await import('@/utils/logger');
+    console.error('DeepSeek API Error:', err);
     await logErrorToAdmin('AI_Boolean_Query', err);
     throw new Error(FRIENDLY_ERROR_MESSAGE);
   }
