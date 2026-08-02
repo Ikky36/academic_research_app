@@ -36,7 +36,7 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
           setMessages([
             {
               role: 'assistant',
-              content: 'Halo! Saya adalah Asisten Metodologi Riset Anda. Mari kita rumuskan masalah empiris (Kesenjangan Empiris) dari riset Anda.\n\nUntuk memulai, **Topik riset spesifik apa yang sedang menarik perhatian Anda saat ini?** (Anda bisa mengetik topik Anda sendiri di bawah, atau klik salah satu contoh opsi)\n[OPSI] Penggunaan multimedia interaktif dalam pembelajaran Bahasa Arab\n[OPSI] Pengaruh kepemimpinan transformasional terhadap kinerja karyawan\n[OPSI] Efektivitas strategi pemasaran digital pada UMKM'
+              content: 'Halo! Saya adalah Asisten Metodologi Riset Anda. Mari kita rumuskan masalah empiris (Kesenjangan Empiris) dari riset Anda.\n\nUntuk memulai, **Topik riset spesifik apa yang sedang menarik perhatian Anda saat ini?**'
             }
           ]);
         }
