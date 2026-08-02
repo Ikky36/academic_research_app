@@ -83,6 +83,9 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
       } else if (res.data) {
         const assistantMessage: ChatMessage = { role: 'assistant', content: res.data, options: res.options || [] };
         setMessages([...newMessages, assistantMessage]);
+      } else {
+        const assistantMessage: ChatMessage = { role: 'assistant', content: "Maaf, AI mengembalikan balasan kosong. Silakan coba kirim ulang atau ketik pesan lain.", options: [] };
+        setMessages([...newMessages, assistantMessage]);
       }
     } catch (err: any) {
       alert(err.message || 'Gagal menghubungi server.');

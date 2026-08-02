@@ -588,8 +588,8 @@ PENTING: Jangan tambahkan \`\`\`json, langsung berikan object JSON-nya!`;
 
     try {
       const parsed = JSON.parse(replyText);
-      data = parsed.text || '';
-      options = parsed.options || [];
+      data = parsed.text || parsed.response || parsed.message || parsed.content || '';
+      options = parsed.options || parsed.choices || [];
     } catch (err) {
       console.warn("JSON parse failed, using fallback regex extraction");
       // Fallback regex jika JSON bocor karena unescaped quotes
