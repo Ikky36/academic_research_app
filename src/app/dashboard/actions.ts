@@ -557,50 +557,60 @@ ATURAN KETAT:
 - Gunakan bahasa akademik Indonesia yang semi-formal, suportif, namun sangat analitis.
 
 TUGAS WAJIB DI SETIAP AKHIR PESAN (HARUS DILAKUKAN!):
-Sistem ini menggunakan parser khusus. Anda WAJIB memberikan 2-3 contoh opsi jawaban spesifik untuk user di bagian paling akhir pesan Anda. Setiap opsi HARUS diawali dengan tag "[OPSI] ".
+Sistem ini HANYA menerima format JSON. Anda WAJIB memberikan 2-3 contoh opsi jawaban spesifik.
 
-CONTOH FORMAT PESAN ANDA YANG BENAR:
-"Baik, mari kita bahas kondisi idealnya. Menurut Anda, bagaimana seharusnya guru mengajar di kelas?"
-[OPSI] Guru harus menggunakan metode interaktif.
-[OPSI] Guru harus menguasai teknologi pembelajaran terbaru.
-[OPSI] Guru harus menyesuaikan materi dengan gaya belajar siswa.
+OUTPUT WAJIB FORMAT JSON SEPERTI BERIKUT (tanpa markdown tambahan):
+{
+  "text": "Teks balasan dan pertanyaan Anda ke user (gunakan markdown **tebal** jika perlu)...",
+  "options": ["Opsi spesifik 1", "Opsi spesifik 2", "Opsi spesifik 3"]
+}
 
-PENTING: Jangan lupa meletakkan [OPSI] di baris-baris paling akhir! HARUS ADA MINIMAL 2 [OPSI]!`;
+PENTING: Jangan tambahkan \`\`\`json, langsung berikan object JSON-nya!`;
 
-    const appendedMessages = messages.map((m, index) => {
-      if (index === messages.length - 1 && m.role === 'user') {
-        return {
-          ...m,
-          content: m.content + '\n\n[INSTRUKSI SISTEM SANGAT PENTING: Anda WAJIB memberikan 2-3 opsi jawaban spesifik di akhir balasan Anda. Gunakan awalan "[OPSI] " di setiap baris opsi. JANGAN DIABAIKAN!]'
-        };
-      }
-      return m;
-    });
-
-    const fullMessages = [{ role: 'system', content: systemPrompt }, ...appendedMessages];
-    // We don't force JSON mode here to avoid escaping issues with DeepSeek Reasoner
-    let replyText = await callDeepSeekChatWithRetry(fullMessages, 'think-medium', false);
+    const fullMessages = [{ role: 'system', content: systemPrompt }, ...messages];
     
-    // Strip think blocks if any
+    // Gunakan mode JSON!
+    let replyText = await callDeepSeekChatWithRetry(fullMessages, 'think-medium', true);
+    
+    // Bersihkan dari tag <think> dan blok markdown
     replyText = replyText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    if (replyText.startsWith('```json')) replyText = replyText.replace(/^```json/, '');
+    if (replyText.startsWith('```')) replyText = replyText.replace(/^```/, '');
+    if (replyText.endsWith('```')) replyText = replyText.replace(/```$/, '');
+    replyText = replyText.trim();
     
-    // Unescape markdown that DeepSeek might have aggressively escaped
+    // Unescape markdown yang di-escape DeepSeek secara otomatis
     replyText = replyText.replace(/\\\*/g, '*');
     replyText = replyText.replace(/\\_/g, '_');
 
-    // Server-side parsing of [OPSI]
-    const lines = replyText.split('\n');
-    const cleanLines = [];
-    const options = [];
-    for (const line of lines) {
-      if (line.trim().startsWith('[OPSI]')) {
-        options.push(line.replace(/\[OPSI\]/g, '').trim());
+    let data = '';
+    let options: string[] = [];
+
+    try {
+      const parsed = JSON.parse(replyText);
+      data = parsed.text || '';
+      options = parsed.options || [];
+    } catch (err) {
+      console.warn("JSON parse failed, using fallback regex extraction");
+      // Fallback regex jika JSON bocor karena unescaped quotes
+      const optionsMatch = replyText.match(/"options"\s*:\s*\[(.*?)\]/s);
+      if (optionsMatch) {
+        // Ambil isi array options
+        const optStr = optionsMatch[1];
+        const opts = optStr.split('","').map(s => s.replace(/"/g, '').trim()).filter(Boolean);
+        options = opts;
+      }
+      
+      const textMatch = replyText.match(/"text"\s*:\s*"(.*?)"\s*,\s*"options"/s);
+      if (textMatch) {
+        data = textMatch[1].replace(/\\"/g, '"');
       } else {
-        cleanLines.push(line);
+        // If all else fails, just return the raw text
+        data = replyText;
       }
     }
     
-    return { data: cleanLines.join('\n').trim(), options };
+    return { data: data.trim(), options };
   } catch (e: any) {
     console.error('DeepSeek PreResearch Error:', e);
     return { error: e.message || 'Terjadi kesalahan saat memanggil AI.' };

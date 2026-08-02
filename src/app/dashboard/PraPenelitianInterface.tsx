@@ -150,7 +150,7 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
               >
                 {displayContent}
               </ReactMarkdown>
-              {isLast && isAssistant && options.length > 0 && !isLoading && (
+              {isLast && isAssistant && !isLoading && (
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
                   {options.map((opt, i) => (
                     <button 
