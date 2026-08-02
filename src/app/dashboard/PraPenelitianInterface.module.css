@@ -154,3 +154,34 @@
   background-color: #9ca3af;
   cursor: not-allowed;
 }
+
+.chipContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  align-items: center;
+}
+
+.chipLabel {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0 4px 0 0;
+  width: 100%;
+}
+
+.chipButton {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  color: #166534;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chipButton:hover {
+  background-color: #dcfce7;
+  border-color: #86efac;
+}

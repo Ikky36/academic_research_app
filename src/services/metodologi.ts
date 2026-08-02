@@ -275,11 +275,20 @@ Untuk selesai:
       text = result.response.text().trim();
     }
     
+    text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
     if (text.startsWith('\`\`\`json')) text = text.substring(7);
     else if (text.startsWith('\`\`\`')) text = text.substring(3);
     if (text.endsWith('\`\`\`')) text = text.substring(0, text.length - 3);
     
     text = text.trim();
+    
+    // Attempt to extract JSON if surrounded by text
+    const jsonStart = text.indexOf('{');
+    const jsonEnd = text.lastIndexOf('}');
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      text = text.substring(jsonStart, jsonEnd + 1);
+    }
+    
     const parsed = JSON.parse(text);
     
     return parsed;

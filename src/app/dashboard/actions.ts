@@ -554,11 +554,53 @@ ATURAN KETAT:
 - BERTANYALAH SATU PER SATU. DILARANG KERAS merangkum semua pertanyaan ke dalam satu pesan panjang. Tunggu respon user.
 - JANGAN menyuapi user dengan jawaban. Pancing mereka untuk berpikir.
 - TUNTUT SUMBER/BUKTI. Jika user memberikan klaim tanpa dasar, kejar terus dengan pertanyaan spesifik (cth: "Data apa yang mendukung pernyataan Anda?").
-- Gunakan bahasa akademik Indonesia yang semi-formal, suportif, namun sangat analitis.`;
+- Gunakan bahasa akademik Indonesia yang semi-formal, suportif, namun sangat analitis.
 
-    const fullMessages = [{ role: 'system', content: systemPrompt }, ...messages];
-    const reply = await callDeepSeekChatWithRetry(fullMessages, 'think-medium');
-    return { data: reply };
+TUGAS WAJIB DI SETIAP AKHIR PESAN (HARUS DILAKUKAN!):
+Sistem ini menggunakan parser khusus. Anda WAJIB memberikan 2-3 contoh opsi jawaban spesifik untuk user di bagian paling akhir pesan Anda. Setiap opsi HARUS diawali dengan tag "[OPSI] ".
+
+CONTOH FORMAT PESAN ANDA YANG BENAR:
+"Baik, mari kita bahas kondisi idealnya. Menurut Anda, bagaimana seharusnya guru mengajar di kelas?"
+[OPSI] Guru harus menggunakan metode interaktif.
+[OPSI] Guru harus menguasai teknologi pembelajaran terbaru.
+[OPSI] Guru harus menyesuaikan materi dengan gaya belajar siswa.
+
+PENTING: Jangan lupa meletakkan [OPSI] di baris-baris paling akhir! HARUS ADA MINIMAL 2 [OPSI]!`;
+
+    const appendedMessages = messages.map((m, index) => {
+      if (index === messages.length - 1 && m.role === 'user') {
+        return {
+          ...m,
+          content: m.content + '\n\n[INSTRUKSI SISTEM SANGAT PENTING: Anda WAJIB memberikan 2-3 opsi jawaban spesifik di akhir balasan Anda. Gunakan awalan "[OPSI] " di setiap baris opsi. JANGAN DIABAIKAN!]'
+        };
+      }
+      return m;
+    });
+
+    const fullMessages = [{ role: 'system', content: systemPrompt }, ...appendedMessages];
+    // We don't force JSON mode here to avoid escaping issues with DeepSeek Reasoner
+    let replyText = await callDeepSeekChatWithRetry(fullMessages, 'think-medium', false);
+    
+    // Strip think blocks if any
+    replyText = replyText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    
+    // Unescape markdown that DeepSeek might have aggressively escaped
+    replyText = replyText.replace(/\\\*/g, '*');
+    replyText = replyText.replace(/\\_/g, '_');
+
+    // Server-side parsing of [OPSI]
+    const lines = replyText.split('\n');
+    const cleanLines = [];
+    const options = [];
+    for (const line of lines) {
+      if (line.trim().startsWith('[OPSI]')) {
+        options.push(line.replace(/\[OPSI\]/g, '').trim());
+      } else {
+        cleanLines.push(line);
+      }
+    }
+    
+    return { data: cleanLines.join('\n').trim(), options };
   } catch (e: any) {
     console.error('DeepSeek PreResearch Error:', e);
     return { error: e.message || 'Terjadi kesalahan saat memanggil AI.' };

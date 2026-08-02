@@ -3,10 +3,13 @@
 import { useState, useEffect, useRef } from 'react';
 import styles from './PraPenelitianInterface.module.css';
 import { generatePreResearchChatAction, savePreResearchChatAction, loadPreResearchChatAction } from './actions';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  options?: string[];
 }
 
 interface PraPenelitianInterfaceProps {
@@ -19,6 +22,7 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Load chat history on mount
   useEffect(() => {
@@ -32,7 +36,7 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
           setMessages([
             {
               role: 'assistant',
-              content: 'Halo! Saya adalah Asisten Metodologi Riset Anda. Mari kita rumuskan masalah empiris (Kesenjangan Empiris) dari riset Anda.\n\nTopik riset apa yang sedang menarik perhatian Anda saat ini, dan apa kondisi ideal (Das Sollen) yang seharusnya terjadi pada topik tersebut menurut aturan atau teori?'
+              content: 'Halo! Saya adalah Asisten Metodologi Riset Anda. Mari kita rumuskan masalah empiris (Kesenjangan Empiris) dari riset Anda.\n\nUntuk memulai, **Topik riset spesifik apa yang sedang menarik perhatian Anda saat ini?** (Anda bisa mengetik topik Anda sendiri di bawah, atau klik salah satu contoh opsi)\n[OPSI] Penggunaan multimedia interaktif dalam pembelajaran Bahasa Arab\n[OPSI] Pengaruh kepemimpinan transformasional terhadap kinerja karyawan\n[OPSI] Efektivitas strategi pemasaran digital pada UMKM'
             }
           ]);
         }
@@ -76,7 +80,7 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
         // revert user message on error to let them try again
         setMessages(messages);
       } else if (res.data) {
-        const assistantMessage: ChatMessage = { role: 'assistant', content: res.data };
+        const assistantMessage: ChatMessage = { role: 'assistant', content: res.data, options: res.options || [] };
         setMessages([...newMessages, assistantMessage]);
       }
     } catch (err: any) {
@@ -106,13 +110,68 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
       </div>
       
       <div className={styles.chatHistory}>
-        {messages.map((msg, idx) => (
-          <div key={idx} className={`${styles.messageWrapper} ${styles[msg.role]}`}>
-            <div className={`${styles.message} ${styles[msg.role]}`}>
-              {msg.content}
+        {messages.map((msg, idx) => {
+          const isLast = idx === messages.length - 1;
+          const isAssistant = msg.role === 'assistant';
+          let displayContent = msg.content;
+          let options: string[] = msg.options && msg.options.length > 0 ? msg.options : [];
+          
+          if (isAssistant && options.length === 0) {
+            // Fallback legacy parser for old text messages
+            const lines = msg.content.split('\n');
+            const cleanLines = [];
+            for (const line of lines) {
+              if (line.trim().startsWith('[OPSI]')) {
+                options.push(line.replace('[OPSI]', '').trim());
+              } else {
+                cleanLines.push(line);
+              }
+            }
+            displayContent = cleanLines.join('\n');
+          }
+
+          return (
+            <div key={idx} style={{
+              alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+              backgroundColor: msg.role === 'user' ? 'var(--primary-container)' : 'var(--surface-container-high)',
+              color: msg.role === 'user' ? 'var(--on-primary-container)' : 'var(--on-surface)',
+              padding: '10px 15px',
+              borderRadius: '12px',
+              maxWidth: '80%',
+              borderBottomRightRadius: msg.role === 'user' ? '0' : '12px',
+              borderBottomLeftRadius: msg.role === 'assistant' ? '0' : '12px',
+            }}>
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]} 
+                components={{ 
+                  p: ({node, ...props}) => <p style={{margin: 0, paddingBottom: '0.5rem'}} {...props} />,
+                  strong: ({node, ...props}) => <strong style={{fontWeight: 700}} {...props} />
+                }}
+              >
+                {displayContent}
+              </ReactMarkdown>
+              {isLast && isAssistant && options.length > 0 && !isLoading && (
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
+                  {options.map((opt, i) => (
+                    <button 
+                      key={i} 
+                      onClick={() => handleSend(opt)}
+                      style={{ padding: '6px 12px', fontSize: '0.85rem', borderRadius: '20px', border: '1px solid var(--primary)', backgroundColor: 'var(--surface)', color: 'var(--primary)', cursor: 'pointer' }}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                  <button 
+                    onClick={() => textareaRef.current?.focus()}
+                    style={{ padding: '6px 12px', fontSize: '0.85rem', borderRadius: '20px', border: '1px solid var(--border)', backgroundColor: 'transparent', color: 'var(--on-surface-variant)', cursor: 'pointer' }}
+                  >
+                    Lainnya (Ketik Sendiri)
+                  </button>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
         {isLoading && (
           <div className={`${styles.messageWrapper} ${styles.assistant}`}>
             <div className={styles.typingIndicator}>
@@ -127,6 +186,7 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
 
       <div className={styles.inputArea}>
         <textarea
+          ref={textareaRef}
           className={styles.input}
           value={input}
           onChange={(e) => setInput(e.target.value)}
