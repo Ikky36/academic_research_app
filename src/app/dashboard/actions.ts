@@ -593,7 +593,7 @@ PENTING: Jangan tambahkan \`\`\`json, langsung berikan object JSON-nya!`;
     } catch (err) {
       console.warn("JSON parse failed, using fallback regex extraction");
       // Fallback regex jika JSON bocor karena unescaped quotes
-      const optionsMatch = replyText.match(/"options"\s*:\s*\[(.*?)\]/s);
+      const optionsMatch = replyText.match(/"options"\s*:\s*\[([\s\S]*?)\]/);
       if (optionsMatch) {
         // Ambil isi array options
         const optStr = optionsMatch[1];
@@ -601,7 +601,7 @@ PENTING: Jangan tambahkan \`\`\`json, langsung berikan object JSON-nya!`;
         options = opts;
       }
       
-      const textMatch = replyText.match(/"text"\s*:\s*"(.*?)"\s*,\s*"options"/s);
+      const textMatch = replyText.match(/"text"\s*:\s*"([\s\S]*?)"\s*,\s*"options"/);
       if (textMatch) {
         data = textMatch[1].replace(/\\"/g, '"');
       } else {

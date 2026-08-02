@@ -64,13 +64,14 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
     }
   }, [messages, projectId, isInitializing]);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  const handleSend = async (textOverride?: string) => {
+    const textToSend = textOverride || input;
+    if (!textToSend.trim()) return;
 
-    const userMessage: ChatMessage = { role: 'user', content: input.trim() };
+    const userMessage: ChatMessage = { role: 'user', content: textToSend.trim() };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
-    setInput('');
+    if (!textOverride) setInput('');
     setIsLoading(true);
 
     try {
@@ -197,7 +198,7 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
         />
         <button 
           className={styles.sendButton} 
-          onClick={handleSend}
+          onClick={() => handleSend()}
           disabled={isLoading || !input.trim()}
         >
           Kirim
