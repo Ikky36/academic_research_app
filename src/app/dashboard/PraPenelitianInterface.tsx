@@ -36,7 +36,7 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
             }
           ]);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Failed to load chat', err);
       } finally {
         setIsInitializing(false);
