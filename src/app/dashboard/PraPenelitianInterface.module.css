@@ -123,6 +123,8 @@
   max-height: 120px;
   outline: none;
   transition: border-color 0.2s;
+  background-color: #ffffff;
+  color: #111827;
 }
 
 .input:focus {
