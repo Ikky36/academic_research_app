@@ -660,12 +660,18 @@ export async function loadPreResearchChatAction(projectId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Unauthorized');
 
-    const { data, error } = await supabase.from('extracted_data').select('abstract').eq('project_id', projectId).eq('source', 'pre_research_chat').single();
+    const { data, error } = await supabase
+      .from('extracted_data')
+      .select('abstract')
+      .eq('project_id', projectId)
+      .eq('source', 'pre_research_chat')
+      .order('created_at', { ascending: false })
+      .limit(1);
 
-    if (error && error.code !== 'PGRST116') throw error;
+    if (error) throw error;
 
-    if (data && data.abstract) {
-      return { data: JSON.parse(data.abstract) };
+    if (data && data.length > 0 && data[0].abstract) {
+      return { data: JSON.parse(data[0].abstract) };
     }
     return { data: [] };
   } catch (e: any) {
