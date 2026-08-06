@@ -212,11 +212,22 @@ export async function createProjectAction(title: string) {
 
 export async function deleteProjectAction(projectId: string) {
   try {
+    const { createClient } = await import('@/utils/supabase/server');
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Unauthorized');
+
+    // Manually delete related data in case ON DELETE CASCADE is not configured
+    await supabase.from('extracted_data').delete().eq('project_id', projectId);
+    await supabase.from('additional_references').delete().eq('project_id', projectId);
+    await supabase.from('project_instruments').delete().eq('project_id', projectId);
+    await supabase.from('outlines').delete().eq('project_id', projectId);
+
     const { error } = await supabase
       .from('projects')
       .delete()
-      .eq('id', projectId);
+      .eq('id', projectId)
+      .eq('user_id', user.id); // Ensure user owns the project
 
     if (error) throw error;
     return { success: true };
