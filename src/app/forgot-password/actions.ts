@@ -14,13 +14,25 @@ export async function requestPasswordReset(formData: FormData) {
 
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=/update-password`,
-  });
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${origin}/auth/callback?next=/update-password`,
+    });
 
-  if (error) {
-    return { error: error.message };
+    if (error) {
+      console.error('Reset password error:', error);
+      let errMsg = error.message;
+      if (!errMsg || errMsg === '{}') {
+        errMsg = 'Gagal mengirim email reset. Periksa kembali pengaturan SMTP atau tunggu beberapa saat.';
+      }
+      return { error: errMsg };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Reset password exception:', err);
+    let errMsg = err.message || 'Terjadi kesalahan internal.';
+    if (errMsg === '{}') errMsg = 'Gagal mengirim email reset (Kesalahan Internal).';
+    return { error: errMsg };
   }
-
-  return { success: true };
 }
