@@ -45,6 +45,8 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
   const [isGeneratingKajian, setIsGeneratingKajian] = useState(false);
   const [completedSubBabs, setCompletedSubBabs] = useState(0);
   const [booksData, setBooksData] = useState(''); // Hidden state to hold fetched books
+  const [isEditingKajian, setIsEditingKajian] = useState(false);
+  const [editedKajianPustaka, setEditedKajianPustaka] = useState('');
   
   // Global/Existing State
   const [sotaMarkdown, setSotaMarkdown] = useState('');
@@ -798,6 +800,34 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
               <button className={styles.btnSecondary} onClick={() => setStep(2)} disabled={isGeneratingKajian}>
                 Edit Outline
               </button>
+              {kajianPustaka && (
+                <button 
+                  className={isEditingKajian ? styles.btnPrimary : styles.btnSecondary} 
+                  onClick={() => {
+                    if (isEditingKajian) {
+                      setKajianPustaka(editedKajianPustaka);
+                      saveProjectState(projectId, 'kp_result', editedKajianPustaka);
+                      setIsEditingKajian(false);
+                    } else {
+                      setEditedKajianPustaka(kajianPustaka);
+                      setIsEditingKajian(true);
+                    }
+                  }} 
+                  disabled={isGeneratingKajian}
+                  style={isEditingKajian ? { background: '#10b981', borderColor: '#10b981', color: 'white' } : {}}
+                >
+                  {isEditingKajian ? 'Simpan Editan' : 'Edit Hasil'}
+                </button>
+              )}
+              {isEditingKajian && (
+                <button 
+                  className={styles.btnSecondary} 
+                  onClick={() => setIsEditingKajian(false)} 
+                  disabled={isGeneratingKajian}
+                >
+                  Batal
+                </button>
+              )}
               <button className={styles.btnPrimary} onClick={handleCopy} disabled={isGeneratingKajian}>
                 {copySuccess ? 'Tersalin!' : 'Salin Teks'}
               </button>
@@ -846,26 +876,46 @@ export default function KajianPustakaInterface({ projectId, isActive, limits, ro
 
           <div className={`${styles.markdownContent} ${isGeneratingKajian ? styles.typingIndicator : ''}`} style={{ marginTop: '24px' }}>
             {kajianPustaka ? (
-              <ReactMarkdown 
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  h2: ({node, ...props}) => {
-                    const isDaftarPustaka = String(props.children).toLowerCase().includes('daftar pustaka') || String(props.children).toLowerCase().includes('referensi');
-                    return (
-                      <h2 {...props} style={isDaftarPustaka ? { color: '#3b82f6', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginTop: '2.5rem', marginBottom: '1.5rem', fontSize: '1.5rem' } : { marginTop: '1.5em', marginBottom: '0.5em', color: 'var(--on-surface)' }}>
+              isEditingKajian ? (
+                <textarea
+                  value={editedKajianPustaka}
+                  onChange={(e) => setEditedKajianPustaka(e.target.value)}
+                  style={{
+                    width: '100%',
+                    minHeight: '600px',
+                    padding: '16px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color, #e5e7eb)',
+                    backgroundColor: 'var(--surface-color, #ffffff)',
+                    color: 'var(--on-surface, #111827)',
+                    fontFamily: 'monospace',
+                    fontSize: '15px',
+                    lineHeight: '1.6',
+                    resize: 'vertical'
+                  }}
+                />
+              ) : (
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h2: ({node, ...props}) => {
+                      const isDaftarPustaka = String(props.children).toLowerCase().includes('daftar pustaka') || String(props.children).toLowerCase().includes('referensi');
+                      return (
+                        <h2 {...props} style={isDaftarPustaka ? { color: '#3b82f6', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginTop: '2.5rem', marginBottom: '1.5rem', fontSize: '1.5rem' } : { marginTop: '1.5em', marginBottom: '0.5em', color: 'var(--on-surface)' }}>
+                          {props.children}
+                        </h2>
+                      );
+                    },
+                    p: ({node, ...props}) => (
+                      <p {...props} style={{ marginBottom: '1.2rem', lineHeight: '1.8', textIndent: '2rem', textAlign: 'justify' }}>
                         {props.children}
-                      </h2>
-                    );
-                  },
-                  p: ({node, ...props}) => (
-                    <p {...props} style={{ marginBottom: '1.2rem', lineHeight: '1.8', textIndent: '2rem', textAlign: 'justify' }}>
-                      {props.children}
-                    </p>
-                  )
-                }}
-              >
-                {kajianPustaka}
-              </ReactMarkdown>
+                      </p>
+                    )
+                  }}
+                >
+                  {kajianPustaka}
+                </ReactMarkdown>
+              )
             ) : (
               <p style={{ color: '#9ca3af', fontStyle: 'italic' }}>Menunggu proses generasi dimulai...</p>
             )}
