@@ -11,6 +11,7 @@ import remarkBreaks from 'remark-breaks'
 import { generateInstrumentQuestionsAction, continueInstrumentChatAction, generateFinalInstrumentAction, generateBlueprintAction, generateLatentVariableDefinitionAction } from './instrumenActions'
 import { generateConceptualDefAction, generateOperationalDefAction, generateObservationTableAction, generateSkalaV2ConceptualDefAction, generateSkalaV2OperationalDefAction, generateSkalaV2TableAction } from './actions'
 import { ChatMessage } from '@/services/instrumen'
+import * as XLSX from 'xlsx'
 
 interface InstrumenInterfaceProps {
   projectId: string;
@@ -666,6 +667,59 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
     setTimeout(() => setBlueprintCopySuccess(false), 2000);
   };
 
+  const downloadBlueprintExcel = () => {
+    if (!blueprintData) return;
+    let tableData: any[][] = [];
+    if (activeInstData?.instrument_type === 'Tes Prestasi') {
+      tableData.push(["Topik Konten", "Domain Kognitif/Psikomotorik/Afektif", "Target Pembelajaran Spesifik", "Bobot/Proporsi"]);
+      blueprintData.forEach((row: any) => {
+        tableData.push([row.topic, row.domain, row.target, row.weight]);
+      });
+    } else {
+      tableData.push(["Aspek", "Indikator", "Aitem Favorable"]);
+      blueprintData.forEach((row: any) => {
+        tableData.push([row.aspek, row.indikator, row.aitem]);
+      });
+    }
+    const ws = XLSX.utils.aoa_to_sheet(tableData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Blueprint");
+    const fileName = `Blueprint_${activeInstData?.name || activeInstData?.instrument_type || 'Instrumen'}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+  };
+
+  const downloadExcel = () => {
+    if (!finalResult) return;
+    
+    const lines = finalResult.split('\n');
+    const tableData: string[][] = [];
+    
+    let inTable = false;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+        if (trimmed.match(/^\|[\s\-\:]+\|/)) continue;
+        const rowData = trimmed.substring(1, trimmed.length - 1).split('|').map(cell => cell.trim().replace(/<br\s*\/?>/gi, '\n'));
+        tableData.push(rowData);
+        inTable = true;
+      } else if (inTable) {
+        // Just continue in case there are multiple tables.
+      }
+    }
+    
+    if (tableData.length === 0) {
+      alert("Tidak ditemukan tabel pada draf instrumen untuk diunduh.");
+      return;
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(tableData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Instrumen");
+    
+    const fileName = `Instrumen_${activeInstData?.name || activeInstData?.instrument_type || 'Final'}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+  };
+
   const toggleDomain = (dom: string) => {
     if (selectedDomains.includes(dom)) {
       setSelectedDomains(selectedDomains.filter(d => d !== dom));
@@ -1014,9 +1068,14 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                   <div style={{ marginTop: '16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                       <h4 style={{ margin: 0 }}>Tabel Spesifikasi (Blueprint)</h4>
-                      <button className={styles.btnSecondary} onClick={copyBlueprintTable} style={{ fontSize: '12px', padding: '4px 8px' }}>
-                        {blueprintCopySuccess ? 'Tersalin!' : '📋 Salin Tabel'}
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button className={styles.btnSecondary} onClick={copyBlueprintTable} style={{ fontSize: '12px', padding: '4px 8px' }}>
+                          {blueprintCopySuccess ? 'Tersalin!' : '📋 Salin Tabel'}
+                        </button>
+                        <button className={styles.btnSecondary} onClick={downloadBlueprintExcel} style={{ fontSize: '12px', padding: '4px 8px' }}>
+                          📥 Download Excel
+                        </button>
+                      </div>
                     </div>
                     <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: '8px' }}>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
@@ -1378,6 +1437,9 @@ export default function InstrumenInterface({ projectId, isActive, limits, role, 
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button onClick={copyToClipboard} className={styles.btnSecondary}>
                     {copySuccess ? 'Tersalin!' : 'Copy Text'}
+                  </button>
+                  <button onClick={downloadExcel} className={styles.btnSecondary}>
+                    Download Excel
                   </button>
                   <button onClick={() => {
                     if(confirm('Yakin ingin merevisi? Draf final ini akan dihapus dan Anda bisa mengedit chat kembali.')){
