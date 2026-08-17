@@ -76,7 +76,7 @@ export async function searchCrossref(query: string, limit = 10, page = 1) {
           item.issued?.['date-parts']?.[0]?.[0] || '',
     abstract: item.abstract ? item.abstract.replace(/<[^>]*>?/gm, '') : '',
     url: item.URL,
-    pdfLink: item.link?.find((l: any) => l['content-type'] === 'application/pdf')?.URL || null
+    pdfLink: item.link?.find((l: any) => l['content-type'] === 'application/pdf' || (l['content-type'] === 'unspecified' && l.URL.toLowerCase().includes('pdf')))?.URL || null
   }));
 
   // Apply Strict Boolean Filtering
