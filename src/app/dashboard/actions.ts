@@ -583,54 +583,77 @@ PENTING: Jangan tambahkan \`\`\`json, langsung berikan object JSON-nya!`;
     const fullMessages = [{ role: 'system', content: systemPrompt }, ...messages];
     
     // Gunakan mode JSON!
-    let replyText = await callDeepSeekChatWithRetry(fullMessages, 'think-medium', true);
-    
-    // Bersihkan dari tag <think> dan blok markdown
-    replyText = replyText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-    if (replyText.startsWith('```json')) replyText = replyText.replace(/^```json/, '');
-    if (replyText.startsWith('```')) replyText = replyText.replace(/^```/, '');
-    if (replyText.endsWith('```')) replyText = replyText.replace(/```$/, '');
-    replyText = replyText.trim();
-    
-    // Unescape markdown yang di-escape DeepSeek secara otomatis
-    replyText = replyText.replace(/\\\*/g, '*');
-    replyText = replyText.replace(/\\_/g, '_');
+    let attempts = 0;
+    const maxAttempts = 6;
+    let finalData = '';
+    let finalOptions: string[] = [];
+    let finalIsComplete = false;
 
-    let data = '';
-    let options: string[] = [];
-    let isComplete = false;
+    while (attempts < maxAttempts) {
+      attempts++;
+      try {
+        let replyText = await callDeepSeekChatWithRetry(fullMessages, 'think-medium', true);
+        
+        // Bersihkan dari tag <think> dan blok markdown
+        replyText = replyText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        if (replyText.startsWith('```json')) replyText = replyText.replace(/^```json/, '');
+        if (replyText.startsWith('```')) replyText = replyText.replace(/^```/, '');
+        if (replyText.endsWith('```')) replyText = replyText.replace(/```$/, '');
+        replyText = replyText.trim();
+        
+        // Unescape markdown yang di-escape DeepSeek secara otomatis
+        replyText = replyText.replace(/\\\*/g, '*');
+        replyText = replyText.replace(/\\_/g, '_');
 
-    try {
-      const parsed = JSON.parse(replyText);
-      data = parsed.text || parsed.response || parsed.message || parsed.content || '';
-      options = parsed.options || parsed.choices || [];
-      isComplete = parsed.isComplete || false;
-    } catch (err) {
-      console.warn("JSON parse failed, using fallback regex extraction");
-      // Fallback regex jika JSON bocor karena unescaped quotes
-      const optionsMatch = replyText.match(/"options"\s*:\s*\[([\s\S]*?)\]/);
-      if (optionsMatch) {
-        // Ambil isi array options
-        const optStr = optionsMatch[1];
-        const opts = optStr.split('","').map(s => s.replace(/"/g, '').trim()).filter(Boolean);
-        options = opts;
-      }
-      
-      const isCompleteMatch = replyText.match(/"isComplete"\s*:\s*(true|false)/);
-      if (isCompleteMatch) {
-        isComplete = isCompleteMatch[1] === 'true';
-      }
-      
-      const textMatch = replyText.match(/"text"\s*:\s*"([\s\S]*?)"\s*,\s*"/);
-      if (textMatch) {
-        data = textMatch[1].replace(/\\"/g, '"');
-      } else {
-        // If all else fails, just return the raw text
-        data = replyText;
+        let data = '';
+        let options: string[] = [];
+        let isComplete = false;
+
+        try {
+          const parsed = JSON.parse(replyText);
+          data = parsed.text || parsed.response || parsed.message || parsed.content || '';
+          options = parsed.options || parsed.choices || [];
+          isComplete = parsed.isComplete || false;
+        } catch (err) {
+          console.warn("JSON parse failed, using fallback regex extraction");
+          // Fallback regex jika JSON bocor karena unescaped quotes
+          const optionsMatch = replyText.match(/"options"\s*:\s*\[([\s\S]*?)\]/);
+          if (optionsMatch) {
+            const optStr = optionsMatch[1];
+            const opts = optStr.split('","').map(s => s.replace(/"/g, '').trim()).filter(Boolean);
+            options = opts;
+          }
+          
+          const isCompleteMatch = replyText.match(/"isComplete"\s*:\s*(true|false)/);
+          if (isCompleteMatch) {
+            isComplete = isCompleteMatch[1] === 'true';
+          }
+          
+          const textMatch = replyText.match(/"text"\s*:\s*"([\s\S]*?)"\s*,\s*"/);
+          if (textMatch) {
+            data = textMatch[1].replace(/\\"/g, '"');
+          } else {
+            // If all else fails, just return the raw text
+            data = replyText;
+          }
+        }
+
+        if (data.trim() !== '') {
+          finalData = data.trim();
+          finalOptions = options;
+          finalIsComplete = isComplete;
+          break; // Berhasil, keluar dari loop
+        }
+      } catch (e: any) {
+        console.error(`Attempt ${attempts} failed:`, e);
       }
     }
+
+    if (!finalData) {
+      return { error: 'Maaf, AI gagal memproses pesan Anda. Silakan salin pesan Anda dan kirim ulang secara manual.' };
+    }
     
-    return { data: data.trim(), options, isComplete };
+    return { data: finalData, options: finalOptions, isComplete: finalIsComplete };
   } catch (e: any) {
     console.error('DeepSeek PreResearch Error:', e);
     return { error: e.message || 'Terjadi kesalahan saat memanggil AI.' };
