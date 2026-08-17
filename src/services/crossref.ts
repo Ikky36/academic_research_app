@@ -54,7 +54,7 @@ export async function searchCrossref(query: string, limit = 10, page = 1) {
   const broadQuery = query.replace(/\b(AND|OR|NOT)\b/gi, ' ').replace(/[()"]/g, ' ').replace(/\s+/g, ' ').trim();
   
   const FETCH_SIZE = 1000;
-  const url = `https://api.crossref.org/works?query.bibliographic=${encodeURIComponent(broadQuery)}&filter=type:journal-article&select=DOI,title,author,abstract,published-print,published-online,published,issued,URL&rows=${FETCH_SIZE}&offset=0`;
+  const url = `https://api.crossref.org/works?query.bibliographic=${encodeURIComponent(broadQuery)}&filter=type:journal-article&select=DOI,title,author,abstract,published-print,published-online,published,issued,URL,link&rows=${FETCH_SIZE}&offset=0`;
   
   const response = await fetch(url, {
     headers: {
