@@ -171,7 +171,7 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
                   </button>
                 </div>
               )}
-              {isLast && isAssistant && !isLoading && (
+              {isLast && isAssistant && !isLoading && !msg.isComplete && (
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
                   {options.map((opt, i) => (
                     <button 
