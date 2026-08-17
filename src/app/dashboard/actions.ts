@@ -669,6 +669,7 @@ export async function savePreResearchChatAction(projectId: string, messages: any
 
     if (messages.length === 0) {
       await supabase.from('project_states').delete().eq('project_id', projectId).eq('state_key', 'pre_research_chat');
+      await supabase.from('project_states').delete().eq('project_id', projectId).eq('state_key', 'empirical_gap_narrative');
       return { success: true };
     }
 
@@ -679,6 +680,17 @@ export async function savePreResearchChatAction(projectId: string, messages: any
     }, { onConflict: 'project_id, state_key' });
 
     if (error) throw error;
+
+    // Extract and save empirical gap narrative if chat is complete
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.role === 'assistant' && lastMessage.isComplete) {
+      await supabase.from('project_states').upsert({
+        project_id: projectId,
+        state_key: 'empirical_gap_narrative',
+        state_value: lastMessage.content
+      }, { onConflict: 'project_id, state_key' });
+    }
+
     return { success: true };
   } catch (e: any) {
     return { error: e.message };
