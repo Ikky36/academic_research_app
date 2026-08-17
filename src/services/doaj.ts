@@ -44,8 +44,9 @@ function evaluateBooleanQuery(text: string, query: string): boolean {
 }
 
 export async function searchDOAJ(query: string, limit = 10, page = 1) {
-  // DOAJ API uses a simple search query without strict boolean parsing for exact matches
-  const broadQuery = query.replace(/\b(AND|OR|NOT)\b/gi, ' ').replace(/[()"]/g, ' ').replace(/\s+/g, ' ').trim();
+  // DOAJ API uses ElasticSearch which supports AND, OR, NOT, (), and "" natively!
+  // Do NOT strip out the boolean operators.
+  const broadQuery = query.trim();
   
   const FETCH_SIZE = 100; // Fetch a larger set to apply strict boolean filter locally
   const url = `https://doaj.org/api/v1/search/articles/${encodeURIComponent(broadQuery)}?page=1&pageSize=${FETCH_SIZE}`;
