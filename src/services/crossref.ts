@@ -56,9 +56,17 @@ export async function searchCrossref(query: string, limit = 10, page = 1) {
   const FETCH_SIZE = 1000;
   const url = `https://api.crossref.org/works?query.bibliographic=${encodeURIComponent(broadQuery)}&filter=type:journal-article&select=DOI,title,author,abstract,published-print,published-online,published,issued,URL,link&rows=${FETCH_SIZE}&offset=0`;
   
+  const politeEmails = [
+    'zulkifli02hayad@gmail.com',
+    'zulkifli.hayad@gmail.com',
+    'zulkifli08hayad@gmail.com',
+    'zulkifli05hayad@gmail.com'
+  ];
+  const selectedEmail = politeEmails[Math.floor(Math.random() * politeEmails.length)];
+
   const response = await fetch(url, {
     headers: {
-      'User-Agent': 'AcademicResearchApp/1.0 (mailto:scholar@university.edu)'
+      'User-Agent': `AcademicResearchApp/1.0 (mailto:${selectedEmail})`
     }
   });
   
