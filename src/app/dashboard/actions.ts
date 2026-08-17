@@ -644,17 +644,16 @@ export async function savePreResearchChatAction(projectId: string, messages: any
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Unauthorized');
 
-    await supabase.from('extracted_data').delete().eq('project_id', projectId).eq('source', 'pre_research_chat');
+    if (messages.length === 0) {
+      await supabase.from('project_states').delete().eq('project_id', projectId).eq('state_key', 'pre_research_chat');
+      return { success: true };
+    }
 
-    if (messages.length === 0) return { success: true };
-
-    const { error } = await supabase.from('extracted_data').insert({
-        project_id: projectId,
-        title: 'Pre-Research Chat',
-        abstract: JSON.stringify(messages),
-        source: 'pre_research_chat',
-        user_id: user.id
-      });
+    const { error } = await supabase.from('project_states').upsert({
+      project_id: projectId,
+      state_key: 'pre_research_chat',
+      state_value: JSON.stringify(messages)
+    }, { onConflict: 'project_id, state_key' });
 
     if (error) throw error;
     return { success: true };
@@ -671,17 +670,16 @@ export async function loadPreResearchChatAction(projectId: string) {
     if (!user) throw new Error('Unauthorized');
 
     const { data, error } = await supabase
-      .from('extracted_data')
-      .select('abstract')
+      .from('project_states')
+      .select('state_value')
       .eq('project_id', projectId)
-      .eq('source', 'pre_research_chat')
-      .order('created_at', { ascending: false })
-      .limit(1);
+      .eq('state_key', 'pre_research_chat')
+      .maybeSingle();
 
     if (error) throw error;
 
-    if (data && data.length > 0 && data[0].abstract) {
-      return { data: JSON.parse(data[0].abstract) };
+    if (data && data.state_value) {
+      return { data: JSON.parse(data.state_value) };
     }
     return { data: [] };
   } catch (e: any) {
