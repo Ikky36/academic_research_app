@@ -54,7 +54,7 @@ export async function searchCrossref(query: string, limit = 10, page = 1) {
   const broadQuery = query.replace(/\b(AND|OR|NOT)\b/gi, ' ').replace(/[()"]/g, ' ').replace(/\s+/g, ' ').trim();
   
   const FETCH_SIZE = 1000;
-  const url = `https://api.crossref.org/works?query.bibliographic=${encodeURIComponent(broadQuery)}&filter=type:journal-article&select=DOI,title,author,abstract,published-print,URL&rows=${FETCH_SIZE}&offset=0`;
+  const url = `https://api.crossref.org/works?query.bibliographic=${encodeURIComponent(broadQuery)}&filter=type:journal-article&select=DOI,title,author,abstract,published-print,published-online,published,issued,URL&rows=${FETCH_SIZE}&offset=0`;
   
   const response = await fetch(url, {
     headers: {
@@ -70,7 +70,10 @@ export async function searchCrossref(query: string, limit = 10, page = 1) {
     doi: item.DOI,
     title: item.title?.[0] || 'No Title',
     authors: item.author?.map((a: any) => [a.given, a.family].filter(Boolean).join(' ')).join(', ') || 'Unknown Authors',
-    year: item['published-print']?.['date-parts']?.[0]?.[0] || '',
+    year: item['published-print']?.['date-parts']?.[0]?.[0] || 
+          item['published-online']?.['date-parts']?.[0]?.[0] || 
+          item.published?.['date-parts']?.[0]?.[0] || 
+          item.issued?.['date-parts']?.[0]?.[0] || '',
     abstract: item.abstract ? item.abstract.replace(/<[^>]*>?/gm, '') : '',
     url: item.URL,
     pdfLink: item.link?.find((l: any) => l['content-type'] === 'application/pdf')?.URL || null
