@@ -78,9 +78,8 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
     try {
       const res = await generatePreResearchChatAction(newMessages);
       if (res.error) {
-        alert(res.error);
-        // revert user message on error to let them try again
-        setMessages(messages);
+        const assistantMessage: ChatMessage = { role: 'assistant', content: res.error, options: [] };
+        setMessages([...newMessages, assistantMessage]);
       } else if (res.data) {
         const assistantMessage: ChatMessage = { role: 'assistant', content: res.data, options: res.options || [], isComplete: res.isComplete };
         setMessages([...newMessages, assistantMessage]);
@@ -89,8 +88,8 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
         setMessages([...newMessages, assistantMessage]);
       }
     } catch (err: any) {
-      alert(err.message || 'Gagal menghubungi server.');
-      setMessages(messages);
+      const assistantMessage: ChatMessage = { role: 'assistant', content: err.message || 'Gagal menghubungi server.', options: [] };
+      setMessages([...newMessages, assistantMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -155,6 +154,23 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
               >
                 {displayContent}
               </ReactMarkdown>
+              {msg.role === 'user' && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '4px' }}>
+                  <button 
+                    onClick={(e) => {
+                      navigator.clipboard.writeText(msg.content);
+                      const btn = e.currentTarget;
+                      const oldText = btn.innerText;
+                      btn.innerText = '📋 Tersalin!';
+                      setTimeout(() => { btn.innerText = oldText; }, 2000);
+                    }}
+                    title="Salin pesan"
+                    style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(0,0,0,0.1)', backgroundColor: 'transparent', color: 'inherit', cursor: 'pointer', opacity: 0.8 }}
+                  >
+                    📋 Salin
+                  </button>
+                </div>
+              )}
               {isLast && isAssistant && !isLoading && (
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
                   {options.map((opt, i) => (
