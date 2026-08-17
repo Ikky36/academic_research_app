@@ -56,7 +56,7 @@ Hanya sebutkan namanya saja (misalnya: "Kualitatif Studi Kasus", "Kuantitatif Ek
       .from('methodology_chunks')
       .select('content, page_start, page_end, methodology_books(title, author, year)')
       .ilike('method_category', `%${methodCategory.split(' ')[0]}%`)
-      .limit(10);
+      .limit(40);
 
     if (chunksError) {
       console.error('Error fetching methodology chunks:', chunksError);
@@ -100,7 +100,7 @@ INSTRUKSI WAJIB:
 3. Buat sub-bab yang sistematis (contoh: 3.1 Pendekatan dan Jenis Penelitian, 3.2 Prosedur/Tahapan Penelitian, 3.3 Teknik Pengumpulan Data, 3.4 Teknik Analisis Data). SANGAT PENTING: Mulailah dokumen DENGAN TEPAT judul "## METODOLOGI PENELITIAN" (Tanpa kata "BAB III"). DILARANG KERAS memberikan kalimat pengantar atau basa-basi apa pun sebelum atau sesudah judul tersebut. Langsung masuk ke konten akademik.
 4. SANGAT PENTING: Kurangi penggunaan poin-poin (bullet points / numbered lists) seminimal mungkin. Utamakan penjelasan dalam bentuk narasi paragraf akademik yang mengalir dan kohesif antar kalimatnya.
 5. Khusus pada bagian **Prosedur/Tahapan Penelitian**, rancang langkah-langkahnya agar benar-benar menjawab *Research Gap* dan *Novelty* di atas.
-${hasContext ? '6. PRIORITAS MUTLAK: Anda WAJIB merujuk pada REFERENSI BUKU METODOLOGI yang diberikan di atas sebagai acuan utama Anda saat menjelaskan tahapan/metode. Setiap kali Anda menggunakan informasi dari referensi, sisipkan kutipan (sitasi) format APA (Contoh: Sugiyono, 2015: 45) di akhir kalimat/paragraf.\n7. Di bagian paling akhir, tambahkan sub-judul "## Daftar Pustaka Buku Metodologi" dan susun referensi buku yang Anda kutip tadi sesuai format APA. SANGAT PENTING: Jangan menggunakan bullet points/nomor untuk daftar pustaka, tuliskan sebagai paragraf biasa yang dipisahkan baris kosong, urutkan sesuai abjad.' : '6. Karena belum ada buku rujukan metodologi di sistem, susunlah tahapan penelitian berdasarkan standar akademik umum yang lazim untuk metode ' + methodCategory + '.\n7. Di bagian paling akhir, tambahkan sub-judul "## Daftar Pustaka Buku Metodologi" dan susun referensi standar sesuai format APA tanpa menggunakan bullet points/nomor.'}
+${hasContext ? '6. PRIORITAS MUTLAK: Anda WAJIB merujuk dan menyintesis DARI SEBANYAK MUNGKIN BUKU BERBEDA yang disediakan di REFERENSI BUKU METODOLOGI. Dilarang keras hanya mengutip dari 1 atau 2 buku saja jika ada banyak referensi penulis yang berbeda. Semakin banyak buku yang Anda kutip secara relevan, semakin baik. Setiap kali Anda menggunakan informasi dari referensi, sisipkan kutipan (sitasi) format APA (Contoh: Sugiyono, 2015: 45) di akhir kalimat/paragraf.\n7. Di bagian paling akhir, tambahkan sub-judul "## Daftar Pustaka Buku Metodologi" dan susun referensi SEMUA buku yang Anda kutip tadi sesuai format APA. SANGAT PENTING: Jangan menggunakan bullet points/nomor untuk daftar pustaka, tuliskan sebagai paragraf biasa yang dipisahkan baris kosong, urutkan sesuai abjad.' : '6. Karena belum ada buku rujukan metodologi di sistem, susunlah tahapan penelitian berdasarkan standar akademik umum yang lazim untuk metode ' + methodCategory + '.\n7. Di bagian paling akhir, tambahkan sub-judul "## Daftar Pustaka Buku Metodologi" dan susun referensi standar sesuai format APA tanpa menggunakan bullet points/nomor.'}
 `;
 
     let finalMarkdown: string;
@@ -221,7 +221,7 @@ export async function continueMethodologyChat(
       .from('methodology_chunks')
       .select('content, methodology_books(title)')
       .ilike('method_category', `%${methodCategory.split(' ')[0]}%`)
-      .limit(10);
+      .limit(40);
 
     let contextText = '';
     if (chunks && chunks.length > 0) {

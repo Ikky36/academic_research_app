@@ -569,11 +569,13 @@ ATURAN KETAT:
 
 TUGAS WAJIB DI SETIAP AKHIR PESAN (HARUS DILAKUKAN!):
 Sistem ini HANYA menerima format JSON. Anda WAJIB memberikan 2-3 contoh opsi jawaban spesifik.
+SANGAT PENTING: Set nilai "isComplete" menjadi true JIKA DAN HANYA JIKA Anda sudah merumuskan Masalah Empiris Final dan Rekomendasi Topik Pencarian (Berada di akhir tahap diskusi). Jika masih dalam tahap tanya jawab, wajib set false.
 
 OUTPUT WAJIB FORMAT JSON SEPERTI BERIKUT (tanpa markdown tambahan):
 {
   "text": "Teks balasan dan pertanyaan Anda ke user (gunakan markdown **tebal** jika perlu)...",
-  "options": ["Opsi spesifik 1", "Opsi spesifik 2", "Opsi spesifik 3"]
+  "options": ["Opsi spesifik 1", "Opsi spesifik 2", "Opsi spesifik 3"],
+  "isComplete": false
 }
 
 PENTING: Jangan tambahkan \`\`\`json, langsung berikan object JSON-nya!`;
@@ -596,11 +598,13 @@ PENTING: Jangan tambahkan \`\`\`json, langsung berikan object JSON-nya!`;
 
     let data = '';
     let options: string[] = [];
+    let isComplete = false;
 
     try {
       const parsed = JSON.parse(replyText);
       data = parsed.text || parsed.response || parsed.message || parsed.content || '';
       options = parsed.options || parsed.choices || [];
+      isComplete = parsed.isComplete || false;
     } catch (err) {
       console.warn("JSON parse failed, using fallback regex extraction");
       // Fallback regex jika JSON bocor karena unescaped quotes
@@ -612,7 +616,12 @@ PENTING: Jangan tambahkan \`\`\`json, langsung berikan object JSON-nya!`;
         options = opts;
       }
       
-      const textMatch = replyText.match(/"text"\s*:\s*"([\s\S]*?)"\s*,\s*"options"/);
+      const isCompleteMatch = replyText.match(/"isComplete"\s*:\s*(true|false)/);
+      if (isCompleteMatch) {
+        isComplete = isCompleteMatch[1] === 'true';
+      }
+      
+      const textMatch = replyText.match(/"text"\s*:\s*"([\s\S]*?)"\s*,\s*"/);
       if (textMatch) {
         data = textMatch[1].replace(/\\"/g, '"');
       } else {
@@ -621,7 +630,7 @@ PENTING: Jangan tambahkan \`\`\`json, langsung berikan object JSON-nya!`;
       }
     }
     
-    return { data: data.trim(), options };
+    return { data: data.trim(), options, isComplete };
   } catch (e: any) {
     console.error('DeepSeek PreResearch Error:', e);
     return { error: e.message || 'Terjadi kesalahan saat memanggil AI.' };
@@ -643,7 +652,8 @@ export async function savePreResearchChatAction(projectId: string, messages: any
         project_id: projectId,
         title: 'Pre-Research Chat',
         abstract: JSON.stringify(messages),
-        source: 'pre_research_chat'
+        source: 'pre_research_chat',
+        user_id: user.id
       });
 
     if (error) throw error;

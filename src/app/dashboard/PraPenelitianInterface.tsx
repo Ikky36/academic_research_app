@@ -10,6 +10,7 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   options?: string[];
+  isComplete?: boolean;
 }
 
 interface PraPenelitianInterfaceProps {
@@ -81,7 +82,7 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
         // revert user message on error to let them try again
         setMessages(messages);
       } else if (res.data) {
-        const assistantMessage: ChatMessage = { role: 'assistant', content: res.data, options: res.options || [] };
+        const assistantMessage: ChatMessage = { role: 'assistant', content: res.data, options: res.options || [], isComplete: res.isComplete };
         setMessages([...newMessages, assistantMessage]);
       } else {
         const assistantMessage: ChatMessage = { role: 'assistant', content: "Maaf, AI mengembalikan balasan kosong. Silakan coba kirim ulang atau ketik pesan lain.", options: [] };
@@ -188,25 +189,33 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
         <div ref={messagesEndRef} />
       </div>
 
-      <div className={styles.inputArea}>
-        <textarea
-          ref={textareaRef}
-          className={styles.input}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ketik balasan Anda di sini... (Tekan Enter untuk kirim, Shift+Enter untuk baris baru)"
-          disabled={isLoading}
-          rows={1}
-        />
-        <button 
-          className={styles.sendButton} 
-          onClick={() => handleSend()}
-          disabled={isLoading || !input.trim()}
-        >
-          Kirim
-        </button>
-      </div>
+      {messages.length > 0 && messages[messages.length - 1].isComplete ? (
+        <div style={{ padding: '20px', textAlign: 'center', backgroundColor: 'var(--primary-container)', color: 'var(--on-primary-container)', borderRadius: '12px', marginTop: '10px' }}>
+          <strong>✅ Brainstorming Selesai.</strong><br/>
+          Masalah empiris dan topik pencarian telah berhasil dirumuskan. Chat kini telah terkunci.<br/>
+          Silakan beralih ke tab <b>Penelitian Terdahulu</b> dan gunakan rekomendasi Topik Pencarian di atas untuk mencari literatur pendukung.
+        </div>
+      ) : (
+        <div className={styles.inputArea}>
+          <textarea
+            ref={textareaRef}
+            className={styles.input}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ketik balasan Anda di sini... (Tekan Enter untuk kirim, Shift+Enter untuk baris baru)"
+            disabled={isLoading}
+            rows={1}
+          />
+          <button 
+            className={styles.sendButton} 
+            onClick={() => handleSend()}
+            disabled={isLoading || !input.trim()}
+          >
+            Kirim
+          </button>
+        </div>
+      )}
     </div>
   );
 }
