@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { searchCrossref } from '@/services/crossref'
 import { searchScopus } from '@/services/scopus'
+import { searchDOAJ } from '@/services/doaj'
 import { generateBooleanQuery } from '@/services/gemini'
 import { uploadToDrive } from '@/services/drive'
 import { getPdfUrlFromUnpaywall } from '@/services/unpaywall'
@@ -73,7 +74,7 @@ export async function generateAIQueryAction(topic: string, problem: string, user
   }
 }
 
-export async function searchPapers(query: string, source: 'crossref' | 'scopus' | 'openalex' | 'semantic-scholar', limit: number = 10, page: number = 1) {
+export async function searchPapers(query: string, source: 'crossref' | 'scopus' | 'openalex' | 'semantic-scholar' | 'doaj', limit: number = 10, page: number = 1) {
   if (source === 'crossref') {
     try {
       return await searchCrossref(query, limit, page);
@@ -89,6 +90,12 @@ export async function searchPapers(query: string, source: 'crossref' | 'scopus' 
   } else if (source === 'openalex') {
     try {
       return await searchOpenAlex(query, limit, page);
+    } catch (e: any) {
+      return { error: e.message };
+    }
+  } else if (source === 'doaj') {
+    try {
+      return await searchDOAJ(query, limit, page);
     } catch (e: any) {
       return { error: e.message };
     }
