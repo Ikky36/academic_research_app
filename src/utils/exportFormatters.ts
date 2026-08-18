@@ -18,7 +18,9 @@ export const generateRIS = (data: any[]): string => {
       } else if (typeof item.authors === 'string') {
         const authorsList = item.authors.split(',');
         authorsList.forEach((a: string) => {
-          const authorName = a.replace(/undefined/gi, '').trim();
+          let authorName = a.replace(/undefined/gi, '').trim();
+          // Bersihkan data lama yang terlanjur menyimpan tahun seperti "(2020)"
+          authorName = authorName.replace(/\s*\(\d{4}\)\s*/g, ' ').trim();
           if (authorName) risContent += `AU  - ${authorName}\n`;
         });
       }
