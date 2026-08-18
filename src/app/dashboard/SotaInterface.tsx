@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { getSavedReferencesAction, generateSotaChunkAction, clearReferencesAction, deleteReferenceAction, deleteReferencesBulkAction, logClientErrorAction } from './actions';
 import { saveProjectState, getProjectState } from '@/services/projectState';
+import { generateRIS } from '@/utils/exportFormatters';
 import styles from './SotaInterface.module.css';
 
 export default function SotaInterface({ projectId, isActive, limits, role, isPaidApi }: { projectId: string, isActive?: boolean, limits?: any, role?: string, isPaidApi?: boolean }) {
@@ -20,6 +21,9 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
   const [duplicateGroups, setDuplicateGroups] = useState<any[][]>([]);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(new Set());
+
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportSelection, setExportSelection] = useState<'all' | 'with_abstract' | 'without_abstract'>('all');
 
   const withAbstract = useMemo(() => references.filter(ref => ref.abstract && ref.abstract.trim() !== ''), [references]);
   const withoutAbstract = useMemo(() => references.filter(ref => !ref.abstract || ref.abstract.trim() === ''), [references]);
@@ -364,6 +368,37 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
     }
   };
 
+  const handleDownloadRIS = () => {
+    let dataToExport: any[] = [];
+    if (exportSelection === 'all') {
+      dataToExport = references;
+    } else if (exportSelection === 'with_abstract') {
+      dataToExport = withAbstract;
+    } else if (exportSelection === 'without_abstract') {
+      dataToExport = withoutAbstract;
+    }
+
+    if (dataToExport.length === 0) {
+      alert("Tidak ada data artikel yang tersedia untuk diekspor pada pilihan ini.");
+      return;
+    }
+
+    const risContent = generateRIS(dataToExport);
+    
+    const blob = new Blob([risContent], { type: 'application/x-research-info-systems;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Referensi_Proyek_${projectId}.ris`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    setShowExportModal(false);
+  };
+
   // Fungsi untuk memastikan tabel SOTA bisa di-parse meskipun newlines hilang (fallback safety)
   const getCleanedMarkdown = () => {
     if (!sotaMarkdown) return '';
@@ -428,6 +463,15 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
             style={{ backgroundColor: 'var(--primary)', color: 'white', borderColor: 'var(--primary)' }}
           >
             Cek Duplikat
+          </button>
+
+          <button 
+            onClick={() => setShowExportModal(true)} 
+            disabled={isGenerating || references.length === 0}
+            className={styles.clearButton}
+            style={{ backgroundColor: '#10b981', color: 'white', borderColor: '#10b981' }}
+          >
+            Export ke Reference Manager
           </button>
           
           <button 
@@ -617,6 +661,79 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
                 style={{ backgroundColor: '#ef4444', padding: '0.8rem 1.5rem' }}
               >
                 Hapus {selectedForDeletion.size} Terpilih
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showExportModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent} style={{ maxWidth: '500px' }}>
+            <h3 style={{ marginBottom: '8px' }}>Export ke Reference Manager (RIS)</h3>
+            <p style={{ marginBottom: '20px', fontSize: '14px', color: '#9ca3af' }}>Pilih kumpulan data artikel yang ingin diekspor ke Mendeley, Zotero, atau EndNote.</p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', border: exportSelection === 'all' ? '1px solid #10b981' : '1px solid var(--border)' }}>
+                <input 
+                  type="radio" 
+                  name="exportSelection" 
+                  value="all" 
+                  checked={exportSelection === 'all'} 
+                  onChange={() => setExportSelection('all')} 
+                  style={{ transform: 'scale(1.2)' }}
+                />
+                <div>
+                  <strong style={{ color: 'var(--foreground)' }}>Export Semua Artikel</strong>
+                  <div style={{ fontSize: '12px', color: '#9ca3af' }}>{references.length} data artikel</div>
+                </div>
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', border: exportSelection === 'with_abstract' ? '1px solid #10b981' : '1px solid var(--border)' }}>
+                <input 
+                  type="radio" 
+                  name="exportSelection" 
+                  value="with_abstract" 
+                  checked={exportSelection === 'with_abstract'} 
+                  onChange={() => setExportSelection('with_abstract')} 
+                  style={{ transform: 'scale(1.2)' }}
+                />
+                <div>
+                  <strong style={{ color: 'var(--foreground)' }}>Export yang Dianalisis Saja</strong>
+                  <div style={{ fontSize: '12px', color: '#9ca3af' }}>Hanya yang memiliki abstrak ({withAbstract.length} data)</div>
+                </div>
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', border: exportSelection === 'without_abstract' ? '1px solid #10b981' : '1px solid var(--border)' }}>
+                <input 
+                  type="radio" 
+                  name="exportSelection" 
+                  value="without_abstract" 
+                  checked={exportSelection === 'without_abstract'} 
+                  onChange={() => setExportSelection('without_abstract')} 
+                  style={{ transform: 'scale(1.2)' }}
+                />
+                <div>
+                  <strong style={{ color: 'var(--foreground)' }}>Export yang Diabaikan Saja</strong>
+                  <div style={{ fontSize: '12px', color: '#9ca3af' }}>Tanpa abstrak ({withoutAbstract.length} data)</div>
+                </div>
+              </label>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={() => setShowExportModal(false)}
+                className={styles.clearButton}
+                style={{ padding: '0.8rem 1.5rem' }}
+              >
+                Batal
+              </button>
+              <button 
+                onClick={handleDownloadRIS}
+                className={styles.generateButton}
+                style={{ backgroundColor: '#10b981', padding: '0.8rem 1.5rem' }}
+              >
+                Unduh Format RIS
               </button>
             </div>
           </div>
