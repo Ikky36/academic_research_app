@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 import { searchCrossref } from '@/services/crossref'
 import { searchScopus } from '@/services/scopus'
 import { searchDOAJ } from '@/services/doaj'
+import { searchCORE } from '@/services/core'
 import { generateBooleanQuery } from '@/services/gemini'
 import { uploadToDrive } from '@/services/drive'
 import { getPdfUrlFromUnpaywall } from '@/services/unpaywall'
@@ -74,37 +75,23 @@ export async function generateAIQueryAction(topic: string, problem: string, user
   }
 }
 
-export async function searchPapers(query: string, source: 'crossref' | 'scopus' | 'openalex' | 'semantic-scholar' | 'doaj', limit: number = 10, page: number = 1) {
-  if (source === 'crossref') {
-    try {
+export async function searchPapers(query: string, source: 'crossref' | 'scopus' | 'openalex' | 'semantic-scholar' | 'doaj' | 'core', limit: number = 10, page: number = 1) {
+  try {
+    if (source === 'crossref') {
       return await searchCrossref(query, limit, page);
-    } catch (e: any) {
-      return { error: e.message };
-    }
-  } else if (source === 'semantic-scholar') {
-    try {
+    } else if (source === 'semantic-scholar') {
       return await searchSemanticScholar(query, limit, page);
-    } catch (e: any) {
-      return { error: e.message };
-    }
-  } else if (source === 'openalex') {
-    try {
+    } else if (source === 'openalex') {
       return await searchOpenAlex(query, limit, page);
-    } catch (e: any) {
-      return { error: e.message };
-    }
-  } else if (source === 'doaj') {
-    try {
+    } else if (source === 'doaj') {
       return await searchDOAJ(query, limit, page);
-    } catch (e: any) {
-      return { error: e.message };
-    }
-  } else {
-    try {
+    } else if (source === 'core') {
+      return await searchCORE(query, limit, page);
+    } else {
       return await searchScopus(query, limit, page);
-    } catch (e: any) {
-      return { error: e.message };
     }
+  } catch (e: any) {
+    return { error: e.message };
   }
 }
 

@@ -221,7 +221,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
   const [booleanQuery, setBooleanQuery] = useState('');
   const [generatingAI, setGeneratingAI] = useState(false);
   
-  const [source, setSource] = useState<'crossref' | 'scopus' | 'openalex' | 'semantic-scholar' | 'doaj'>('semantic-scholar');
+  const [source, setSource] = useState<'crossref' | 'scopus' | 'openalex' | 'semantic-scholar' | 'doaj' | 'core'>('semantic-scholar');
   const [results, setResults] = useState<any[]>([]);
   const [totalResults, setTotalResults] = useState(0);
   
@@ -542,7 +542,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
               className={styles.sourceSelect}
               value={source} 
               onChange={(e) => {
-                const newSource = e.target.value as 'crossref' | 'scopus' | 'openalex' | 'semantic-scholar' | 'doaj';
+                const newSource = e.target.value as 'crossref' | 'scopus' | 'openalex' | 'semantic-scholar' | 'doaj' | 'core';
                 
                 // Save current state into caches
                 setDatabaseCaches(prev => {
@@ -569,7 +569,8 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
               <option value="openalex">OpenAlex</option>
               <option value="crossref">Crossref</option>
               <option value="scopus">Scopus</option>
-              <option value="doaj">DOAJ (Open Access)</option>
+              <option value="doaj">DOAJ (Jurnal Open Access)</option>
+              <option value="core">CORE (Tesis & Jurnal)</option>
             </select>
             <button type="submit" disabled={loading || !booleanQuery} className={styles.searchButton}>
               {loading ? 'Mencari...' : 'Cari'}
