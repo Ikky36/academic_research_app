@@ -43,7 +43,7 @@ const HighlightText = ({ text, terms }: { text: string, terms: string[] }) => {
         // Also check if part matches the regex for highlighting check
         const isMatch = escapedTerms.some(t => new RegExp(`^${t}$`, 'i').test(part));
         return isMatch ? (
-          <mark key={i} style={{ backgroundColor: '#d1fae5', padding: '0 2px', borderRadius: '3px', color: '#065f46', fontWeight: 600 }}>
+          <mark key={i} style={{ backgroundColor: '#86efac', padding: '0 2px', borderRadius: '3px', color: '#000000', fontWeight: 600 }}>
             {part}
           </mark>
         ) : (
