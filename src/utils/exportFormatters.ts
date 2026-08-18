@@ -17,7 +17,7 @@ export const generateRIS = (data: any[]): string => {
         });
       } else if (typeof item.authors === 'string') {
         const authorsList = item.authors.split(',');
-        authorsList.forEach(a => {
+        authorsList.forEach((a: string) => {
           const authorName = a.replace(/undefined/gi, '').trim();
           if (authorName) risContent += `AU  - ${authorName}\n`;
         });
