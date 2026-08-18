@@ -54,7 +54,7 @@ export async function searchCrossref(query: string, limit = 10, page = 1) {
   const broadQuery = query.replace(/\b(AND|OR|NOT)\b/gi, ' ').replace(/[()"]/g, ' ').replace(/\s+/g, ' ').trim();
   
   const FETCH_SIZE = 1000;
-  const url = `https://api.crossref.org/works?query.bibliographic=${encodeURIComponent(broadQuery)}&filter=type:journal-article&select=DOI,title,author,abstract,published-print,published-online,published,issued,URL,link&rows=${FETCH_SIZE}&offset=0`;
+  const url = `https://api.crossref.org/works?query.bibliographic=${encodeURIComponent(broadQuery)}&filter=type:journal-article&select=DOI,title,author,abstract,published-print,published-online,published,issued,URL,link,container-title,volume,issue,page,subject&rows=${FETCH_SIZE}&offset=0`;
   
   const politeEmails = [
     'zulkifli02hayad@gmail.com',
@@ -78,6 +78,11 @@ export async function searchCrossref(query: string, limit = 10, page = 1) {
     doi: item.DOI,
     title: item.title?.[0] || 'No Title',
     authors: item.author?.map((a: any) => [a.given, a.family].filter(Boolean).join(' ')).join(', ') || 'Unknown Authors',
+    journal_name: item['container-title']?.[0] || '',
+    volume: item.volume || '',
+    issue: item.issue || '',
+    pages: item.page || '',
+    keywords: item.subject?.join(', ') || '',
     year: item['published-print']?.['date-parts']?.[0]?.[0] || 
           item['published-online']?.['date-parts']?.[0]?.[0] || 
           item.published?.['date-parts']?.[0]?.[0] || 

@@ -64,6 +64,11 @@ export async function searchCORE(query: string, limit = 10, page = 1) {
     return {
       title: item.title || 'Untitled',
       authors: authors,
+      journal_name: publisher,
+      volume: '',
+      issue: '',
+      pages: '',
+      keywords: item.topics?.join(', ') || '',
       year: item.yearPublished ? item.yearPublished.toString() : '',
       abstract: item.abstract || '',
       url: item.doi ? `https://doi.org/${item.doi}` : (item.links && item.links.length > 0 ? item.links[0].url : ''),

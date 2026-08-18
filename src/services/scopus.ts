@@ -76,6 +76,11 @@ export async function searchScopus(query: string, limit = 10, page = 1) {
       doi,
       title: item['dc:title'],
       authors: item['dc:creator'],
+      journal_name: item['prism:publicationName'] || '',
+      volume: item['prism:volume'] || '',
+      issue: item['prism:issueIdentifier'] || '',
+      pages: item['prism:pageRange'] || '',
+      keywords: '',
       year: item['prism:coverDate'] ? item['prism:coverDate'].split('-')[0] : '',
       abstract,
       url: (item['link']?.find((l: any) => l['@ref'] === 'scopus')?.['@href']) || 

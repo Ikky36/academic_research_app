@@ -108,14 +108,21 @@ export async function saveReference(projectId: string, reference: any) {
       title: reference.title,
       abstract: reference.abstract,
       authors: reference.year ? `${reference.authors} (${reference.year})` : reference.authors,
-      source: ['crossref', 'scopus', 'pdf'].includes(reference.source) ? reference.source : null,
-      pdf_drive_link: reference.url
+      source: ['crossref', 'scopus', 'doaj', 'core', 'pdf'].includes(reference.source) ? reference.source : null,
+      pdf_drive_link: reference.url,
+      journal_name: reference.journal_name || null,
+      volume: reference.volume || null,
+      issue: reference.issue || null,
+      pages: reference.pages || null,
+      keywords: reference.keywords || null,
+      year_published: reference.year || null
     });
 
   if (error) {
     console.error('Supabase Insert Error:', error);
     throw error;
   }
+
   return { success: true };
 }
 
@@ -149,7 +156,7 @@ export async function getSavedReferencesAction(projectId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('extracted_data')
-      .select('id, title, authors, doi, abstract')
+      .select('id, title, authors, doi, abstract, journal_name, volume, issue, pages, keywords, year_published, pdf_drive_link')
       .eq('project_id', projectId)
       .order('created_at', { ascending: false });
 

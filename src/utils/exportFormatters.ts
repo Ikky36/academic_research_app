@@ -29,14 +29,43 @@ export const generateRIS = (data: any[]): string => {
       risContent += `AB  - ${cleanAbstract}\n`;
     }
 
+    if (item.journal_name) {
+      risContent += `JO  - ${item.journal_name}\n`;
+    }
+
+    if (item.volume) {
+      risContent += `VL  - ${item.volume}\n`;
+    }
+
+    if (item.issue) {
+      risContent += `IS  - ${item.issue}\n`;
+    }
+
+    if (item.pages) {
+      const pages = item.pages.split('-');
+      if (pages.length === 2) {
+        risContent += `SP  - ${pages[0].trim()}\n`;
+        risContent += `EP  - ${pages[1].trim()}\n`;
+      } else {
+        risContent += `SP  - ${item.pages.trim()}\n`;
+      }
+    }
+
+    if (item.keywords) {
+      const kwList = item.keywords.split(',');
+      kwList.forEach((kw: string) => {
+        if (kw.trim()) risContent += `KW  - ${kw.trim()}\n`;
+      });
+    }
+
     if (item.doi) {
       risContent += `DO  - ${item.doi}\n`;
     }
 
-    if (item.yearPublished) {
+    if (item.year_published) {
+      risContent += `PY  - ${item.year_published}\n`;
+    } else if (item.yearPublished) {
       risContent += `PY  - ${item.yearPublished}\n`;
-    } else if (item.date) {
-      risContent += `PY  - ${item.date}\n`;
     }
 
     if (item.pdf_drive_link) {
