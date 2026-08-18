@@ -9,9 +9,8 @@ export async function searchCORE(query: string, limit = 10, page = 1) {
   ];
 
   const offset = (page - 1) * limit;
-  // CORE API uses ElasticSearch syntax. We wrap it to search ONLY title or abstract.
-  const strictQuery = `title:(${query}) OR abstract:(${query})`;
-  const url = `https://api.core.ac.uk/v3/search/works?q=${encodeURIComponent(strictQuery)}&limit=${limit}&offset=${offset}`;
+  // CORE API uses ElasticSearch syntax so we can just pass the query directly
+  const url = `https://api.core.ac.uk/v3/search/works?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`;
 
   let response = null;
   let success = false;
