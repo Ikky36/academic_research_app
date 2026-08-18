@@ -225,6 +225,10 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
   const [results, setResults] = useState<any[]>([]);
   const [totalResults, setTotalResults] = useState(0);
   
+  // Database caching state
+  const [databaseCaches, setDatabaseCaches] = useState<Record<string, { results: any[], totalResults: number, page: number, limit: number }>>({});
+
+  
   // Pagination state
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -238,11 +242,24 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
         const parsed = JSON.parse(savedState);
         setTopic(parsed.topic || '');
         setBooleanQuery(parsed.booleanQuery || '');
-        setSource(parsed.source || 'semantic-scholar');
-        setResults(parsed.results || []);
-        setTotalResults(parsed.totalResults || 0);
-        setPage(parsed.page || 1);
-        setLimit(parsed.limit || 10);
+        const savedSource = parsed.source || 'semantic-scholar';
+        setSource(savedSource);
+        
+        if (parsed.caches) {
+          setDatabaseCaches(parsed.caches);
+          const activeCache = parsed.caches[savedSource];
+          if (activeCache) {
+            setResults(activeCache.results || []);
+            setTotalResults(activeCache.totalResults || 0);
+            setPage(activeCache.page || 1);
+            setLimit(activeCache.limit || 10);
+          }
+        } else {
+          setResults(parsed.results || []);
+          setTotalResults(parsed.totalResults || 0);
+          setPage(parsed.page || 1);
+          setLimit(parsed.limit || 10);
+        }
       } catch (e) {}
     }
     setIsInitialized(true);
@@ -250,10 +267,18 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
 
   useEffect(() => {
     if (isInitialized) {
-      const stateToSave = { topic, booleanQuery, source, results, totalResults, page, limit };
+      const stateToSave = { 
+        topic, 
+        booleanQuery, 
+        source, 
+        caches: {
+          ...databaseCaches,
+          [source]: { results, totalResults, page, limit }
+        }
+      };
       localStorage.setItem(`search_state_${projectId}`, JSON.stringify(stateToSave));
     }
-  }, [isInitialized, projectId, topic, booleanQuery, source, results, totalResults, page, limit]);
+  }, [isInitialized, projectId, topic, booleanQuery, source, results, totalResults, page, limit, databaseCaches]);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -514,15 +539,31 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
           </div>
           <div className={styles.booleanBar}>
             <select 
+              className={styles.sourceSelect}
               value={source} 
               onChange={(e) => {
                 const newSource = e.target.value as 'crossref' | 'scopus' | 'openalex' | 'semantic-scholar' | 'doaj';
+                
+                // Save current state into caches
+                setDatabaseCaches(prev => {
+                  const newCaches = {
+                    ...prev,
+                    [source]: { results, totalResults, page, limit }
+                  };
+                  
+                  // Load new state from caches
+                  const nextCache = newCaches[newSource];
+                  setResults(nextCache?.results || []);
+                  setTotalResults(nextCache?.totalResults || 0);
+                  setPage(nextCache?.page || 1);
+                  setLimit(nextCache?.limit || (newSource === 'scopus' && limit > 25 ? 25 : limit));
+                  
+                  return newCaches;
+                });
+                
                 setSource(newSource);
-                if (newSource === 'scopus' && limit > 25) {
-                  setLimit(25);
-                }
-              }} 
-              className={styles.sourceSelect}
+              }}
+              disabled={loading || isBulkUploading || isBulkSaving}
             >
               <option value="semantic-scholar">Semantic Scholar</option>
               <option value="openalex">OpenAlex</option>
