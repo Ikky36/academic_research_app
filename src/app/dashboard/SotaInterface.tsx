@@ -579,7 +579,7 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
               return (
                 <li key={ref.id} className={styles.referenceItem}>
                   <span>
-                    {isProcessed ? '✅' : '⏳'} <strong>{ref.title}</strong> - {ref.authors?.replace(/undefined/gi, '').replace(/\s+/g, ' ').trim()}
+                    {isProcessed ? '✅' : '⏳'} <strong>{ref.title}</strong> - {ref.authors?.replace(/undefined/gi, '').replace(/\s+/g, ' ').trim()} {ref.year_published ? `(${ref.year_published})` : ''}
                   </span>
                   <button 
                     className={styles.deleteItemButton}
@@ -601,7 +601,7 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
                 {withoutAbstract.map((ref) => (
                   <li key={ref.id} className={styles.referenceItem}>
                     <span>
-                      <strong>{ref.title}</strong> - {ref.authors?.replace(/undefined/gi, '').replace(/\s+/g, ' ').trim()}
+                      <strong>{ref.title}</strong> - {ref.authors?.replace(/undefined/gi, '').replace(/\s+/g, ' ').trim()} {ref.year_published ? `(${ref.year_published})` : ''}
                     </span>
                     <button 
                       className={styles.deleteItemButton}
@@ -639,7 +639,7 @@ export default function SotaInterface({ projectId, isActive, limits, role, isPai
                       />
                       <div style={{ fontSize: '13px' }}>
                         <strong style={{ color: 'var(--foreground)' }}>{ref.title}</strong><br/>
-                        <span style={{ color: '#9ca3af' }}>Penulis: {ref.authors?.replace(/undefined/gi, '').replace(/\s+/g, ' ').trim() || '-'} | DOI: {ref.doi || '-'}</span>
+                        <span style={{ color: '#9ca3af' }}>Penulis: {ref.authors?.replace(/undefined/gi, '').replace(/\s+/g, ' ').trim() || '-'} {ref.year_published ? `(${ref.year_published})` : ''} | DOI: {ref.doi || '-'}</span>
                       </div>
                     </div>
                   ))}
