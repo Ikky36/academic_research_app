@@ -124,12 +124,14 @@ export default async function DashboardPage({
           >
             Research GAP & Novelty
           </Link>
+          {/* 
           <Link 
             href={`/dashboard?tab=lit-review&project=${activeProject?.id}`} 
             className={activeTab === 'lit-review' ? styles.activeTab : styles.tab}
           >
             Literature Review
           </Link>
+          */}
           <Link 
             href={`/dashboard?tab=kajian-pustaka&project=${activeProject?.id}`} 
             className={activeTab === 'kajian-pustaka' ? styles.activeTab : styles.tab}
