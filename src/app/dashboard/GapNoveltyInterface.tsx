@@ -22,6 +22,10 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
   const [selectedGap, setSelectedGap] = useState<string | null>(null);
+  
+  const [researchQuestionMarkdown, setResearchQuestionMarkdown] = useState('');
+  const [isGeneratingRQ, setIsGeneratingRQ] = useState(false);
+  const [rqError, setRqError] = useState('');
 
   useEffect(() => {
     if (isActive && projectId) {
@@ -37,6 +41,9 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
       });
       getProjectState(projectId, 'education_level').then(savedLevel => {
         if (savedLevel) setEducationLevel(savedLevel);
+      });
+      getProjectState(projectId, 'research_question').then(savedRQ => {
+        if (savedRQ) setResearchQuestionMarkdown(savedRQ);
       });
       getProjectState(projectId, 'selected_gap').then(savedSelected => {
         if (savedSelected) {
@@ -178,12 +185,51 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
   };
 
   const handleSelectGap = (gapText: string, topikBaruText?: string) => {
+    // Reset RQ whenever gap selection changes
+    setResearchQuestionMarkdown('');
+    saveProjectState(projectId, 'research_question', '');
+    
     if (selectedGap === gapText) {
       setSelectedGap(null);
       saveProjectState(projectId, 'selected_gap', '');
     } else {
       setSelectedGap(gapText);
       saveProjectState(projectId, 'selected_gap', JSON.stringify({ gap: gapText, topikBaru: topikBaruText }));
+    }
+  };
+
+  const handleGenerateRQ = async () => {
+    if (!selectedGap) return;
+    
+    setIsGeneratingRQ(true);
+    setRqError('');
+
+    try {
+      const response = await fetch('/api/research-question', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gapText: selectedGap,
+          researchTopic,
+          isPaidApi
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Gagal merumuskan Pertanyaan Penelitian');
+      }
+
+      const data = await response.json();
+      if (data.rqMarkdown) {
+        setResearchQuestionMarkdown(data.rqMarkdown);
+        saveProjectState(projectId, 'research_question', data.rqMarkdown);
+      }
+    } catch (err: any) {
+      setRqError(err.message || 'Terjadi kesalahan sistem.');
+    } finally {
+      setIsGeneratingRQ(false);
     }
   };
 
@@ -368,6 +414,31 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
               {gapMarkdown}
             </ReactMarkdown>
           </div>
+        </div>
+      )}
+
+      {selectedGap && (
+        <div className={styles.sotaResult} style={{ marginTop: '24px', borderTop: '2px dashed var(--border)', paddingTop: '24px' }}>
+          <h3 style={{ marginBottom: '16px' }}>Rumusan Masalah (Research Questions)</h3>
+          
+          <button 
+            className={styles.generateButton}
+            onClick={handleGenerateRQ}
+            disabled={isGeneratingRQ}
+            style={{ marginBottom: '20px', background: 'var(--primary)' }}
+          >
+            {isGeneratingRQ ? '✨ Merumuskan dengan AI...' : '✨ Rumuskan Pertanyaan Penelitian'}
+          </button>
+
+          {rqError && <div className={styles.errorMessage}>{rqError}</div>}
+
+          {researchQuestionMarkdown && (
+            <div className={styles.markdownWrapper}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {researchQuestionMarkdown}
+              </ReactMarkdown>
+            </div>
+          )}
         </div>
       )}
     </div>

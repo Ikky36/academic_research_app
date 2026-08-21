@@ -344,3 +344,43 @@ DILARANG KERAS menggunakan kalimat pembuka, pengantar, atau basa-basi seperti "B
     throw new Error(FRIENDLY_ERROR_MESSAGE);
   }
 }
+export async function generateResearchQuestion(gapText: string, researchTopic: string, userApiKey?: string, isPaidApi?: boolean): Promise<string> {
+  const { getGeminiApiKey, getActiveAiProvider } = await import('@/utils/apiKeyManager');
+  const role = isPaidApi ? 'pro' : 'free';
+  const { key: apiKey, modelName: defaultModelName } = getGeminiApiKey(role, userApiKey);
+  const provider = await getActiveAiProvider();
+  
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const geminiModel = genAI.getGenerativeModel({ model: defaultModelName });
+
+  const prompt = \
+Anda adalah pakar penelitian akademik yang sangat kritis dan ahli metodologi.
+Tugas Anda adalah merumuskan Pertanyaan Penelitian (Research Questions) dan Tujuan Penelitian (Research Objectives) berdasarkan Research Gap dan Topik yang dipilih di bawah ini.
+
+Topik Penelitian:
+"\"
+
+Research Gap & Novelty (Fokus Utama):
+"\"
+
+Instruksi:
+1. Buatlah 2-3 Pertanyaan Penelitian utama yang BENAR-BENAR berakar dari Research Gap di atas. Jangan membuat masalah baru yang tidak ada di deskripsi Gap.
+2. Buatlah 2-3 Tujuan Penelitian yang secara langsung menjawab pertanyaan penelitian tersebut (misal: RQ1 dijawab oleh Tujuan 1).
+3. Format output harus dalam Markdown murni tanpa basa-basi pengantar atau penutup. Gunakan heading (### Pertanyaan Penelitian dan ### Tujuan Penelitian).
+4. Gunakan bahasa Indonesia akademik yang formal dan tajam.
+  \;
+
+  try {
+    let result: string;
+    if (provider === 'deepseek' && isPaidApi) {
+      console.log('[RQ] Using DeepSeek (think-medium) for Research Question');
+      result = await callDeepSeekWithRetry(prompt, 'Anda adalah pakar penelitian akademik yang sangat kritis.', 'think-medium');
+    } else {
+      result = await fetchWithRetry(geminiModel, prompt);
+    }
+    return result.replace(/\\\markdown/gi, '').replace(/\\\/g, '').trim();
+  } catch (err: any) {
+    console.error('Research Question generation error:', err);
+    throw err;
+  }
+}
