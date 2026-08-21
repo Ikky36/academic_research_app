@@ -26,6 +26,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
   const [researchQuestionMarkdown, setResearchQuestionMarkdown] = useState('');
   const [isGeneratingRQ, setIsGeneratingRQ] = useState(false);
   const [rqError, setRqError] = useState('');
+  const [isEditingRQ, setIsEditingRQ] = useState(false);
 
   useEffect(() => {
     if (isActive && projectId) {
@@ -187,6 +188,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
   const handleSelectGap = (gapText: string, topikBaruText?: string) => {
     // Reset RQ whenever gap selection changes
     setResearchQuestionMarkdown('');
+    setIsEditingRQ(false);
     saveProjectState(projectId, 'research_question', '');
     
     if (selectedGap === gapText) {
@@ -433,10 +435,54 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
           {rqError && <div className={styles.errorMessage}>{rqError}</div>}
 
           {researchQuestionMarkdown && (
-            <div className={styles.markdownWrapper}>
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {researchQuestionMarkdown}
-              </ReactMarkdown>
+            <div className={styles.markdownWrapper} style={{ position: 'relative', marginTop: '16px' }}>
+              <button 
+                onClick={() => {
+                  if (isEditingRQ) {
+                    saveProjectState(projectId, 'research_question', researchQuestionMarkdown);
+                  }
+                  setIsEditingRQ(!isEditingRQ);
+                }}
+                className={styles.clearButton}
+                style={{ 
+                  position: 'absolute', 
+                  top: '-10px', 
+                  right: '0', 
+                  zIndex: 10,
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  backgroundColor: isEditingRQ ? '#10b981' : 'var(--surface-container-high)',
+                  color: isEditingRQ ? 'white' : 'var(--on-surface)',
+                  borderColor: isEditingRQ ? '#10b981' : 'var(--border)'
+                }}
+              >
+                {isEditingRQ ? '💾 Simpan Perubahan' : '✏️ Edit Teks'}
+              </button>
+              
+              {isEditingRQ ? (
+                <textarea
+                  value={researchQuestionMarkdown}
+                  onChange={(e) => setResearchQuestionMarkdown(e.target.value)}
+                  style={{ 
+                    width: '100%', 
+                    minHeight: '250px', 
+                    padding: '16px',
+                    marginTop: '24px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    backgroundColor: 'var(--background)',
+                    color: 'var(--foreground)',
+                    fontFamily: 'inherit',
+                    fontSize: '14px',
+                    lineHeight: '1.6',
+                    resize: 'vertical'
+                  }}
+                />
+              ) : (
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {researchQuestionMarkdown}
+                </ReactMarkdown>
+              )}
             </div>
           )}
         </div>
