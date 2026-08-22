@@ -416,7 +416,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
                           onClick={() => handleSelectGap(gapText, topikBaruText)}
                           style={{
                             background: isSelected ? 'var(--primary)' : 'var(--surface-container-high)',
-                            color: 'var(--on-surface)',
+                            color: isSelected ? '#ffffff' : 'var(--on-surface)',
                             border: '1px solid var(--border)',
                             padding: '8px 12px',
                             borderRadius: '6px',
@@ -451,7 +451,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
             disabled={isGeneratingRQ}
             style={{ marginBottom: '20px', background: 'var(--primary)' }}
           >
-            {isGeneratingRQ ? '✨ Merumuskan dengan AI...' : '✨ Rumuskan Pertanyaan Penelitian'}
+            {isGeneratingRQ ? 'Merumuskan dengan AI...' : 'Rumuskan Pertanyaan Penelitian'}
           </button>
 
           {rqError && <div className={styles.errorMessage}>{rqError}</div>}
