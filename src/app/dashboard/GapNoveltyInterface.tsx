@@ -215,6 +215,7 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
         body: JSON.stringify({
           gapText: selectedGap,
           researchTopic,
+          educationLevel,
           isPaidApi
         }),
       });

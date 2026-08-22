@@ -344,7 +344,7 @@ DILARANG KERAS menggunakan kalimat pembuka, pengantar, atau basa-basi seperti "B
     throw new Error(FRIENDLY_ERROR_MESSAGE);
   }
 }
-export async function generateResearchQuestion(gapText: string, researchTopic: string, userApiKey?: string, isPaidApi?: boolean): Promise<string> {
+export async function generateResearchQuestion(gapText: string, researchTopic: string, educationLevel: string = 'Sarjana', userApiKey?: string, isPaidApi?: boolean): Promise<string> {
   const { getGeminiApiKey, getActiveAiProvider } = await import('@/utils/apiKeyManager');
   const role = isPaidApi ? 'pro' : 'free';
   const { key: apiKey, modelName: defaultModelName } = getGeminiApiKey(role, userApiKey);
@@ -359,6 +359,9 @@ Tugas Anda adalah merumuskan Pertanyaan Penelitian (Research Questions) dan Tuju
 
 Topik Penelitian:
 "${researchTopic}"
+
+Tingkat Pendidikan (Level Akademik):
+"${educationLevel}" (Sesuaikan kedalaman, kompleksitas, dan kata kerja operasional pertanyaan penelitian dengan standar jenjang pendidikan ini. Misal: S1 lebih aplikatif/eksploratif, S2 lebih analitik/relasional, S3 lebih filosofis/konstruksi model).
 
 Research Gap & Novelty (Fokus Utama):
 "${gapText}"
