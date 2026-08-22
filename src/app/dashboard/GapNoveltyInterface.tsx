@@ -185,7 +185,28 @@ export default function GapNoveltyInterface({ projectId, isActive, limits, role,
     }
   };
 
-  const handleSelectGap = (gapText: string, topikBaruText?: string) => {
+  const handleSelectGap = async (gapText: string, topikBaruText?: string) => {
+    // Pengecekan sebelum mengubah pilihan
+    if (selectedGap !== gapText && selectedGap !== null) {
+      const hasRQ = !!researchQuestionMarkdown;
+      const savedLitReview = await getProjectState(projectId, 'literature_review');
+      const hasLitReview = !!savedLitReview;
+      
+      if (hasRQ || hasLitReview) {
+        const confirmMsg = `PERINGATAN:\n\nMengubah pilihan Research Gap akan MENGHAPUS Rumusan Masalah yang sudah ada${hasLitReview ? ' dan membuat draf Kajian Pustaka Anda menjadi tidak sinkron dengan Gap yang baru' : ''}.\n\nApakah Anda yakin ingin mengganti pilihan Gap?`;
+        if (!window.confirm(confirmMsg)) {
+          return;
+        }
+      }
+    } else if (selectedGap === gapText) {
+      // Jika menekan tombol pilihan yang sama untuk membatalkan
+      if (researchQuestionMarkdown) {
+        if (!window.confirm(`PERINGATAN:\n\nMembatalkan pilihan ini akan MENGHAPUS Rumusan Masalah yang sudah Anda buat di bawah. Lanjutkan?`)) {
+          return;
+        }
+      }
+    }
+
     // Reset RQ whenever gap selection changes
     setResearchQuestionMarkdown('');
     setIsEditingRQ(false);
