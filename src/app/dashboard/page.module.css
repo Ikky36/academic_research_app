@@ -26,13 +26,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: sticky;
-  top: 0;
-  z-index: 50;
   height: 80px;
   min-height: 80px;
-  flex-shrink: 0;
-  box-sizing: border-box;
+  border-bottom: 1px solid var(--border);
 }
 
 @media (max-width: 768px) {
@@ -125,16 +121,18 @@
   
   /* Efek Sticky (Melayang) */
   position: sticky;
-  top: 80px; /* Jarak dari header utama */
+  top: -1.5rem; /* Menempel menyisakan 1rem padding di atas (karena padding dari mainLayout adalah 2.5rem) */
   z-index: 40;
   background-color: var(--background);
-  padding-top: 1rem;
-  margin-top: -1rem;
+  padding-top: 2.5rem;
+  margin-top: -2.5rem;
 }
 
 @media (max-width: 768px) {
   .tabs {
-    top: 60px; /* Jarak header lebih kecil di HP */
+    top: 0; /* Padding mainLayout di HP adalah 1rem, top 0 menyisakan ruang yang sama dengan paddingnya */
+    padding-top: 1rem;
+    margin-top: -1rem;
   }
 }
 
