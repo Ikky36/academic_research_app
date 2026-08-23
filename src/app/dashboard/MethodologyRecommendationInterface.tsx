@@ -16,6 +16,7 @@ export default function MethodologyRecommendationInterface({ projectId, isActive
   const [researchTopic, setResearchTopic] = useState('');
   const [educationLevel, setEducationLevel] = useState('');
   const [selectedGap, setSelectedGap] = useState<string | null>(null);
+  const [selectedNovelty, setSelectedNovelty] = useState<string | null>(null);
   const [researchQuestionMarkdown, setResearchQuestionMarkdown] = useState('');
   
   const [recommendationMarkdown, setRecommendationMarkdown] = useState('');
@@ -36,11 +37,13 @@ export default function MethodologyRecommendationInterface({ projectId, isActive
           try {
             const parsed = JSON.parse(gapRaw);
             setSelectedGap(parsed.gap);
+            if (parsed.novelty) setSelectedNovelty(parsed.novelty);
           } catch (e) {
             setSelectedGap(gapRaw);
           }
         } else {
           setSelectedGap(null);
+          setSelectedNovelty(null);
         }
       });
       getProjectState(projectId, 'research_question').then(rq => {
@@ -66,6 +69,7 @@ export default function MethodologyRecommendationInterface({ projectId, isActive
           researchTopic,
           educationLevel,
           gapText: selectedGap,
+          noveltyText: selectedNovelty,
           researchQuestion: researchQuestionMarkdown,
           isPaidApi
         }),

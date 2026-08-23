@@ -41,7 +41,16 @@ export default function LitReviewInterface({ projectId, isActive, limits, role, 
       ]).then(([savedSota, savedTopic, savedGap, savedReview, savedParagraphs, savedStyle]) => {
         if (savedSota) setSotaMarkdown(savedSota);
         if (savedTopic) setResearchTopic(savedTopic);
-        if (savedGap) setSelectedGap(savedGap);
+        
+        if (savedGap) {
+          try {
+            const parsed = JSON.parse(savedGap);
+            setSelectedGap(parsed.gap);
+          } catch (e) {
+            setSelectedGap(savedGap);
+          }
+        }
+
         if (savedReview) setLitReview(savedReview);
         if (savedParagraphs) setParagraphs(savedParagraphs);
         if (savedStyle) setCitationStyle(savedStyle);

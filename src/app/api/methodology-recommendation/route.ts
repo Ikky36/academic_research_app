@@ -13,7 +13,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { researchTopic, educationLevel, gapText, researchQuestion, isPaidApi } = await req.json();
+    const { researchTopic, educationLevel, gapText, noveltyText, researchQuestion, isPaidApi } = await req.json();
 
     if (!researchTopic || !gapText || !researchQuestion) {
       return NextResponse.json({ error: 'Data tidak lengkap. Pastikan Topik, Gap, dan RQ sudah ada.' }, { status: 400 });
@@ -23,6 +23,7 @@ export async function POST(req: Request) {
       researchTopic,
       educationLevel || 'Sarjana',
       gapText,
+      noveltyText,
       researchQuestion,
       undefined,
       isPaidApi

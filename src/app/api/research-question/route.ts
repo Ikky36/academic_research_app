@@ -14,13 +14,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { gapText, researchTopic, educationLevel, isPaidApi } = await req.json();
+    const { gapText, noveltyText, researchTopic, educationLevel, isPaidApi } = await req.json();
 
     if (!gapText || !researchTopic) {
       return NextResponse.json({ error: 'Missing gapText or researchTopic' }, { status: 400 });
     }
 
-    const rqMarkdown = await generateResearchQuestion(gapText, researchTopic, educationLevel || 'Sarjana', undefined, isPaidApi);
+    const rqMarkdown = await generateResearchQuestion(gapText, noveltyText, researchTopic, educationLevel || 'Sarjana', undefined, isPaidApi);
 
     return NextResponse.json({ rqMarkdown });
   } catch (error: any) {
