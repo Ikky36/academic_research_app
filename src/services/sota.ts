@@ -389,7 +389,7 @@ Instruksi:
     throw err;
   }
 }
-export async function generateMethodologyRecommendation(researchTopic: string, educationLevel: string, gapText: string, researchQuestion: string, userApiKey?: string, isPaidApi?: boolean): Promise<string> {
+export async function generateMethodologyRecommendation(researchTopic: string, educationLevel: string, gapText: string, noveltyText: string | null | undefined, researchQuestion: string, userApiKey?: string, isPaidApi?: boolean): Promise<string> {
   const { getGeminiApiKey, getActiveAiProvider } = await import('@/utils/apiKeyManager');
   const role = isPaidApi ? 'pro' : 'free';
   const { key: apiKey, modelName: defaultModelName } = getGeminiApiKey(role, userApiKey);
@@ -408,9 +408,10 @@ Topik Penelitian:
 Tingkat Pendidikan (Level Akademik):
 "${educationLevel}"
 
-Research Gap & Novelty:
+Research Gap:
 "${gapText}"
 
+${noveltyText ? `Novelty (Kebaruan):\n"${noveltyText}"\n` : ''}
 Rumusan Masalah (Research Questions) yang disetujui:
 "${researchQuestion}"
 
