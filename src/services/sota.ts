@@ -574,7 +574,7 @@ INSTRUKSI PENULISAN:
 - Output HANYA berupa teks Markdown Latar Belakang (tanpa kata pengantar, langsung judul Bab 1).`;
 
   try {
-    let result;
+    let result: any;
     if (existingText) {
       result = await aiModel.generateContentStream({
         contents: [
