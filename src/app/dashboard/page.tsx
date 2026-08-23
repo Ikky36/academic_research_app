@@ -8,6 +8,7 @@ import LitReviewInterface from './LitReviewInterface'
 import KajianPustakaInterface from './KajianPustakaInterface'
 import MethodologyRecommendationInterface from './MethodologyRecommendationInterface'
 import MetodologiInterface from './MetodologiInterface'
+import LatarBelakangInterface from './LatarBelakangInterface'
 import InstrumenInterface from './InstrumenInterface'
 import PraPenelitianInterface from './PraPenelitianInterface'
 import Sidebar from './Sidebar'
@@ -152,6 +153,12 @@ export default async function DashboardPage({
             Metodologi
           </Link>
           <Link 
+            href={`/dashboard?tab=latar-belakang&project=${activeProject?.id}`} 
+            className={activeTab === 'latar-belakang' ? styles.activeTab : styles.tab}
+          >
+            Latar Belakang
+          </Link>
+          <Link 
             href={`/dashboard?tab=instrumen&project=${activeProject?.id}`} 
             className={activeTab === 'instrumen' ? styles.activeTab : styles.tab}
           >
@@ -185,6 +192,9 @@ export default async function DashboardPage({
               </div>
               <div style={{ display: activeTab === 'metodologi' ? 'block' : 'none' }}>
                 <MetodologiInterface key={`met-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'metodologi'} limits={limits} role={role} isPaidApi={isPaidApi} />
+              </div>
+              <div style={{ display: activeTab === 'latar-belakang' ? 'block' : 'none' }}>
+                <LatarBelakangInterface key={`lb-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'latar-belakang'} isPaidApi={isPaidApi} />
               </div>
               <div style={{ display: activeTab === 'instrumen' ? 'block' : 'none' }}>
                 <InstrumenInterface key={`ins-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'instrumen'} limits={limits} role={role} isPaidApi={isPaidApi} />

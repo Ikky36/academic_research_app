@@ -452,3 +452,112 @@ Format output harus murni Markdown. Jangan beri salam pembuka atau penutup. Guna
     throw err;
   }
 }
+export async function generateLatarBelakang(
+  filteredKp: string,
+  empiricalGap: string,
+  sotaMarkdown: string,
+  gap: string,
+  novelty: string,
+  researchTopic: string,
+  paragraphCount: number,
+  userApiKey?: string,
+  isPaidApi?: boolean
+): Promise<AsyncGenerator<string, void, unknown>> {
+  let aiModel: any;
+  let provider: 'gemini' | 'deepseek' = 'gemini';
+  
+  if (userApiKey && userApiKey !== 'null' && userApiKey.trim() !== '') {
+    const genAI = new GoogleGenerativeAI(userApiKey);
+    aiModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+  } else {
+    const supabase = await createClient();
+    const { data: globalSettings } = await supabase.from('admin_settings').select('can_use_byok').eq('id', 1).single();
+    if (globalSettings?.can_use_byok) {
+      throw new Error("Sistem mewajibkan penggunaan API Key pribadi (BYOK). Harap masukkan API Key Anda di menu Pengaturan.");
+    }
+    const { getGeminiApiKey, getActiveAiProvider } = await import('@/utils/apiKeyManager');
+    const role = isPaidApi ? 'pro' : 'free';
+    const { key: keyToUse, modelName } = getGeminiApiKey(role, userApiKey);
+    provider = await getActiveAiProvider();
+    
+    if (provider === 'deepseek' && isPaidApi) {
+      const { callDeepSeekWithRetry } = await import('./deepseek');
+      
+      const prompt = Anda adalah seorang Profesor Pembimbing Akademik yang ahli dalam menyusun Bab 1: Latar Belakang Penelitian.
+Tugas Anda adalah menjahit 5 komponen narasi yang diberikan menjadi sebuah esai Latar Belakang (Bab 1) yang mengalir mulus, kohesif, dan meyakinkan.
+
+BERIKUT ADALAH 5 BAHAN BAKU ANDA:
+1. PENEKANAN JUDUL/TOPIK: "\"
+2. GAMBARAN UMUM (Sari Kajian Pustaka):
+\
+3. KESENJANGAN EMPIRIS:
+\
+4. STATE OF THE ART (SOTA):
+\
+5. RESEARCH GAP & NOVELTY:
+Gap: \
+Novelty: \
+
+INSTRUKSI PENULISAN:
+- Alur logika harus DEDUKTIF ke INDUKTIF. Mulai dari Gambaran Umum -> Kesenjangan Empiris -> SOTA -> Research Gap -> Novelty -> Penegasan pentingnya penelitian ini dilakukan (merujuk ke Topik).
+- Buat sepanjang sekitar \ paragraf utama yang padat dan bergaya bahasa akademis formal.
+- PERTAHANKAN sitasi (kutipan dalam teks) yang ada di Gambaran Umum maupun SOTA (misalnya: Smith, 2023). Jangan mengarang sitasi baru yang tidak ada di sumber.
+- Gunakan transisi antar paragraf yang sangat halus. Pembaca tidak boleh sadar bahwa ini adalah gabungan dari 5 teks yang berbeda.
+- DI BAGIAN PALING AKHIR, Anda WAJIB membuat bagian "## Daftar Pustaka" yang berisi referensi dari sitasi-sitasi yang Anda sebutkan di teks. (Rangkum dari teks SOTA dan Kajian Pustaka).
+- Output HANYA berupa teks Markdown Latar Belakang (tanpa kata pengantar, langsung judul Bab 1).
+;
+      
+      // Simulate streaming for DeepSeek since the current deepseek.ts might not return a generator
+      // Actually we can just call it and yield the whole chunk, or stream if deepseek supports it.
+      // To be safe with the generator signature, we'll yield the whole string at once.
+      async function* generateDeepSeek() {
+        const result = await callDeepSeekWithRetry([{ role: 'user', content: prompt }], 'think-medium');
+        yield result;
+      }
+      return generateDeepSeek();
+    }
+    
+    const genAI = new GoogleGenerativeAI(keyToUse);
+    aiModel = genAI.getGenerativeModel({ model: modelName });
+  }
+
+  const prompt = Anda adalah seorang Profesor Pembimbing Akademik yang ahli dalam menyusun Bab 1: Latar Belakang Penelitian.
+Tugas Anda adalah menjahit 5 komponen narasi yang diberikan menjadi sebuah esai Latar Belakang (Bab 1) yang mengalir mulus, kohesif, dan meyakinkan.
+
+BERIKUT ADALAH 5 BAHAN BAKU ANDA:
+1. PENEKANAN JUDUL/TOPIK: "\"
+2. GAMBARAN UMUM (Sari Kajian Pustaka):
+\
+3. KESENJANGAN EMPIRIS:
+\
+4. STATE OF THE ART (SOTA):
+\
+5. RESEARCH GAP & NOVELTY:
+Gap: \
+Novelty: \
+
+INSTRUKSI PENULISAN:
+- Alur logika harus DEDUKTIF ke INDUKTIF. Mulai dari Gambaran Umum -> Kesenjangan Empiris -> SOTA -> Research Gap -> Novelty -> Penegasan pentingnya penelitian ini dilakukan (merujuk ke Topik).
+- Buat sepanjang sekitar \ paragraf utama yang padat dan bergaya bahasa akademis formal.
+- PERTAHANKAN sitasi (kutipan dalam teks) yang ada di Gambaran Umum maupun SOTA (misalnya: Smith, 2023). Jangan mengarang sitasi baru yang tidak ada di sumber.
+- Gunakan transisi antar paragraf yang sangat halus. Pembaca tidak boleh sadar bahwa ini adalah gabungan dari 5 teks yang berbeda.
+- DI BAGIAN PALING AKHIR, Anda WAJIB membuat bagian "## Daftar Pustaka" yang berisi referensi dari sitasi-sitasi yang Anda sebutkan di teks.
+- Output HANYA berupa teks Markdown Latar Belakang (tanpa kata pengantar, langsung judul Bab 1).
+;
+
+  try {
+    const result = await aiModel.generateContentStream(prompt);
+    
+    async function* streamGenerator() {
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        yield chunkText;
+      }
+    }
+    
+    return streamGenerator();
+  } catch (err: any) {
+    console.error('Error generating Latar Belakang:', err);
+    throw err;
+  }
+}
