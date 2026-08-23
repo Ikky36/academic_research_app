@@ -91,7 +91,14 @@ export async function POST(req: Request) {
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
+        let keepAlive: any = null;
         try {
+          // Send a keepalive comment every 3 seconds to prevent Vercel TTFB timeout
+          // This is completely invisible in Markdown
+          keepAlive = setInterval(() => {
+            controller.enqueue(encoder.encode('<!-- keepalive -->\n'));
+          }, 3000);
+
           const aiStream = await generateLatarBelakang(
             filteredKp,
             stateMap['empirical_gap_narrative'],
@@ -105,10 +112,16 @@ export async function POST(req: Request) {
           );
           
           for await (const chunk of aiStream) {
+            if (keepAlive) {
+              clearInterval(keepAlive);
+              keepAlive = null;
+            }
             controller.enqueue(encoder.encode(chunk));
           }
+          if (keepAlive) clearInterval(keepAlive);
           controller.close();
         } catch (err: any) {
+          if (keepAlive) clearInterval(keepAlive);
           controller.enqueue(encoder.encode(`\n\n[Error: ${err.message}]`));
           controller.close();
         }
