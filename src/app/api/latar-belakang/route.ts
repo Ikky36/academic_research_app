@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     // Regex explanation:
     // /(### 2\.\d+\.1.*?)(?=### 2\.\d+\.2|## 2\.\d+|$)/gs
     // Captures everything starting from ### 2.x.1 up to but not including the next sub-sub chapter or main chapter
-    const regex = /(### 2\.\d+\.1.*?)(?=### 2\.\d+\.2|## 2\.\d+|$)/gs;
+    const regex = /(### 2\.\d+\.1[\s\S]*?)(?=### 2\.\d+\.2|## 2\.\d+|$)/g;
     const matches = kpResult.match(regex);
     
     if (matches && matches.length > 0) {
