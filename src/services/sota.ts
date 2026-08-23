@@ -396,21 +396,21 @@ export async function generateMethodologyRecommendation(researchTopic: string, e
   const genAI = new GoogleGenerativeAI(apiKey);
   const geminiModel = genAI.getGenerativeModel({ model: defaultModelName });
 
-  const prompt = \
+  const prompt = `
 Anda adalah dosen pembimbing metodologi penelitian tingkat dewa yang sangat rasional, kritis, dan berorientasi pada hasil.
 Mahasiswa bimbingan Anda memiliki rancangan awal sebagai berikut:
 
 Topik Penelitian:
-"\"
+"${researchTopic}"
 
 Tingkat Pendidikan (Level Akademik):
-"\"
+"${educationLevel}"
 
 Research Gap & Novelty:
-"\"
+"${gapText}"
 
 Rumusan Masalah (Research Questions) yang disetujui:
-"\"
+"${researchQuestion}"
 
 Tugas Anda adalah merekomendasikan PENDEKATAN dan METODE penelitian terbaik untuk menjawab Rumusan Masalah tersebut. 
 Anda WAJIB memberikan TEPAT 3 (TIGA) rekomendasi dengan struktur berikut:
@@ -418,7 +418,7 @@ Anda WAJIB memberikan TEPAT 3 (TIGA) rekomendasi dengan struktur berikut:
 ### 1. Rekomendasi Utama (Jalur Aman & Standar)
 - **Pendekatan:** (Misal: Kuantitatif / Kualitatif / R&D / Mix-Method)
 - **Metode Spesifik:** (Misal: Kuasi-Eksperimen / Studi Kasus / Korelasional, dll)
-- **Justifikasi Akademis:** (Jelaskan secara logis MENGAPA metode ini paling lurus, mudah dieksekusi, dan paling sesuai dengan jenjang pendidikan saat ini (\) guna menjawab Rumusan Masalah tersebut).
+- **Justifikasi Akademis:** (Jelaskan secara logis MENGAPA metode ini paling lurus, mudah dieksekusi, dan paling sesuai dengan jenjang pendidikan saat ini (${educationLevel}) guna menjawab Rumusan Masalah tersebut).
 
 ### 2. Rekomendasi Alternatif (Sudut Pandang Berbeda)
 - **Pendekatan:** (Sebutkan pendekatan)
@@ -431,7 +431,7 @@ Anda WAJIB memberikan TEPAT 3 (TIGA) rekomendasi dengan struktur berikut:
 - **Justifikasi Akademis:** (Jelaskan bahwa ini direkomendasikan JIKA mahasiswa menargetkan predikat Cum Laude atau publikasi di jurnal bereputasi tinggi. Sebutkan tingkat kesulitan dan syarat yang harus dipenuhi).
 
 Format output harus murni Markdown. Jangan beri salam pembuka atau penutup. Gunakan bahasa Indonesia akademik yang tegas dan mencerahkan.
-\;
+`;
 
   try {
     let result: string;
