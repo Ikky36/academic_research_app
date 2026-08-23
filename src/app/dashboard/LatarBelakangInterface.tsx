@@ -226,16 +226,12 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
 
             {latarBelakang && !isGenerating && (
               <button 
+                className={styles.generateButton}
                 onClick={handleContinue}
                 style={{ 
-                  background: 'var(--secondary)', 
-                  color: 'var(--on-secondary)',
-                  border: 'none',
-                  borderRadius: '100px',
+                  background: '#f59e0b', 
                   margin: 0, 
                   padding: '10px 24px',
-                  fontWeight: '500',
-                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px'
