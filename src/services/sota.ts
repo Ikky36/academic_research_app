@@ -508,7 +508,7 @@ INSTRUKSI PENULISAN:
 - Output HANYA berupa teks Markdown Latar Belakang (tanpa kata pengantar, langsung judul Bab 1).`;
       
       async function* generateDeepSeek() {
-        const result = await callDeepSeekWithRetry([{ role: 'user', content: prompt }], 'think-medium');
+        const result = await callDeepSeekWithRetry(prompt, "Anda adalah asisten AI akademik.", 'think-medium');
         yield result;
       }
       return generateDeepSeek();
