@@ -6,6 +6,7 @@ import SotaInterface from './SotaInterface'
 import GapNoveltyInterface from './GapNoveltyInterface'
 import LitReviewInterface from './LitReviewInterface'
 import KajianPustakaInterface from './KajianPustakaInterface'
+import MethodologyRecommendationInterface from './MethodologyRecommendationInterface'
 import MetodologiInterface from './MetodologiInterface'
 import InstrumenInterface from './InstrumenInterface'
 import PraPenelitianInterface from './PraPenelitianInterface'
@@ -139,6 +140,12 @@ export default async function DashboardPage({
             Kajian Pustaka
           </Link>
           <Link 
+            href={`/dashboard?tab=rekomendasi-metode&project=${activeProject?.id}`} 
+            className={activeTab === 'rekomendasi-metode' ? styles.activeTab : styles.tab}
+          >
+            Rekomendasi Metode
+          </Link>
+          <Link 
             href={`/dashboard?tab=metodologi&project=${activeProject?.id}`} 
             className={activeTab === 'metodologi' ? styles.activeTab : styles.tab}
           >
@@ -172,6 +179,9 @@ export default async function DashboardPage({
               </div>
               <div style={{ display: activeTab === 'kajian-pustaka' ? 'block' : 'none' }}>
                 <KajianPustakaInterface key={`kp-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'kajian-pustaka'} limits={limits} role={role} isPaidApi={isPaidApi} />
+              </div>
+              <div style={{ display: activeTab === 'rekomendasi-metode' ? 'block' : 'none' }}>
+                <MethodologyRecommendationInterface key={`mr-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'rekomendasi-metode'} isPaidApi={isPaidApi} />
               </div>
               <div style={{ display: activeTab === 'metodologi' ? 'block' : 'none' }}>
                 <MetodologiInterface key={`met-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'metodologi'} limits={limits} role={role} isPaidApi={isPaidApi} />

@@ -387,3 +387,63 @@ Instruksi:
     throw err;
   }
 }
+export async function generateMethodologyRecommendation(researchTopic: string, educationLevel: string, gapText: string, researchQuestion: string, userApiKey?: string, isPaidApi?: boolean): Promise<string> {
+  const { getGeminiApiKey, getActiveAiProvider } = await import('@/utils/apiKeyManager');
+  const role = isPaidApi ? 'pro' : 'free';
+  const { key: apiKey, modelName: defaultModelName } = getGeminiApiKey(role, userApiKey);
+  const provider = await getActiveAiProvider();
+  
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const geminiModel = genAI.getGenerativeModel({ model: defaultModelName });
+
+  const prompt = \
+Anda adalah dosen pembimbing metodologi penelitian tingkat dewa yang sangat rasional, kritis, dan berorientasi pada hasil.
+Mahasiswa bimbingan Anda memiliki rancangan awal sebagai berikut:
+
+Topik Penelitian:
+"\"
+
+Tingkat Pendidikan (Level Akademik):
+"\"
+
+Research Gap & Novelty:
+"\"
+
+Rumusan Masalah (Research Questions) yang disetujui:
+"\"
+
+Tugas Anda adalah merekomendasikan PENDEKATAN dan METODE penelitian terbaik untuk menjawab Rumusan Masalah tersebut. 
+Anda WAJIB memberikan TEPAT 3 (TIGA) rekomendasi dengan struktur berikut:
+
+### 1. Rekomendasi Utama (Jalur Aman & Standar)
+- **Pendekatan:** (Misal: Kuantitatif / Kualitatif / R&D / Mix-Method)
+- **Metode Spesifik:** (Misal: Kuasi-Eksperimen / Studi Kasus / Korelasional, dll)
+- **Justifikasi Akademis:** (Jelaskan secara logis MENGAPA metode ini paling lurus, mudah dieksekusi, dan paling sesuai dengan jenjang pendidikan saat ini (\) guna menjawab Rumusan Masalah tersebut).
+
+### 2. Rekomendasi Alternatif (Sudut Pandang Berbeda)
+- **Pendekatan:** (Sebutkan pendekatan)
+- **Metode Spesifik:** (Sebutkan metode spesifik yang berbeda kutub/sudut pandang dari Rekomendasi 1)
+- **Justifikasi Akademis:** (Jelaskan mengapa ini cocok sebagai 'ban serep' jika Rekomendasi 1 ditolak, atau kondisi spesifik apa yang membuat metode ini lebih disukai, misal sampel terbatas).
+
+### 3. Rekomendasi Lanjutan (High-Impact / Ambisius)
+- **Pendekatan:** (Sebutkan pendekatan)
+- **Metode Spesifik:** (Metode kelas berat, misal: SEM, Mixed-Method Explanatory, DBR tingkat lanjut)
+- **Justifikasi Akademis:** (Jelaskan bahwa ini direkomendasikan JIKA mahasiswa menargetkan predikat Cum Laude atau publikasi di jurnal bereputasi tinggi. Sebutkan tingkat kesulitan dan syarat yang harus dipenuhi).
+
+Format output harus murni Markdown. Jangan beri salam pembuka atau penutup. Gunakan bahasa Indonesia akademik yang tegas dan mencerahkan.
+\;
+
+  try {
+    let result: string;
+    if (provider === 'deepseek' && isPaidApi) {
+      console.log('[Methodology Rec] Using DeepSeek (think-medium)');
+      result = await callDeepSeekWithRetry(prompt, 'Anda adalah pakar metodologi penelitian akademik.', 'think-medium');
+    } else {
+      result = await fetchWithRetry(geminiModel, prompt);
+    }
+    return result.replace(/\\\markdown/gi, '').replace(/\\\/g, '').trim();
+  } catch (err: any) {
+    console.error('Methodology Recommendation generation error:', err);
+    throw err;
+  }
+}
