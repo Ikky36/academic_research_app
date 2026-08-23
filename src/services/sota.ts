@@ -389,7 +389,7 @@ Instruksi:
     throw err;
   }
 }
-export async function generateMethodologyRecommendation(researchTopic: string, educationLevel: string, gapText: string, noveltyText: string | null | undefined, researchQuestion: string, userApiKey?: string, isPaidApi?: boolean): Promise<string> {
+export async function generateMethodologyRecommendation(researchTopic: string, educationLevel: string, gapText: string, noveltyText: string | null | undefined, researchQuestion: string, libraryContext: string = '', userApiKey?: string, isPaidApi?: boolean): Promise<string> {
   const { getGeminiApiKey, getActiveAiProvider } = await import('@/utils/apiKeyManager');
   const role = isPaidApi ? 'pro' : 'free';
   const { key: apiKey, modelName: defaultModelName } = getGeminiApiKey(role, userApiKey);
@@ -414,6 +414,8 @@ Research Gap:
 ${noveltyText ? `Novelty (Kebaruan):\n"${noveltyText}"\n` : ''}
 Rumusan Masalah (Research Questions) yang disetujui:
 "${researchQuestion}"
+
+${libraryContext ? `Sebagai informasi, perpustakaan lokal kampus memiliki referensi buku untuk metode-metode berikut:\n${libraryContext}\n\nJIKA MEMUNGKINKAN DAN RELEVAN, prioritaskan untuk memilih/mengambil inspirasi metode dari daftar di atas agar mahasiswa memiliki rujukan buku yang jelas. Sebutkan judul buku rujukannya di bagian Justifikasi Akademis jika Anda memilih dari daftar ini.\n` : ''}
 
 Tugas Anda adalah merekomendasikan PENDEKATAN dan METODE penelitian terbaik untuk menjawab Rumusan Masalah tersebut. 
 Anda WAJIB memberikan TEPAT 3 (TIGA) rekomendasi dengan struktur berikut:

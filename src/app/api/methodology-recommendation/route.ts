@@ -19,12 +19,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Data tidak lengkap. Pastikan Topik, Gap, dan RQ sudah ada.' }, { status: 400 });
     }
 
+    // Ambil daftar metode yang ada di database dari hasil sinkronisasi buku
+    let libraryContext = '';
+    const { data: chunks } = await supabase
+      .from('methodology_chunks')
+      .select('method_category, methodology_books(title, author)');
+      
+    if (chunks && chunks.length > 0) {
+      const uniqueMethods = Array.from(new Set(chunks.map(c => 
+        `- ${c.method_category} (dari buku: ${c.methodology_books?.title} oleh ${c.methodology_books?.author})`
+      )));
+      libraryContext = uniqueMethods.join('\n');
+    }
+
     const recommendationMarkdown = await generateMethodologyRecommendation(
       researchTopic,
       educationLevel || 'Sarjana',
       gapText,
       noveltyText,
       researchQuestion,
+      libraryContext,
       undefined,
       isPaidApi
     );
