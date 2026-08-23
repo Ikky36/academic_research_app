@@ -224,7 +224,7 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
               {isGenerating ? 'Menyintesis Latar Belakang...' : (latarBelakang ? 'Generate Ulang Latar Belakang' : 'Susun Latar Belakang')}
             </button>
 
-            {latarBelakang && !isGenerating && !latarBelakang.toLowerCase().includes('daftar pustaka') && (
+            {latarBelakang && !isGenerating && (
               <button 
                 onClick={handleContinue}
                 style={{ 
