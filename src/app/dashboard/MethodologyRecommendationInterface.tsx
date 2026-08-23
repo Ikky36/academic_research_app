@@ -115,7 +115,17 @@ export default function MethodologyRecommendationInterface({ projectId, isActive
               
               <h4 style={{ fontSize: '14px', color: 'var(--on-surface-variant)', marginBottom: '8px' }}>Rumusan Masalah yang Menjadi Patokan:</h4>
               <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h1: ({node, ...props}) => <h1 style={{marginTop: '1.5em', marginBottom: '0.5em', fontSize: '1.5em'}} {...props} />,
+                    h2: ({node, ...props}) => <h2 style={{marginTop: '1.5em', marginBottom: '0.5em', fontSize: '1.3em'}} {...props} />,
+                    h3: ({node, ...props}) => <h3 style={{marginTop: '1.5em', marginBottom: '0.5em', fontSize: '1.1em'}} {...props} />,
+                    p: ({node, ...props}) => <p style={{marginBottom: '1em'}} {...props} />,
+                    ul: ({node, ...props}) => <ul style={{marginBottom: '1em', paddingLeft: '2em'}} {...props} />,
+                    ol: ({node, ...props}) => <ol style={{marginBottom: '1em', paddingLeft: '2em'}} {...props} />
+                  }}
+                >
                   {researchQuestionMarkdown}
                 </ReactMarkdown>
               </div>
@@ -177,7 +187,18 @@ export default function MethodologyRecommendationInterface({ projectId, isActive
                     }}
                   />
                 ) : (
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      h1: ({node, ...props}) => <h1 style={{marginTop: '1.5em', marginBottom: '0.5em', fontSize: '1.5em', color: 'var(--primary-dark)'}} {...props} />,
+                      h2: ({node, ...props}) => <h2 style={{marginTop: '1.5em', marginBottom: '0.5em', fontSize: '1.3em', color: 'var(--primary-dark)'}} {...props} />,
+                      h3: ({node, ...props}) => <h3 style={{marginTop: '1.5em', marginBottom: '0.5em', fontSize: '1.1em'}} {...props} />,
+                      p: ({node, ...props}) => <p style={{marginBottom: '1em'}} {...props} />,
+                      ul: ({node, ...props}) => <ul style={{marginBottom: '1em', paddingLeft: '2em'}} {...props} />,
+                      ol: ({node, ...props}) => <ol style={{marginBottom: '1em', paddingLeft: '2em'}} {...props} />,
+                      li: ({node, ...props}) => <li style={{marginBottom: '0.5em'}} {...props} />
+                    }}
+                  >
                     {recommendationMarkdown}
                   </ReactMarkdown>
                 )}
