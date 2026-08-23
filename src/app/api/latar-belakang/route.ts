@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { projectId, paragraphCount, isPaidApi } = await req.json();
+    const { projectId, paragraphCount, isPaidApi, existingText } = await req.json();
 
     if (!projectId) {
       return NextResponse.json({ error: 'Project ID required' }, { status: 400 });
