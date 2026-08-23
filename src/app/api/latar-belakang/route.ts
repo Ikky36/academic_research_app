@@ -93,11 +93,24 @@ export async function POST(req: Request) {
       .select('title, authors, year_published, journal_name')
       .eq('project_id', projectId);
       
+    const { data: additionalRefs } = await supabase
+      .from('additional_references')
+      .select('title, author, year, publisher')
+      .eq('project_id', projectId);
+      
     let referencesList = '';
+    let counter = 1;
+    
     if (referencesData && referencesData.length > 0) {
-      referencesList = referencesData.map((r, i) => 
-        `[${i+1}] ${r.authors || 'Tanpa Penulis'} (${r.year_published || 'n.d.'}). ${r.title || 'Tanpa Judul'}. ${r.journal_name || ''}`
-      ).join('\n');
+      referencesList += referencesData.map((r) => 
+        `[${counter++}] ${r.authors || 'Tanpa Penulis'} (${r.year_published || 'n.d.'}). ${r.title || 'Tanpa Judul'}. ${r.journal_name || ''}`
+      ).join('\n') + '\n';
+    }
+    
+    if (additionalRefs && additionalRefs.length > 0) {
+      referencesList += additionalRefs.map((r) => 
+        `[${counter++}] ${r.author || 'Tanpa Penulis'} (${r.year || 'n.d.'}). ${r.title || 'Tanpa Judul'}. ${r.publisher || ''}`
+      ).join('\n') + '\n';
     }
 
     // 4. Generate with AI (Streaming)
