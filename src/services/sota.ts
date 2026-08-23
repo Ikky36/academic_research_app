@@ -441,7 +441,7 @@ Format output harus murni Markdown. Jangan beri salam pembuka atau penutup. Guna
     } else {
       result = await fetchWithRetry(geminiModel, prompt);
     }
-    return result.replace(/\\\markdown/gi, '').replace(/\\\/g, '').trim();
+    return result.replace(/```markdown/gi, '').replace(/```/g, '').trim();
   } catch (err: any) {
     console.error('Methodology Recommendation generation error:', err);
     throw err;
