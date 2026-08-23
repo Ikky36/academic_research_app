@@ -23,6 +23,7 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
   
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState('');
+  const [copySuccess, setCopySuccess] = useState('');
 
   useEffect(() => {
     if (isActive) {
@@ -118,6 +119,12 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
     setIsEditing(false);
   };
 
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(latarBelakang);
+    setCopySuccess('Tersalin!');
+    setTimeout(() => setCopySuccess(''), 2000);
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -179,9 +186,14 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h3 style={{ fontSize: '18px', color: 'var(--primary-dark)' }}>Hasil Sintesis Latar Belakang</h3>
                 {!isEditing ? (
-                  <button onClick={startEditing} style={{ padding: '6px 12px', fontSize: '14px', cursor: 'pointer', borderRadius: '4px', border: '1px solid var(--border)' }}>
-                    ✏️ Edit Manual
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={copyToClipboard} style={{ padding: '6px 12px', fontSize: '14px', cursor: 'pointer', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                      {copySuccess || '📋 Salin'}
+                    </button>
+                    <button onClick={startEditing} style={{ padding: '6px 12px', fontSize: '14px', cursor: 'pointer', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                      ✏️ Edit Manual
+                    </button>
+                  </div>
                 ) : (
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => setIsEditing(false)} style={{ padding: '6px 12px', fontSize: '14px', cursor: 'pointer', borderRadius: '4px', border: '1px solid var(--border)' }}>
