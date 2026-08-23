@@ -87,6 +87,19 @@ export async function POST(req: Request) {
       userApiKey = profile.api_key;
     }
 
+    // 3.5. Fetch References (metadata) to build complete Daftar Pustaka
+    const { data: referencesData } = await supabase
+      .from('extracted_data')
+      .select('title, authors, year_published, journal_name')
+      .eq('project_id', projectId);
+      
+    let referencesList = '';
+    if (referencesData && referencesData.length > 0) {
+      referencesList = referencesData.map((r, i) => 
+        `[${i+1}] ${r.authors || 'Tanpa Penulis'} (${r.year_published || 'n.d.'}). ${r.title || 'Tanpa Judul'}. ${r.journal_name || ''}`
+      ).join('\n');
+    }
+
     // 4. Generate with AI (Streaming)
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
@@ -107,6 +120,7 @@ export async function POST(req: Request) {
             gapData.novelty,
             stateMap['research_topic'],
             paragraphCount || 5,
+            referencesList,
             userApiKey,
             isPaidApi
           );

@@ -461,6 +461,7 @@ export async function generateLatarBelakang(
   novelty: string,
   researchTopic: string,
   paragraphCount: number,
+  referencesList: string,
   userApiKey?: string,
   isPaidApi?: boolean
 ): Promise<AsyncGenerator<string, void, unknown>> {
@@ -488,7 +489,7 @@ export async function generateLatarBelakang(
         const prompt = `Anda adalah seorang Profesor Pembimbing Akademik yang ahli dalam menyusun Bab 1: Latar Belakang Penelitian.
   Tugas Anda adalah menjahit 5 komponen narasi yang diberikan menjadi sebuah esai Latar Belakang (Bab 1) yang mengalir mulus, kohesif, dan meyakinkan.
   
-  BERIKUT ADALAH 5 BAHAN BAKU ANDA:
+  BERIKUT ADALAH BAHAN BAKU ANDA:
   1. PENEKANAN JUDUL/TOPIK: "${researchTopic}"
   2. GAMBARAN UMUM (Sari Kajian Pustaka):
   ${filteredKp}
@@ -499,13 +500,16 @@ export async function generateLatarBelakang(
   5. RESEARCH GAP & NOVELTY:
   Gap: ${gap}
   Novelty: ${novelty}
+  6. DAFTAR REFERENSI LENGKAP (Metadata Pustaka):
+  ${referencesList}
   
   INSTRUKSI PENULISAN:
   - Alur logika harus DEDUKTIF ke INDUKTIF. Mulai dari Gambaran Umum -> Kesenjangan Empiris -> SOTA -> Research Gap -> Novelty -> Penegasan pentingnya penelitian ini dilakukan (merujuk ke Topik).
   - Buat sepanjang sekitar ${paragraphCount} paragraf utama yang padat dan bergaya bahasa akademis formal.
   - PERTAHANKAN sitasi (kutipan dalam teks) yang ada di Gambaran Umum maupun SOTA (misalnya: Smith, 2023). Jangan mengarang sitasi baru yang tidak ada di sumber.
   - Gunakan transisi antar paragraf yang sangat halus. Pembaca tidak boleh sadar bahwa ini adalah gabungan dari 5 teks yang berbeda.
-  - DI BAGIAN PALING AKHIR, Anda WAJIB membuat bagian "## Daftar Pustaka" yang berisi referensi dari sitasi-sitasi yang Anda sebutkan di teks. (Rangkum dari SOTA dan Kajian Pustaka).
+  - DI BAGIAN PALING AKHIR, Anda WAJIB membuat bagian "## Daftar Pustaka" yang berisi referensi dari sitasi-sitasi yang Anda sebutkan di teks. 
+  - SANGAT PENTING: Gunakan informasi dari "DAFTAR REFERENSI LENGKAP" (poin 6) untuk menulis Daftar Pustaka secara utuh (Penulis, Tahun, Judul, Jurnal). JANGAN MENGARANG judul atau nama jurnal jika tidak ada!
   - Output HANYA berupa teks Markdown Latar Belakang (tanpa kata pengantar, langsung judul Bab 1).`;
         
         async function* generateDeepSeek() {
@@ -535,7 +539,7 @@ export async function generateLatarBelakang(
   const prompt = `Anda adalah seorang Profesor Pembimbing Akademik yang ahli dalam menyusun Bab 1: Latar Belakang Penelitian.
 Tugas Anda adalah menjahit 5 komponen narasi yang diberikan menjadi sebuah esai Latar Belakang (Bab 1) yang mengalir mulus, kohesif, dan meyakinkan.
 
-BERIKUT ADALAH 5 BAHAN BAKU ANDA:
+BERIKUT ADALAH BAHAN BAKU ANDA:
 1. PENEKANAN JUDUL/TOPIK: "${researchTopic}"
 2. GAMBARAN UMUM (Sari Kajian Pustaka):
 ${filteredKp}
@@ -546,13 +550,16 @@ ${sotaMarkdown}
 5. RESEARCH GAP & NOVELTY:
 Gap: ${gap}
 Novelty: ${novelty}
+6. DAFTAR REFERENSI LENGKAP (Metadata Pustaka):
+${referencesList}
 
 INSTRUKSI PENULISAN:
 - Alur logika harus DEDUKTIF ke INDUKTIF. Mulai dari Gambaran Umum -> Kesenjangan Empiris -> SOTA -> Research Gap -> Novelty -> Penegasan pentingnya penelitian ini dilakukan (merujuk ke Topik).
 - Buat sepanjang sekitar ${paragraphCount} paragraf utama yang padat dan bergaya bahasa akademis formal.
 - PERTAHANKAN sitasi (kutipan dalam teks) yang ada di Gambaran Umum maupun SOTA (misalnya: Smith, 2023). Jangan mengarang sitasi baru yang tidak ada di sumber.
 - Gunakan transisi antar paragraf yang sangat halus. Pembaca tidak boleh sadar bahwa ini adalah gabungan dari 5 teks yang berbeda.
-- DI BAGIAN PALING AKHIR, Anda WAJIB membuat bagian "## Daftar Pustaka" yang berisi referensi dari sitasi-sitasi yang Anda sebutkan di teks. (Rangkum dari SOTA dan Kajian Pustaka).
+- DI BAGIAN PALING AKHIR, Anda WAJIB membuat bagian "## Daftar Pustaka" yang berisi referensi dari sitasi-sitasi yang Anda sebutkan di teks.
+- SANGAT PENTING: Gunakan informasi dari "DAFTAR REFERENSI LENGKAP" (poin 6) untuk menulis Daftar Pustaka secara utuh (Penulis, Tahun, Judul, Jurnal). JANGAN MENGARANG judul atau nama jurnal jika tidak ada!
 - Output HANYA berupa teks Markdown Latar Belakang (tanpa kata pengantar, langsung judul Bab 1).`;
 
   try {
