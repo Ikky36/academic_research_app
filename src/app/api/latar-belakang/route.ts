@@ -75,11 +75,6 @@ export async function POST(req: Request) {
       gapData = { gap: stateMap['selected_gap'], novelty: '', topikBaru: '' };
     }
 
-    // 2. Extract only sub-chapters ending in .1 from Kajian Pustaka
-    const kpText = stateMap['kp_result'];
-    const regex = /(### 2\.\d+\.1[\s\S]*?)(?=### 2\.\d+\.2|## 2\.\d+|$)/g;
-    const matches = [...kpText.matchAll(regex)];
-    const filteredKp = matches.length > 0 ? matches.map(m => m[0].trim()).join('\n\n') : kpText.substring(0, 5000);
 
     // 3. Fetch User API Key if BYOK is active
     let userApiKey = undefined;
