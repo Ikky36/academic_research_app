@@ -75,6 +75,12 @@ export async function POST(req: Request) {
       gapData = { gap: stateMap['selected_gap'], novelty: '', topikBaru: '' };
     }
 
+    // 2. Extract only sub-chapters ending in .1 from Kajian Pustaka
+    const kpText = stateMap['kp_result'];
+    const regex = /(### 2\.\d+\.1[\s\S]*?)(?=### 2\.\d+\.2|## 2\.\d+|$)/g;
+    const matches = [...kpText.matchAll(regex)];
+    const filteredKp = matches.length > 0 ? matches.map(m => m[0].trim()).join('\n\n') : kpText.substring(0, 5000);
+
     // 3. Fetch User API Key if BYOK is active
     let userApiKey = undefined;
     const { data: profile } = await supabase
@@ -88,17 +94,13 @@ export async function POST(req: Request) {
     }
 
     // 3.5. Fetch References (metadata) to build complete Daftar Pustaka
-    // We extract the perfectly formatted Daftar Pustaka directly from Kajian Pustaka
-    // so the AI gets the DOIs, publishers, and correct citation style (e.g. APA).
     const kpResultForRefs = stateMap['kp_result'] || '';
     let referencesList = '';
     
     const dpMatch = kpResultForRefs.match(/## Daftar Pustaka[\s\S]*/i);
     if (dpMatch) {
-      // Hilangkan headingnya agar AI tidak dobel judul
       referencesList = dpMatch[0].replace(/## Daftar Pustaka/i, '').trim();
     } else {
-      // Fallback jika tidak ditemukan (sangat jarang)
       const { data: referencesData } = await supabase
         .from('extracted_data')
         .select('title, authors, year_published, journal_name')
@@ -130,8 +132,6 @@ export async function POST(req: Request) {
       async start(controller) {
         let keepAlive: any = null;
         try {
-          // Send a space character every 3 seconds to prevent Vercel TTFB timeout
-          // Markdown ignores extra spaces so this won't break the UI
           keepAlive = setInterval(() => {
             controller.enqueue(encoder.encode(' '));
           }, 3000);
@@ -145,6 +145,7 @@ export async function POST(req: Request) {
             stateMap['research_topic'],
             paragraphCount || 5,
             referencesList,
+            existingText,
             userApiKey,
             isPaidApi
           );

@@ -462,6 +462,7 @@ export async function generateLatarBelakang(
   researchTopic: string,
   paragraphCount: number,
   referencesList: string,
+  existingText?: string,
   userApiKey?: string,
   isPaidApi?: boolean
 ): Promise<AsyncGenerator<string, void, unknown>> {
@@ -513,12 +514,22 @@ export async function generateLatarBelakang(
   - Output HANYA berupa teks Markdown Latar Belakang (tanpa kata pengantar, langsung judul Bab 1).`;
         
         async function* generateDeepSeek() {
+          const messages: any[] = [
+            { role: 'system', content: 'Anda adalah asisten AI akademik yang ahli.' },
+            { role: 'user', content: prompt }
+          ];
+
+          if (existingText) {
+            messages.push({ role: 'assistant', content: existingText });
+            messages.push({ 
+              role: 'user', 
+              content: 'Teks Anda terpotong. Lanjutkan persis dari kata terakhir Anda di atas. JANGAN ulangi kalimat yang sudah ditulis. JANGAN gunakan kata pengantar. Langsung sambung ketikannya hingga tuntas termasuk Daftar Pustaka.' 
+            });
+          }
+
           const params: any = {
             model: 'deepseek-chat', // Use standard deepseek-chat model
-            messages: [
-              { role: 'system', content: 'Anda adalah asisten AI akademik yang ahli.' },
-              { role: 'user', content: prompt }
-            ],
+            messages: messages,
             max_tokens: 8000,
             stream: true
           };
@@ -563,7 +574,18 @@ INSTRUKSI PENULISAN:
 - Output HANYA berupa teks Markdown Latar Belakang (tanpa kata pengantar, langsung judul Bab 1).`;
 
   try {
-    const result = await aiModel.generateContentStream(prompt);
+    let result;
+    if (existingText) {
+      result = await aiModel.generateContentStream({
+        contents: [
+          { role: 'user', parts: [{ text: prompt }] },
+          { role: 'model', parts: [{ text: existingText }] },
+          { role: 'user', parts: [{ text: 'Teks Anda terpotong. Lanjutkan persis dari kata terakhir Anda di atas. JANGAN ulangi kalimat yang sudah ditulis. JANGAN gunakan kata pengantar. Langsung sambung ketikannya hingga tuntas termasuk Daftar Pustaka.' }] }
+        ]
+      });
+    } else {
+      result = await aiModel.generateContentStream(prompt);
+    }
     
     async function* streamGenerator() {
       for await (const chunk of result.stream) {

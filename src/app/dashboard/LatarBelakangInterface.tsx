@@ -108,6 +108,52 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
     }
   };
 
+  const handleContinue = async () => {
+    setIsGenerating(true);
+    setError('');
+    
+    try {
+      const response = await fetch('/api/latar-belakang', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          projectId,
+          paragraphCount,
+          isPaidApi,
+          existingText: latarBelakang
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Gagal melanjutkan Latar Belakang');
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No stream available');
+      
+      const decoder = new TextDecoder();
+      let done = false;
+      let text = latarBelakang;
+      
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        const chunkValue = decoder.decode(value, { stream: true });
+        text += chunkValue;
+        setLatarBelakang(text);
+      }
+      
+      await saveProjectState(projectId, 'latar_belakang_result', text);
+      
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Terjadi kesalahan saat menghubungi AI');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const startEditing = () => {
     setEditedText(latarBelakang);
     setIsEditing(true);
@@ -177,6 +223,27 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
             >
               {isGenerating ? 'Menyintesis Latar Belakang...' : (latarBelakang ? 'Generate Ulang Latar Belakang' : 'Susun Latar Belakang')}
             </button>
+
+            {latarBelakang && !isGenerating && !latarBelakang.toLowerCase().includes('daftar pustaka') && (
+              <button 
+                onClick={handleContinue}
+                style={{ 
+                  background: 'var(--secondary)', 
+                  color: 'var(--on-secondary)',
+                  border: 'none',
+                  borderRadius: '100px',
+                  margin: 0, 
+                  padding: '10px 24px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                🔄 Lanjutkan Teks yang Terpotong
+              </button>
+            )}
           </div>
 
           {error && <div className={styles.errorMessage}>{error}</div>}
