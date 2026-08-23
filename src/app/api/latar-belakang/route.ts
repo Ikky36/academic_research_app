@@ -88,29 +88,40 @@ export async function POST(req: Request) {
     }
 
     // 3.5. Fetch References (metadata) to build complete Daftar Pustaka
-    const { data: referencesData } = await supabase
-      .from('extracted_data')
-      .select('title, authors, year_published, journal_name')
-      .eq('project_id', projectId);
-      
-    const { data: additionalRefs } = await supabase
-      .from('additional_references')
-      .select('title, author, year, publisher')
-      .eq('project_id', projectId);
-      
+    // We extract the perfectly formatted Daftar Pustaka directly from Kajian Pustaka
+    // so the AI gets the DOIs, publishers, and correct citation style (e.g. APA).
+    const kpResultForRefs = stateMap['kp_result'] || '';
     let referencesList = '';
-    let counter = 1;
     
-    if (referencesData && referencesData.length > 0) {
-      referencesList += referencesData.map((r) => 
-        `[${counter++}] ${r.authors || 'Tanpa Penulis'} (${r.year_published || 'n.d.'}). ${r.title || 'Tanpa Judul'}. ${r.journal_name || ''}`
-      ).join('\n') + '\n';
-    }
-    
-    if (additionalRefs && additionalRefs.length > 0) {
-      referencesList += additionalRefs.map((r) => 
-        `[${counter++}] ${r.author || 'Tanpa Penulis'} (${r.year || 'n.d.'}). ${r.title || 'Tanpa Judul'}. ${r.publisher || ''}`
-      ).join('\n') + '\n';
+    const dpMatch = kpResultForRefs.match(/## Daftar Pustaka[\s\S]*/i);
+    if (dpMatch) {
+      // Hilangkan headingnya agar AI tidak dobel judul
+      referencesList = dpMatch[0].replace(/## Daftar Pustaka/i, '').trim();
+    } else {
+      // Fallback jika tidak ditemukan (sangat jarang)
+      const { data: referencesData } = await supabase
+        .from('extracted_data')
+        .select('title, authors, year_published, journal_name')
+        .eq('project_id', projectId);
+        
+      const { data: additionalRefs } = await supabase
+        .from('additional_references')
+        .select('title, author, year, publisher')
+        .eq('project_id', projectId);
+        
+      let counter = 1;
+      
+      if (referencesData && referencesData.length > 0) {
+        referencesList += referencesData.map((r) => 
+          `[${counter++}] ${r.authors || 'Tanpa Penulis'} (${r.year_published || 'n.d.'}). ${r.title || 'Tanpa Judul'}. ${r.journal_name || ''}`
+        ).join('\n') + '\n';
+      }
+      
+      if (additionalRefs && additionalRefs.length > 0) {
+        referencesList += additionalRefs.map((r) => 
+          `[${counter++}] ${r.author || 'Tanpa Penulis'} (${r.year || 'n.d.'}). ${r.title || 'Tanpa Judul'}. ${r.publisher || ''}`
+        ).join('\n') + '\n';
+      }
     }
 
     // 4. Generate with AI (Streaming)
