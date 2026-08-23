@@ -237,7 +237,7 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
                   gap: '8px'
                 }}
               >
-                🔄 Lanjutkan Teks yang Terpotong
+                Lanjutkan Teks yang Terpotong
               </button>
             )}
           </div>
