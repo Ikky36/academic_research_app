@@ -122,6 +122,20 @@
   white-space: nowrap;
   padding-bottom: 8px;
   -webkit-overflow-scrolling: touch;
+  
+  /* Efek Sticky (Melayang) */
+  position: sticky;
+  top: 80px; /* Jarak dari header utama */
+  z-index: 40;
+  background-color: var(--background);
+  padding-top: 1rem;
+  margin-top: -1rem;
+}
+
+@media (max-width: 768px) {
+  .tabs {
+    top: 60px; /* Jarak header lebih kecil di HP */
+  }
 }
 
 .tabs::-webkit-scrollbar {
