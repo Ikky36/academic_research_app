@@ -152,9 +152,12 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
                 type="number" 
                 min="3" 
                 max="25" 
-                value={paragraphCount}
-                onChange={(e) => setParagraphCount(parseInt(e.target.value) || 5)}
-                style={{ width: '80px', padding: '8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: 'var(--surface)' }}
+                value={paragraphCount === 0 ? '' : paragraphCount}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setParagraphCount(isNaN(val) ? 0 : val);
+                }}
+                style={{ width: '80px', padding: '8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: 'var(--surface)', color: 'var(--on-surface)' }}
                 disabled={isGenerating}
               />
             </div>
@@ -162,10 +165,10 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
             <button 
               className={styles.generateButton}
               onClick={handleGenerate}
-              disabled={isGenerating}
+              disabled={isGenerating || paragraphCount < 3}
               style={{ background: 'var(--primary)', margin: 0, padding: '10px 24px' }}
             >
-              {isGenerating ? 'Menyintesis Latar Belakang...' : (latarBelakang ? '✨ Generate Ulang Latar Belakang' : '✨ Susun Latar Belakang')}
+              {isGenerating ? 'Menyintesis Latar Belakang...' : (latarBelakang ? 'Generate Ulang Latar Belakang' : 'Susun Latar Belakang')}
             </button>
           </div>
 
