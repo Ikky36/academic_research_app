@@ -93,10 +93,10 @@ export async function POST(req: Request) {
       async start(controller) {
         let keepAlive: any = null;
         try {
-          // Send a keepalive comment every 3 seconds to prevent Vercel TTFB timeout
-          // This is completely invisible in Markdown
+          // Send a space character every 3 seconds to prevent Vercel TTFB timeout
+          // Markdown ignores extra spaces so this won't break the UI
           keepAlive = setInterval(() => {
-            controller.enqueue(encoder.encode('<!-- keepalive -->\n'));
+            controller.enqueue(encoder.encode(' '));
           }, 3000);
 
           const aiStream = await generateLatarBelakang(

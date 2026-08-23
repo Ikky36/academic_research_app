@@ -482,36 +482,50 @@ export async function generateLatarBelakang(
     provider = await getActiveAiProvider();
     
     if (provider === 'deepseek' && isPaidApi) {
-      const { callDeepSeekWithRetry } = await import('./deepseek');
-      
-      const prompt = `Anda adalah seorang Profesor Pembimbing Akademik yang ahli dalam menyusun Bab 1: Latar Belakang Penelitian.
-Tugas Anda adalah menjahit 5 komponen narasi yang diberikan menjadi sebuah esai Latar Belakang (Bab 1) yang mengalir mulus, kohesif, dan meyakinkan.
-
-BERIKUT ADALAH 5 BAHAN BAKU ANDA:
-1. PENEKANAN JUDUL/TOPIK: "${researchTopic}"
-2. GAMBARAN UMUM (Sari Kajian Pustaka):
-${filteredKp}
-3. KESENJANGAN EMPIRIS:
-${empiricalGap}
-4. STATE OF THE ART (SOTA):
-${sotaMarkdown}
-5. RESEARCH GAP & NOVELTY:
-Gap: ${gap}
-Novelty: ${novelty}
-
-INSTRUKSI PENULISAN:
-- Alur logika harus DEDUKTIF ke INDUKTIF. Mulai dari Gambaran Umum -> Kesenjangan Empiris -> SOTA -> Research Gap -> Novelty -> Penegasan pentingnya penelitian ini dilakukan (merujuk ke Topik).
-- Buat sepanjang sekitar ${paragraphCount} paragraf utama yang padat dan bergaya bahasa akademis formal.
-- PERTAHANKAN sitasi (kutipan dalam teks) yang ada di Gambaran Umum maupun SOTA (misalnya: Smith, 2023). Jangan mengarang sitasi baru yang tidak ada di sumber.
-- Gunakan transisi antar paragraf yang sangat halus. Pembaca tidak boleh sadar bahwa ini adalah gabungan dari 5 teks yang berbeda.
-- DI BAGIAN PALING AKHIR, Anda WAJIB membuat bagian "## Daftar Pustaka" yang berisi referensi dari sitasi-sitasi yang Anda sebutkan di teks. (Rangkum dari SOTA dan Kajian Pustaka).
-- Output HANYA berupa teks Markdown Latar Belakang (tanpa kata pengantar, langsung judul Bab 1).`;
-      
-      async function* generateDeepSeek() {
-        const result = await callDeepSeekWithRetry(prompt, "Anda adalah asisten AI akademik.", 'think-medium');
-        yield result;
-      }
-      return generateDeepSeek();
+        const { getDeepSeekClient } = await import('./deepseek');
+        const client = getDeepSeekClient();
+        
+        const prompt = `Anda adalah seorang Profesor Pembimbing Akademik yang ahli dalam menyusun Bab 1: Latar Belakang Penelitian.
+  Tugas Anda adalah menjahit 5 komponen narasi yang diberikan menjadi sebuah esai Latar Belakang (Bab 1) yang mengalir mulus, kohesif, dan meyakinkan.
+  
+  BERIKUT ADALAH 5 BAHAN BAKU ANDA:
+  1. PENEKANAN JUDUL/TOPIK: "${researchTopic}"
+  2. GAMBARAN UMUM (Sari Kajian Pustaka):
+  ${filteredKp}
+  3. KESENJANGAN EMPIRIS:
+  ${empiricalGap}
+  4. STATE OF THE ART (SOTA):
+  ${sotaMarkdown}
+  5. RESEARCH GAP & NOVELTY:
+  Gap: ${gap}
+  Novelty: ${novelty}
+  
+  INSTRUKSI PENULISAN:
+  - Alur logika harus DEDUKTIF ke INDUKTIF. Mulai dari Gambaran Umum -> Kesenjangan Empiris -> SOTA -> Research Gap -> Novelty -> Penegasan pentingnya penelitian ini dilakukan (merujuk ke Topik).
+  - Buat sepanjang sekitar ${paragraphCount} paragraf utama yang padat dan bergaya bahasa akademis formal.
+  - PERTAHANKAN sitasi (kutipan dalam teks) yang ada di Gambaran Umum maupun SOTA (misalnya: Smith, 2023). Jangan mengarang sitasi baru yang tidak ada di sumber.
+  - Gunakan transisi antar paragraf yang sangat halus. Pembaca tidak boleh sadar bahwa ini adalah gabungan dari 5 teks yang berbeda.
+  - DI BAGIAN PALING AKHIR, Anda WAJIB membuat bagian "## Daftar Pustaka" yang berisi referensi dari sitasi-sitasi yang Anda sebutkan di teks. (Rangkum dari SOTA dan Kajian Pustaka).
+  - Output HANYA berupa teks Markdown Latar Belakang (tanpa kata pengantar, langsung judul Bab 1).`;
+        
+        async function* generateDeepSeek() {
+          const params: any = {
+            model: 'deepseek-chat', // Use standard deepseek-chat model
+            messages: [
+              { role: 'system', content: 'Anda adalah asisten AI akademik yang ahli.' },
+              { role: 'user', content: prompt }
+            ],
+            max_tokens: 8000,
+            stream: true
+          };
+          
+          const stream = await client.chat.completions.create(params);
+          for await (const chunk of stream as any) {
+            const delta = chunk.choices[0]?.delta?.content || '';
+            if (delta) yield delta;
+          }
+        }
+        return generateDeepSeek();
     }
     
     const genAI = new GoogleGenerativeAI(keyToUse);
