@@ -26,9 +26,10 @@ export async function POST(req: Request) {
       .select('method_category, methodology_books(title, author)');
       
     if (chunks && chunks.length > 0) {
-      const uniqueMethods = Array.from(new Set(chunks.map(c => 
-        `- ${c.method_category} (dari buku: ${c.methodology_books?.title} oleh ${c.methodology_books?.author})`
-      )));
+      const uniqueMethods = Array.from(new Set(chunks.map(c => {
+        const book: any = Array.isArray(c.methodology_books) ? c.methodology_books[0] : c.methodology_books;
+        return `- ${c.method_category} (dari buku: ${book?.title || 'Unknown'} oleh ${book?.author || 'Unknown'})`;
+      })));
       libraryContext = uniqueMethods.join('\n');
     }
 
