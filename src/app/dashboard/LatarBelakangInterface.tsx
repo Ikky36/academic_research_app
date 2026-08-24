@@ -174,9 +174,9 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2 className={styles.title}>Penyusunan Latar Belakang (Bab 1)</h2>
+        <h2 className={styles.title}>Penyusunan Latar Belakang</h2>
         <p className={styles.description} style={{ marginBottom: 0 }}>
-          AI akan memadukan Gambaran Umum (dari Kajian Pustaka), Kesenjangan Empiris, Tabel SOTA, serta Research Gap & Novelty menjadi Bab 1 Latar Belakang yang komprehensif lengkap dengan sitasi dan daftar pustaka.
+          AI akan memadukan Gambaran Umum (dari Kajian Pustaka), Kesenjangan Empiris, Tabel SOTA, serta Research Gap & Novelty menjadi Latar Belakang yang komprehensif lengkap dengan sitasi dan daftar pustaka.
         </p>
       </div>
 
