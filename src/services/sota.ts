@@ -514,7 +514,7 @@ export async function generateLatarBelakang(
   - Gunakan transisi antar paragraf yang sangat halus. Pembaca tidak boleh sadar bahwa ini adalah gabungan dari 5 teks yang berbeda.
   - DI BAGIAN PALING AKHIR, Anda WAJIB membuat bagian "## Daftar Pustaka" yang berisi referensi dari sitasi-sitasi yang Anda sebutkan di teks. 
   - SANGAT PENTING: Gunakan informasi dari "DAFTAR REFERENSI LENGKAP" (poin 6) untuk menulis Daftar Pustaka secara utuh (Penulis, Tahun, Judul, Jurnal). JANGAN MENGARANG judul atau nama jurnal jika tidak ada!
-  - Output HANYA berupa teks Markdown Latar Belakang (tanpa kata pengantar, langsung judul Bab 1).`;
+  - Output HANYA berupa teks Markdown Latar Belakang. JANGAN menuliskan judul besar "BAB 1: PENDAHULUAN". Langsung saja mulai dengan sub-judul "### Latar Belakang Penelitian".`;
         
         async function* generateDeepSeek() {
           const messages: any[] = [
@@ -577,7 +577,7 @@ INSTRUKSI PENULISAN:
 - Gunakan transisi antar paragraf yang sangat halus. Pembaca tidak boleh sadar bahwa ini adalah gabungan dari 5 teks yang berbeda.
 - DI BAGIAN PALING AKHIR, Anda WAJIB membuat bagian "## Daftar Pustaka" yang berisi referensi dari sitasi-sitasi yang Anda sebutkan di teks.
 - SANGAT PENTING: Gunakan informasi dari "DAFTAR REFERENSI LENGKAP" (poin 6) untuk menulis Daftar Pustaka secara utuh (Penulis, Tahun, Judul, Jurnal). JANGAN MENGARANG judul atau nama jurnal jika tidak ada!
-- Output HANYA berupa teks Markdown Latar Belakang (tanpa kata pengantar, langsung judul Bab 1).`;
+- Output HANYA berupa teks Markdown Latar Belakang. JANGAN menuliskan judul besar "BAB 1: PENDAHULUAN". Langsung saja mulai dengan sub-judul "### Latar Belakang Penelitian".`;
 
   try {
     let result: any;
