@@ -506,6 +506,9 @@ export async function generateLatarBelakang(
   
   INSTRUKSI PENULISAN:
   - Alur logika harus DEDUKTIF ke INDUKTIF. Mulai dari Gambaran Umum -> Kesenjangan Empiris -> SOTA -> Research Gap -> Novelty -> Penegasan pentingnya penelitian ini dilakukan (merujuk ke Topik).
+  - STRUKTUR MIKRO PARAGRAF (SANGAT PENTING): 
+      a) Pastikan SETIAP paragraf (kecuali paragraf paling akhir) menerapkan struktur P-E-E-L (Point-Evidence-Explanation-Link). Artinya, DILARANG KERAS membuat paragraf opini kosong tanpa bukti/sitasi. Setiap kalimat utama (klaim) HARUS langsung diikuti oleh sitasi dari teori di bahan baku!
+      b) KHUSUS PARAGRAF PALING AKHIR: Gunakan struktur S-U-D (Synthesis-Urgency-Declaration). Jangan bawa sitasi baru lagi di akhir. Rangkum masalah, tunjukkan bahayanya jika dibiarkan (urgensi), lalu tutup dengan deklarasi bahwa "Oleh karena itu, penelitian ini sangat urgen untuk dilakukan."
   - Buat sepanjang sekitar ${paragraphCount} paragraf utama yang padat dan bergaya bahasa akademis formal.
   - PERTAHANKAN sitasi (kutipan dalam teks) yang ada di Gambaran Umum maupun SOTA (misalnya: Smith, 2023). Jangan mengarang sitasi baru yang tidak ada di sumber.
   - Gunakan transisi antar paragraf yang sangat halus. Pembaca tidak boleh sadar bahwa ini adalah gabungan dari 5 teks yang berbeda.
@@ -565,9 +568,12 @@ Novelty: ${novelty}
 ${referencesList}
 
 INSTRUKSI PENULISAN:
-- Alur logika harus DEDUKTIF ke INDUKTIF. Mulai dari Gambaran Umum -> Kesenjangan Empiris -> SOTA -> Research Gap -> Novelty -> Penegasan pentingnya penelitian ini dilakukan (merujuk ke Topik).
-- Buat sepanjang sekitar ${paragraphCount} paragraf utama yang padat dan bergaya bahasa akademis formal.
-- PERTAHANKAN sitasi (kutipan dalam teks) yang ada di Gambaran Umum maupun SOTA (misalnya: Smith, 2023). Jangan mengarang sitasi baru yang tidak ada di sumber.
+  - Alur logika harus DEDUKTIF ke INDUKTIF. Mulai dari Gambaran Umum -> Kesenjangan Empiris -> SOTA -> Research Gap -> Novelty -> Penegasan pentingnya penelitian ini dilakukan (merujuk ke Topik).
+  - STRUKTUR MIKRO PARAGRAF (SANGAT PENTING): 
+      a) Pastikan SETIAP paragraf (kecuali paragraf paling akhir) menerapkan struktur P-E-E-L (Point-Evidence-Explanation-Link). Artinya, DILARANG KERAS membuat paragraf opini kosong tanpa bukti/sitasi. Setiap kalimat utama (klaim) HARUS langsung diikuti oleh sitasi dari teori di bahan baku!
+      b) KHUSUS PARAGRAF PALING AKHIR: Gunakan struktur S-U-D (Synthesis-Urgency-Declaration). Jangan bawa sitasi baru lagi di akhir. Rangkum masalah, tunjukkan bahayanya jika dibiarkan (urgensi), lalu tutup dengan deklarasi bahwa "Oleh karena itu, penelitian ini sangat urgen untuk dilakukan."
+  - Buat sepanjang sekitar ${paragraphCount} paragraf utama yang padat dan bergaya bahasa akademis formal.
+  - PERTAHANKAN sitasi (kutipan dalam teks) yang ada di Gambaran Umum maupun SOTA (misalnya: Smith, 2023). Jangan mengarang sitasi baru yang tidak ada di sumber.
 - Gunakan transisi antar paragraf yang sangat halus. Pembaca tidak boleh sadar bahwa ini adalah gabungan dari 5 teks yang berbeda.
 - DI BAGIAN PALING AKHIR, Anda WAJIB membuat bagian "## Daftar Pustaka" yang berisi referensi dari sitasi-sitasi yang Anda sebutkan di teks.
 - SANGAT PENTING: Gunakan informasi dari "DAFTAR REFERENSI LENGKAP" (poin 6) untuk menulis Daftar Pustaka secara utuh (Penulis, Tahun, Judul, Jurnal). JANGAN MENGARANG judul atau nama jurnal jika tidak ada!
