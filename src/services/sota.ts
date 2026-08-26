@@ -530,10 +530,11 @@ ${baseInstructions}
 TUGAS: Berikut adalah teks Latar Belakang yang baru disusun sebagian:
 ${existingText || ''}
 
-Lanjutkan teks di atas secara mulus dengan menyisipkan KESENJANGAN EMPIRIS dan STATE OF THE ART (SOTA). Anda WAJIB menulis TEPAT ${p2Count} paragraf tambahan (tidak boleh kurang, tidak boleh lebih).
+Berdasarkan teks di atas, lanjutkan pembahasannya dengan membuat paragraf-paragraf baru yang berisi KESENJANGAN EMPIRIS dan STATE OF THE ART (SOTA). Anda WAJIB menulis TEPAT ${p2Count} paragraf tambahan.
 INSTRUKSI KHUSUS TAHAP 2:
 - Terapkan struktur mikro P-E-E-L.
-- Jangan ulangi kalimat atau paragraf yang sudah ditulis sebelumnya. Jangan beri salam pengantar. Langsung sambung narasinya dari kata terakhir.
+- Mulailah langsung dengan kalimat awal di paragraf baru Anda. JANGAN mencoba menyambung kalimat/kata terakhir dari teks sebelumnya.
+- Jangan ulangi kalimat atau paragraf yang sudah ditulis sebelumnya. Jangan beri salam pengantar. 
 - JANGAN menulis Daftar Pustaka.
 - SANGAT PENTING: DILARANG KERAS menuliskan teks penanda urutan seperti "Paragraf 3:", "Paragraf 4:", dsb. (Penggunaan kata "paragraf" secara normal di dalam struktur kalimat tetap diizinkan).`;
   } else if (step === 3) {
@@ -542,9 +543,10 @@ ${baseInstructions}
 TUGAS: Berikut teks Latar Belakang yang hampir selesai:
 ${existingText || ''}
 
-Lanjutkan secara mulus dengan membahas RESEARCH GAP & NOVELTY sebagai penutup Latar Belakang. Anda WAJIB menulis TEPAT ${p3Count} paragraf tambahan (tidak boleh kurang, tidak boleh lebih).
+Berdasarkan teks di atas, lanjutkan pembahasannya dengan membuat paragraf-paragraf baru yang berisi RESEARCH GAP & NOVELTY sebagai penutup Latar Belakang. Anda WAJIB menulis TEPAT ${p3Count} paragraf tambahan.
 INSTRUKSI KHUSUS TAHAP 3:
 - Paragraf paling akhir WAJIB menggunakan struktur S-U-D (Synthesis-Urgency-Declaration) yang menegaskan pentingnya penelitian ini dilakukan (contoh: "Oleh karena itu, penelitian ini urgen dilakukan...").
+- Mulailah langsung dengan kalimat awal di paragraf baru Anda. JANGAN mencoba menyambung kalimat/kata terakhir dari teks sebelumnya.
 - Jangan bawa sitasi baru di paragraf paling akhir.
 - Jangan ulangi teks sebelumnya. Jangan beri salam pengantar.
 - JANGAN menulis Daftar Pustaka.

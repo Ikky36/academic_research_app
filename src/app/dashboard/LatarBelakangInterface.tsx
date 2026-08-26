@@ -103,6 +103,12 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
         
         if (step === 1) {
           setLatarBelakang('');
+        } else {
+          // Tambahkan jeda paragraf agar tidak menempel dengan hasil tahap sebelumnya
+          if (!accumulatedText.endsWith('\n\n')) {
+             if (accumulatedText.endsWith('\n')) accumulatedText += '\n';
+             else accumulatedText += '\n\n';
+          }
         }
 
         while (!done) {
