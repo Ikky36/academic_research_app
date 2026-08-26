@@ -518,10 +518,11 @@ ${referencesList}
   if (step === 1) {
     prompt = `Anda adalah Profesor Pembimbing Akademik yang ahli dalam menyusun Bab 1: Latar Belakang Penelitian.
 ${baseInstructions}
-TUGAS: Tuliskan HANYA Bagian 1 dari Latar Belakang. Anda WAJIB menulis TEPAT ${p1Count} paragraf untuk bagian ini (tidak boleh kurang, tidak boleh lebih). Fokus pada KONTEKS MAKRO dan GAMBARAN UMUM.
+TUGAS: Tuliskan HANYA Bagian 1 dari Latar Belakang. Anda WAJIB menulis TEPAT ${p1Count} paragraf untuk bagian ini (tidak boleh kurang, tidak boleh lebih). Fokus HANYA pada KONTEKS MAKRO dan GAMBARAN UMUM berdasarkan data Sari Kajian Pustaka.
 INSTRUKSI KHUSUS TAHAP 1:
 - Terapkan struktur mikro P-E-E-L (Point-Evidence-Explanation-Link). Setiap klaim harus diikuti sitasi dari Bahan Baku.
-- Jangan menulis kesimpulan. Jangan membuat judul besar BAB 1 PENDAHULUAN. Langsung mulai dengan "### Latar Belakang Penelitian".
+- Jangan menulis kesimpulan. Jangan membuat judul besar BAB 1 PENDAHULUAN. Langsung mulai teks Anda dengan "### Latar Belakang Penelitian".
+- JANGAN membahas Kesenjangan Empiris, Tabel SOTA, atau Research Gap di tahap ini! (Itu adalah tugas untuk tahap selanjutnya).
 - JANGAN menulis Daftar Pustaka.
 - SANGAT PENTING: DILARANG KERAS menuliskan teks penanda urutan seperti "Paragraf 1:", "Paragraf 2:", dsb. Namun, Anda tetap Boleh menggunakan kata "paragraf" di dalam narasi jika topik penelitiannya memang membahas tentang paragraf teks.`;
   } else if (step === 2) {
