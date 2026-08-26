@@ -494,21 +494,13 @@ export async function generateLatarBelakang(
   }
 
   let prompt = '';
-  const baseInstructions = `
-BERIKUT ADALAH BAHAN BAKU ANDA:
-1. PENEKANAN JUDUL/TOPIK: "${researchTopic}"
-2. GAMBARAN UMUM (Sari Kajian Pustaka):
-${filteredKp}
-3. KESENJANGAN EMPIRIS:
-${empiricalGap}
-4. STATE OF THE ART (SOTA):
-${sotaMarkdown}
-5. RESEARCH GAP & NOVELTY:
-Gap: ${gap}
-Novelty: ${novelty}
+  // Format Referensi wajib ada di setiap tahap agar AI bisa melakukan sitasi
+  const referencesString = `
 6. DAFTAR REFERENSI LENGKAP (Metadata Pustaka):
 ${referencesList}
-`;
+  `;
+
+  const topicString = `1. PENEKANAN JUDUL/TOPIK: "${researchTopic}"`;
 
   // Hitung distribusi paragraf secara dinamis berdasarkan input user
   const p1Count = Math.max(1, Math.round(paragraphCount * 0.25)); // 25% untuk Konteks
@@ -517,17 +509,28 @@ ${referencesList}
 
   if (step === 1) {
     prompt = `Anda adalah Profesor Pembimbing Akademik yang ahli dalam menyusun Bab 1: Latar Belakang Penelitian.
-${baseInstructions}
+BERIKUT ADALAH BAHAN BAKU ANDA:
+${topicString}
+2. GAMBARAN UMUM (Sari Kajian Pustaka):
+${filteredKp}
+${referencesString}
+
 TUGAS: Tuliskan HANYA Bagian 1 dari Latar Belakang. Anda WAJIB menulis TEPAT ${p1Count} paragraf untuk bagian ini (tidak boleh kurang, tidak boleh lebih). Fokus HANYA pada KONTEKS MAKRO dan GAMBARAN UMUM berdasarkan data Sari Kajian Pustaka.
 INSTRUKSI KHUSUS TAHAP 1:
 - Terapkan struktur mikro P-E-E-L (Point-Evidence-Explanation-Link). Setiap klaim harus diikuti sitasi dari Bahan Baku.
 - Jangan menulis kesimpulan. Jangan membuat judul besar BAB 1 PENDAHULUAN. Langsung mulai teks Anda dengan "### Latar Belakang Penelitian".
-- JANGAN membahas Kesenjangan Empiris, Tabel SOTA, atau Research Gap di tahap ini! (Itu adalah tugas untuk tahap selanjutnya).
 - JANGAN menulis Daftar Pustaka.
 - SANGAT PENTING: DILARANG KERAS menuliskan teks penanda urutan seperti "Paragraf 1:", "Paragraf 2:", dsb. Namun, Anda tetap Boleh menggunakan kata "paragraf" di dalam narasi jika topik penelitiannya memang membahas tentang paragraf teks.`;
   } else if (step === 2) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
-${baseInstructions}
+BERIKUT ADALAH BAHAN BAKU ANDA:
+${topicString}
+3. KESENJANGAN EMPIRIS:
+${empiricalGap}
+4. STATE OF THE ART (SOTA):
+${sotaMarkdown}
+${referencesString}
+
 TUGAS: Berikut adalah teks Latar Belakang yang baru disusun sebagian:
 ${existingText || ''}
 
@@ -540,7 +543,13 @@ INSTRUKSI KHUSUS TAHAP 2:
 - SANGAT PENTING: DILARANG KERAS menuliskan teks penanda urutan seperti "Paragraf 3:", "Paragraf 4:", dsb. (Penggunaan kata "paragraf" secara normal di dalam struktur kalimat tetap diizinkan).`;
   } else if (step === 3) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
-${baseInstructions}
+BERIKUT ADALAH BAHAN BAKU ANDA:
+${topicString}
+5. RESEARCH GAP & NOVELTY:
+Gap: ${gap}
+Novelty: ${novelty}
+${referencesString}
+
 TUGAS: Berikut teks Latar Belakang yang hampir selesai:
 ${existingText || ''}
 
@@ -554,7 +563,10 @@ INSTRUKSI KHUSUS TAHAP 3:
 - SANGAT PENTING: DILARANG KERAS menuliskan teks penanda urutan seperti "Paragraf 5:", dsb. (Penggunaan kata "paragraf" secara normal di dalam struktur kalimat tetap diizinkan).`;
   } else if (step === 4) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
-${baseInstructions}
+BERIKUT ADALAH BAHAN BAKU ANDA:
+${topicString}
+${referencesString}
+
 TUGAS: Berdasarkan KESELURUHAN teks Latar Belakang yang telah disusun berikut:
 ${existingText || ''}
 
@@ -566,7 +578,19 @@ INSTRUKSI KHUSUS TAHAP 4:
   } else {
     // Fallback if step is not provided (single-shot or continuation)
     prompt = `Anda adalah seorang Profesor Pembimbing Akademik yang ahli dalam menyusun Bab 1: Latar Belakang Penelitian.
-${baseInstructions}
+BERIKUT ADALAH BAHAN BAKU ANDA:
+${topicString}
+2. GAMBARAN UMUM (Sari Kajian Pustaka):
+${filteredKp}
+3. KESENJANGAN EMPIRIS:
+${empiricalGap}
+4. STATE OF THE ART (SOTA):
+${sotaMarkdown}
+5. RESEARCH GAP & NOVELTY:
+Gap: ${gap}
+Novelty: ${novelty}
+${referencesString}
+
 INSTRUKSI PENULISAN:
 - Alur logika harus DEDUKTIF ke INDUKTIF. Mulai dari Gambaran Umum -> Kesenjangan Empiris -> SOTA -> Research Gap -> Novelty -> Penegasan.
 - STRUKTUR MIKRO PARAGRAF (SANGAT PENTING): 
