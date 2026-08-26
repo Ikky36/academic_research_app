@@ -519,6 +519,7 @@ TUGAS: Tuliskan HANYA Bagian 1 dari Latar Belakang. Anda WAJIB menulis TEPAT ${p
 INSTRUKSI KHUSUS TAHAP 1:
 - Terapkan struktur mikro P-E-E-L (Point-Evidence-Explanation-Link). Setiap klaim harus diikuti sitasi dari Bahan Baku.
 - Jangan menulis kesimpulan. Jangan membuat judul besar BAB 1 PENDAHULUAN. Langsung mulai teks Anda dengan "### Latar Belakang Penelitian".
+- JANGAN membahas Kesenjangan Empiris, Tabel SOTA, atau Research Gap di tahap ini! (Itu adalah tugas untuk tahap selanjutnya).
 - JANGAN menulis Daftar Pustaka.
 - SANGAT PENTING: DILARANG KERAS menuliskan teks penanda urutan seperti "Paragraf 1:", "Paragraf 2:", dsb. Namun, Anda tetap Boleh menggunakan kata "paragraf" di dalam narasi jika topik penelitiannya memang membahas tentang paragraf teks.`;
   } else if (step === 2) {
@@ -527,21 +528,38 @@ BERIKUT ADALAH BAHAN BAKU ANDA:
 ${topicString}
 3. KESENJANGAN EMPIRIS:
 ${empiricalGap}
-4. STATE OF THE ART (SOTA):
-${sotaMarkdown}
 ${referencesString}
 
 TUGAS: Berikut adalah teks Latar Belakang yang baru disusun sebagian:
 ${existingText || ''}
 
-Berdasarkan teks di atas, lanjutkan pembahasannya dengan membuat paragraf-paragraf baru yang berisi KESENJANGAN EMPIRIS dan STATE OF THE ART (SOTA). Anda WAJIB menulis TEPAT ${p2Count} paragraf tambahan.
+Berdasarkan teks di atas, lanjutkan pembahasannya dengan membuat paragraf-paragraf baru yang berisi KESENJANGAN EMPIRIS. Anda WAJIB menulis TEPAT ${p2Count} paragraf tambahan.
 INSTRUKSI KHUSUS TAHAP 2:
 - Terapkan struktur mikro P-E-E-L.
 - Mulailah langsung dengan kalimat awal di paragraf baru Anda. JANGAN mencoba menyambung kalimat/kata terakhir dari teks sebelumnya.
 - Jangan ulangi kalimat atau paragraf yang sudah ditulis sebelumnya. Jangan beri salam pengantar. 
+- JANGAN membahas Tabel SOTA atau Research Gap & Novelty di tahap ini!
 - JANGAN menulis Daftar Pustaka.
 - SANGAT PENTING: DILARANG KERAS menuliskan teks penanda urutan seperti "Paragraf 3:", "Paragraf 4:", dsb. (Penggunaan kata "paragraf" secara normal di dalam struktur kalimat tetap diizinkan).`;
   } else if (step === 3) {
+    prompt = `Anda adalah Profesor Pembimbing Akademik.
+BERIKUT ADALAH BAHAN BAKU ANDA:
+${topicString}
+4. STATE OF THE ART (SOTA):
+${sotaMarkdown}
+${referencesString}
+
+TUGAS: Berikut teks Latar Belakang yang hampir selesai:
+${existingText || ''}
+
+Berdasarkan teks di atas, lanjutkan pembahasannya dengan membuat paragraf-paragraf baru yang berisi narasi STATE OF THE ART (SOTA). Anda WAJIB menulis TEPAT ${p3Count} paragraf tambahan.
+INSTRUKSI KHUSUS TAHAP 3:
+- Uraikan temuan dari penelitian terdahulu yang ada di Tabel SOTA menjadi narasi yang mengalir.
+- Mulailah langsung dengan kalimat awal di paragraf baru Anda. JANGAN mencoba menyambung kalimat/kata terakhir dari teks sebelumnya.
+- Jangan ulangi teks sebelumnya. Jangan beri salam pengantar.
+- JANGAN menulis Daftar Pustaka.
+- SANGAT PENTING: DILARANG KERAS menuliskan teks penanda urutan seperti "Paragraf 5:", dsb. (Penggunaan kata "paragraf" secara normal di dalam struktur kalimat tetap diizinkan).`;
+  } else if (step === 4) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
 BERIKUT ADALAH BAHAN BAKU ANDA:
 ${topicString}
@@ -553,15 +571,15 @@ ${referencesString}
 TUGAS: Berikut teks Latar Belakang yang hampir selesai:
 ${existingText || ''}
 
-Berdasarkan teks di atas, lanjutkan pembahasannya dengan membuat paragraf-paragraf baru yang berisi RESEARCH GAP & NOVELTY sebagai penutup Latar Belakang. Anda WAJIB menulis TEPAT ${p3Count} paragraf tambahan.
-INSTRUKSI KHUSUS TAHAP 3:
+Berdasarkan teks di atas, lanjutkan pembahasannya dengan membuat paragraf-paragraf baru yang berisi RESEARCH GAP & NOVELTY sebagai penutup Latar Belakang. Anda WAJIB menulis TEPAT ${p4Count} paragraf tambahan.
+INSTRUKSI KHUSUS TAHAP 4:
 - Paragraf paling akhir WAJIB menggunakan struktur S-U-D (Synthesis-Urgency-Declaration) yang menegaskan pentingnya penelitian ini dilakukan (contoh: "Oleh karena itu, penelitian ini urgen dilakukan...").
 - Mulailah langsung dengan kalimat awal di paragraf baru Anda. JANGAN mencoba menyambung kalimat/kata terakhir dari teks sebelumnya.
 - Jangan bawa sitasi baru di paragraf paling akhir.
 - Jangan ulangi teks sebelumnya. Jangan beri salam pengantar.
 - JANGAN menulis Daftar Pustaka.
-- SANGAT PENTING: DILARANG KERAS menuliskan teks penanda urutan seperti "Paragraf 5:", dsb. (Penggunaan kata "paragraf" secara normal di dalam struktur kalimat tetap diizinkan).`;
-  } else if (step === 4) {
+- SANGAT PENTING: DILARANG KERAS menuliskan teks penanda urutan.`;
+  } else if (step === 5) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
 BERIKUT ADALAH BAHAN BAKU ANDA:
 ${topicString}
@@ -571,7 +589,7 @@ TUGAS: Berdasarkan KESELURUHAN teks Latar Belakang yang telah disusun berikut:
 ${existingText || ''}
 
 Buatkan section "## Daftar Pustaka" HANYA untuk referensi/sitasi yang benar-benar muncul di teks tersebut.
-INSTRUKSI KHUSUS TAHAP 4:
+INSTRUKSI KHUSUS TAHAP 5:
 - Gunakan format penulisan berdasarkan informasi dari DAFTAR REFERENSI LENGKAP (poin 6 di bahan baku).
 - JANGAN mengarang judul atau jurnal jika tidak ada di bahan baku. 
 - Jangan beri salam pengantar, langsung mulai dengan baris ## Daftar Pustaka.`;
