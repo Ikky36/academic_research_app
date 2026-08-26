@@ -535,11 +535,10 @@ ${existingText || ''}
 
 Berdasarkan teks di atas, lanjutkan pembahasannya dengan membuat paragraf-paragraf baru yang berisi KESENJANGAN EMPIRIS. Anda WAJIB menulis TEPAT ${p2Count} paragraf tambahan.
 INSTRUKSI KHUSUS TAHAP 2:
-- Terapkan struktur mikro P-E-E-L. Fokuskan narasi pada ketimpangan antara kondisi ideal (das sollen) dan realita di lapangan (das sein).
-- Paparkan fenomena, data, atau fakta permasalahan nyata yang menjadi alasan mengapa penelitian ini dibutuhkan.
+- Terapkan struktur mikro P-E-E-L.
 - Mulailah langsung dengan kalimat awal di paragraf baru Anda. JANGAN mencoba menyambung kalimat/kata terakhir dari teks sebelumnya.
 - Jangan ulangi kalimat atau paragraf yang sudah ditulis sebelumnya. Jangan beri salam pengantar. 
-- JANGAN membahas kajian Literatur/Tabel SOTA atau Research Gap di tahap ini! Fokus murni pada masalah dunia nyata (Empiris).
+- JANGAN membahas Tabel SOTA atau Research Gap & Novelty di tahap ini!
 - JANGAN menulis Daftar Pustaka.
 - SANGAT PENTING: DILARANG KERAS menuliskan teks penanda urutan seperti "Paragraf 3:", "Paragraf 4:", dsb. (Penggunaan kata "paragraf" secara normal di dalam struktur kalimat tetap diizinkan).`;
   } else if (step === 3) {
