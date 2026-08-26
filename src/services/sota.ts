@@ -523,7 +523,7 @@ INSTRUKSI KHUSUS TAHAP 1:
 - Terapkan struktur mikro P-E-E-L (Point-Evidence-Explanation-Link). Setiap klaim harus diikuti sitasi dari Bahan Baku.
 - Jangan menulis kesimpulan. Jangan membuat judul besar BAB 1 PENDAHULUAN. Langsung mulai dengan "### Latar Belakang Penelitian".
 - JANGAN menulis Daftar Pustaka.
-- SANGAT PENTING: Pastikan tulisan Anda terdiri dari persis ${p1Count} paragraf. DILARANG KERAS menuliskan label "Paragraf 1", "Paragraf 2", dsb di dalam teks. Cukup pisahkan tiap paragraf dengan baris kosong (Enter).`;
+- SANGAT PENTING: DILARANG KERAS menuliskan teks penanda urutan seperti "Paragraf 1:", "Paragraf 2:", dsb. Namun, Anda tetap Boleh menggunakan kata "paragraf" di dalam narasi jika topik penelitiannya memang membahas tentang paragraf teks.`;
   } else if (step === 2) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
 ${baseInstructions}
@@ -535,7 +535,7 @@ INSTRUKSI KHUSUS TAHAP 2:
 - Terapkan struktur mikro P-E-E-L.
 - Jangan ulangi kalimat atau paragraf yang sudah ditulis sebelumnya. Jangan beri salam pengantar. Langsung sambung narasinya dari kata terakhir.
 - JANGAN menulis Daftar Pustaka.
-- SANGAT PENTING: Pastikan tambahan tulisan Anda terdiri dari persis ${p2Count} paragraf. DILARANG KERAS menuliskan label "Paragraf", "Bagian", atau nomor urut di dalam teks. Cukup pisahkan tiap paragraf dengan baris kosong.`;
+- SANGAT PENTING: DILARANG KERAS menuliskan teks penanda urutan seperti "Paragraf 3:", "Paragraf 4:", dsb. (Penggunaan kata "paragraf" secara normal di dalam struktur kalimat tetap diizinkan).`;
   } else if (step === 3) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
 ${baseInstructions}
@@ -548,7 +548,7 @@ INSTRUKSI KHUSUS TAHAP 3:
 - Jangan bawa sitasi baru di paragraf paling akhir.
 - Jangan ulangi teks sebelumnya. Jangan beri salam pengantar.
 - JANGAN menulis Daftar Pustaka.
-- SANGAT PENTING: Pastikan tambahan tulisan Anda terdiri dari persis ${p3Count} paragraf. DILARANG KERAS menuliskan label "Paragraf" atau penomoran apapun di dalam teks. Cukup pisahkan dengan baris kosong.`;
+- SANGAT PENTING: DILARANG KERAS menuliskan teks penanda urutan seperti "Paragraf 5:", dsb. (Penggunaan kata "paragraf" secara normal di dalam struktur kalimat tetap diizinkan).`;
   } else if (step === 4) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
 ${baseInstructions}
