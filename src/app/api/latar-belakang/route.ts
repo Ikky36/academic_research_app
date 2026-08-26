@@ -14,7 +14,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { projectId, paragraphCount, isPaidApi, existingText } = await req.json();
+    const { projectId, paragraphCount, isPaidApi, existingText, step, apiKeyIndex } = await req.json();
 
     if (!projectId) {
       return NextResponse.json({ error: 'Project ID required' }, { status: 400 });
@@ -49,20 +49,15 @@ export async function POST(req: Request) {
     }
 
     // 2. Parse and filter kp_result (Regex Parser)
-    // We want to extract content under headings like "### 2.X.1" up to the next heading "### 2.X.2" or "## "
     const kpResult = stateMap['kp_result'];
     let filteredKp = "";
     
-    // Regex explanation:
-    // /(### 2\.\d+\.1.*?)(?=### 2\.\d+\.2|## 2\.\d+|$)/gs
-    // Captures everything starting from ### 2.x.1 up to but not including the next sub-sub chapter or main chapter
     const regex = /(### 2\.\d+\.1[\s\S]*?)(?=### 2\.\d+\.2|## 2\.\d+|$)/g;
     const matches = kpResult.match(regex);
     
     if (matches && matches.length > 0) {
       filteredKp = matches.join('\n\n');
     } else {
-      // Fallback if parsing fails (maybe formatting is different), just use a truncated version
       filteredKp = kpResult.substring(0, 5000); 
     }
 
@@ -71,10 +66,8 @@ export async function POST(req: Request) {
     try {
       gapData = JSON.parse(stateMap['selected_gap']);
     } catch (e) {
-      // Fallback if it was stored as raw string previously
       gapData = { gap: stateMap['selected_gap'], novelty: '', topikBaru: '' };
     }
-
 
     // 3. Fetch User API Key if BYOK is active
     let userApiKey = undefined;
@@ -88,7 +81,7 @@ export async function POST(req: Request) {
       userApiKey = profile.api_key;
     }
 
-    // 3.5. Fetch References (metadata) to build complete Daftar Pustaka
+    // 3.5. Fetch References
     const kpResultForRefs = stateMap['kp_result'] || '';
     let referencesList = '';
     
@@ -107,13 +100,11 @@ export async function POST(req: Request) {
         .eq('project_id', projectId);
         
       let counter = 1;
-      
       if (referencesData && referencesData.length > 0) {
         referencesList += referencesData.map((r) => 
           `[${counter++}] ${r.authors || 'Tanpa Penulis'} (${r.year_published || 'n.d.'}). ${r.title || 'Tanpa Judul'}. ${r.journal_name || ''}`
         ).join('\n') + '\n';
       }
-      
       if (additionalRefs && additionalRefs.length > 0) {
         referencesList += additionalRefs.map((r) => 
           `[${counter++}] ${r.author || 'Tanpa Penulis'} (${r.year || 'n.d.'}). ${r.title || 'Tanpa Judul'}. ${r.publisher || ''}`
@@ -122,6 +113,22 @@ export async function POST(req: Request) {
     }
 
     // 4. Generate with AI (Streaming)
+    const { stream: aiStream, usedKeyIndex } = await generateLatarBelakang(
+      filteredKp,
+      stateMap['empirical_gap_narrative'],
+      stateMap['sota_markdown'],
+      gapData.gap,
+      gapData.novelty,
+      stateMap['research_topic'],
+      paragraphCount || 5,
+      referencesList,
+      existingText,
+      userApiKey,
+      isPaidApi,
+      step,
+      apiKeyIndex
+    );
+
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
@@ -131,20 +138,6 @@ export async function POST(req: Request) {
             controller.enqueue(encoder.encode(' '));
           }, 3000);
 
-          const aiStream = await generateLatarBelakang(
-            filteredKp,
-            stateMap['empirical_gap_narrative'],
-            stateMap['sota_markdown'],
-            gapData.gap,
-            gapData.novelty,
-            stateMap['research_topic'],
-            paragraphCount || 5,
-            referencesList,
-            existingText,
-            userApiKey,
-            isPaidApi
-          );
-          
           for await (const chunk of aiStream) {
             if (keepAlive) {
               clearInterval(keepAlive);
@@ -162,12 +155,16 @@ export async function POST(req: Request) {
       }
     });
 
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Transfer-Encoding': 'chunked',
-      },
-    });
+    const headers: Record<string, string> = {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Transfer-Encoding': 'chunked',
+    };
+
+    if (usedKeyIndex !== undefined) {
+      headers['X-API-Key-Index'] = usedKeyIndex.toString();
+    }
+
+    return new Response(stream, { headers });
 
   } catch (error: any) {
     console.error('Error generating latar belakang:', error);

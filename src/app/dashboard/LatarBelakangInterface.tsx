@@ -66,39 +66,55 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
     await saveProjectState(projectId, 'latar_belakang_paragraphs', paragraphCount.toString());
 
     try {
-      const response = await fetch('/api/latar-belakang', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          projectId,
-          paragraphCount,
-          isPaidApi
-        }),
-      });
+      let accumulatedText = "";
+      let currentApiKeyIndex: number | null = null;
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error || 'Gagal menyusun Latar Belakang');
+      for (let step = 1; step <= 4; step++) {
+        const response = await fetch('/api/latar-belakang', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            projectId,
+            paragraphCount,
+            isPaidApi,
+            step,
+            existingText: step > 1 ? accumulatedText : undefined,
+            apiKeyIndex: currentApiKeyIndex
+          }),
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || `Gagal menyusun Latar Belakang (Tahap ${step})`);
+        }
+        
+        if (step === 1) {
+          const headerIdx = response.headers.get('X-API-Key-Index');
+          if (headerIdx !== null && headerIdx !== undefined) {
+             currentApiKeyIndex = parseInt(headerIdx, 10);
+          }
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error('No stream available');
+        
+        const decoder = new TextDecoder();
+        let done = false;
+        
+        if (step === 1) {
+          setLatarBelakang('');
+        }
+
+        while (!done) {
+          const { value, done: doneReading } = await reader.read();
+          done = doneReading;
+          const chunkValue = decoder.decode(value, { stream: true });
+          accumulatedText += chunkValue;
+          setLatarBelakang(accumulatedText);
+        }
       }
-
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error('No stream available');
       
-      const decoder = new TextDecoder();
-      let done = false;
-      let text = '';
-      
-      setLatarBelakang('');
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        const chunkValue = decoder.decode(value, { stream: true });
-        text += chunkValue;
-        setLatarBelakang(text);
-      }
-      
-      await saveProjectState(projectId, 'latar_belakang_result', text);
+      await saveProjectState(projectId, 'latar_belakang_result', accumulatedText);
       
     } catch (err: any) {
       console.error(err);
@@ -199,29 +215,36 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
           
           <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <label htmlFor="p-count" style={{ fontSize: '14px', fontWeight: '500' }}>Target Jumlah Paragraf:</label>
-              <input 
+              <label htmlFor="p-count" style={{ fontSize: '14px', fontWeight: '500' }}>Estimasi Panjang:</label>
+              <select 
                 id="p-count"
-                type="number" 
-                min="3" 
-                max="25" 
-                value={paragraphCount === 0 ? '' : paragraphCount}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setParagraphCount(isNaN(val) ? 0 : val);
+                value={paragraphCount}
+                onChange={(e) => setParagraphCount(parseInt(e.target.value))}
+                style={{ 
+                  padding: '8px', 
+                  borderRadius: '4px', 
+                  border: '1px solid var(--border)', 
+                  backgroundColor: 'var(--surface)', 
+                  color: 'var(--on-surface)',
+                  minWidth: '180px',
+                  cursor: 'pointer'
                 }}
-                style={{ width: '80px', padding: '8px', borderRadius: '4px', border: '1px solid var(--border)', backgroundColor: 'var(--surface)', color: 'var(--on-surface)' }}
                 disabled={isGenerating}
-              />
+              >
+                <option value={5}>± 5 Paragraf (Ringkas)</option>
+                <option value={10}>± 10 Paragraf (Standar)</option>
+                <option value={15}>± 15 Paragraf (Mendetail)</option>
+                <option value={20}>± 20 Paragraf (Sangat Panjang)</option>
+              </select>
             </div>
             
             <button 
-              className={styles.generateButton}
+              className={styles.generateButton} 
               onClick={handleGenerate}
               disabled={isGenerating || paragraphCount < 3}
               style={{ background: 'var(--primary)', margin: 0, padding: '10px 24px' }}
             >
-              {isGenerating ? 'Menyintesis Latar Belakang...' : (latarBelakang ? 'Generate Ulang Latar Belakang' : 'Susun Latar Belakang')}
+              {isGenerating ? 'Sedang membuat latar belakang ...' : (latarBelakang ? 'Generate Ulang Latar Belakang' : 'Susun Latar Belakang')}
             </button>
 
             {latarBelakang && !isGenerating && (

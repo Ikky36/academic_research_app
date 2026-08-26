@@ -22,23 +22,29 @@ function getEnvFallback(key: string): string | undefined {
 /**
  * Mendapatkan API key DeepSeek secara acak (rotasi) dari env DEEPSEEK_API_KEYS
  */
-export function getDeepSeekApiKey(): string {
+export function getDeepSeekApiKey(requestedIndex?: number): { key: string, keyIndex: number } {
   const keysEnv = getEnvFallback('DEEPSEEK_API_KEYS');
   if (!keysEnv) throw new Error('DEEPSEEK_API_KEYS tidak ditemukan di environment variables.');
   const keys = keysEnv.split(',').map(k => k.trim()).filter(Boolean);
   if (keys.length === 0) throw new Error('Tidak ada DeepSeek API key yang valid.');
-  return keys[Math.floor(Math.random() * keys.length)];
+  
+  const idx = (typeof requestedIndex === 'number' && requestedIndex >= 0 && requestedIndex < keys.length)
+    ? requestedIndex
+    : Math.floor(Math.random() * keys.length);
+    
+  return { key: keys[idx], keyIndex: idx };
 }
 
 /**
  * Mendapatkan OpenAI client yang dikonfigurasi ke endpoint DeepSeek
  */
-export function getDeepSeekClient(): OpenAI {
-  const apiKey = getDeepSeekApiKey();
-  return new OpenAI({
-    apiKey,
+export function getDeepSeekClient(requestedIndex?: number): { client: OpenAI, keyIndex: number } {
+  const { key, keyIndex } = getDeepSeekApiKey(requestedIndex);
+  const client = new OpenAI({
+    apiKey: key,
     baseURL: 'https://api.deepseek.com',
   });
+  return { client, keyIndex };
 }
 
 /**
@@ -71,7 +77,7 @@ export async function callDeepSeek(
   mode: DeepSeekReasoningMode = 'think-medium',
   jsonMode: boolean = false
 ): Promise<string> {
-  const client = getDeepSeekClient();
+  const { client } = getDeepSeekClient();
   const reasoningConfig = getReasoningConfig(mode);
 
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -111,7 +117,7 @@ export async function callDeepSeekChat(
   mode: DeepSeekReasoningMode = 'think-medium',
   jsonMode: boolean = false
 ): Promise<string> {
-  const client = getDeepSeekClient();
+  const { client } = getDeepSeekClient();
   const reasoningConfig = getReasoningConfig(mode);
 
   const params: any = {
@@ -146,7 +152,7 @@ export async function streamDeepSeek(
   mode: DeepSeekReasoningMode = 'think-medium',
   onChunk?: (chunk: string) => void
 ): Promise<string> {
-  const client = getDeepSeekClient();
+  const { client } = getDeepSeekClient();
   const reasoningConfig = getReasoningConfig(mode);
 
   const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [

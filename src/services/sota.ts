@@ -464,10 +464,13 @@ export async function generateLatarBelakang(
   referencesList: string,
   existingText?: string,
   userApiKey?: string,
-  isPaidApi?: boolean
-): Promise<AsyncGenerator<string, void, unknown>> {
+  isPaidApi?: boolean,
+  step?: number,
+  apiKeyIndex?: number | null
+): Promise<{ stream: AsyncGenerator<string, void, unknown>, usedKeyIndex?: number }> {
   let aiModel: any;
   let provider: 'gemini' | 'deepseek' = 'gemini';
+  let usedKeyIndex: number | undefined = undefined;
   
   if (userApiKey && userApiKey !== 'null' && userApiKey.trim() !== '') {
     const genAI = new GoogleGenerativeAI(userApiKey);
@@ -480,79 +483,18 @@ export async function generateLatarBelakang(
     }
     const { getGeminiApiKey, getActiveAiProvider } = await import('@/utils/apiKeyManager');
     const role = isPaidApi ? 'pro' : 'free';
-    const { key: keyToUse, modelName } = getGeminiApiKey(role, userApiKey);
-    provider = await getActiveAiProvider();
+    const reqIdx = (apiKeyIndex !== undefined && apiKeyIndex !== null) ? apiKeyIndex : undefined;
+    const { key: keyToUse, modelName, keyIndex } = getGeminiApiKey(role, userApiKey, reqIdx);
     
-    if (provider === 'deepseek' && isPaidApi) {
-        const { getDeepSeekClient } = await import('./deepseek');
-        const client = getDeepSeekClient();
-        
-        const prompt = `Anda adalah seorang Profesor Pembimbing Akademik yang ahli dalam menyusun Bab 1: Latar Belakang Penelitian.
-  Tugas Anda adalah menjahit 5 komponen narasi yang diberikan menjadi sebuah esai Latar Belakang (Bab 1) yang mengalir mulus, kohesif, dan meyakinkan.
-  
-  BERIKUT ADALAH BAHAN BAKU ANDA:
-  1. PENEKANAN JUDUL/TOPIK: "${researchTopic}"
-  2. GAMBARAN UMUM (Sari Kajian Pustaka):
-  ${filteredKp}
-  3. KESENJANGAN EMPIRIS:
-  ${empiricalGap}
-  4. STATE OF THE ART (SOTA):
-  ${sotaMarkdown}
-  5. RESEARCH GAP & NOVELTY:
-  Gap: ${gap}
-  Novelty: ${novelty}
-  6. DAFTAR REFERENSI LENGKAP (Metadata Pustaka):
-  ${referencesList}
-  
-  INSTRUKSI PENULISAN:
-  - Alur logika harus DEDUKTIF ke INDUKTIF. Mulai dari Gambaran Umum -> Kesenjangan Empiris -> SOTA -> Research Gap -> Novelty -> Penegasan pentingnya penelitian ini dilakukan (merujuk ke Topik).
-  - STRUKTUR MIKRO PARAGRAF (SANGAT PENTING): 
-      a) Pastikan SETIAP paragraf (kecuali paragraf paling akhir) menerapkan struktur P-E-E-L (Point-Evidence-Explanation-Link). Artinya, DILARANG KERAS membuat paragraf opini kosong tanpa bukti/sitasi. Setiap kalimat utama (klaim) HARUS langsung diikuti oleh sitasi dari teori di bahan baku!
-      b) KHUSUS PARAGRAF PALING AKHIR: Gunakan struktur S-U-D (Synthesis-Urgency-Declaration). Jangan bawa sitasi baru lagi di akhir. Rangkum masalah, tunjukkan bahayanya jika dibiarkan (urgensi), lalu tutup dengan deklarasi bahwa "Oleh karena itu, penelitian ini sangat urgen untuk dilakukan."
-  - Buat sepanjang sekitar ${paragraphCount} paragraf utama yang padat dan bergaya bahasa akademis formal.
-  - PERTAHANKAN sitasi (kutipan dalam teks) yang ada di Gambaran Umum maupun SOTA (misalnya: Smith, 2023). Jangan mengarang sitasi baru yang tidak ada di sumber.
-  - Gunakan transisi antar paragraf yang sangat halus. Pembaca tidak boleh sadar bahwa ini adalah gabungan dari 5 teks yang berbeda.
-  - DI BAGIAN PALING AKHIR, Anda WAJIB membuat bagian "## Daftar Pustaka" yang berisi referensi dari sitasi-sitasi yang Anda sebutkan di teks. 
-  - SANGAT PENTING: Gunakan informasi dari "DAFTAR REFERENSI LENGKAP" (poin 6) untuk menulis Daftar Pustaka secara utuh (Penulis, Tahun, Judul, Jurnal). JANGAN MENGARANG judul atau nama jurnal jika tidak ada!
-  - Output HANYA berupa teks Markdown Latar Belakang. JANGAN menuliskan judul besar "BAB 1: PENDAHULUAN". Langsung saja mulai dengan sub-judul "### Latar Belakang Penelitian".`;
-        
-        async function* generateDeepSeek() {
-          const messages: any[] = [
-            { role: 'system', content: 'Anda adalah asisten AI akademik yang ahli.' },
-            { role: 'user', content: prompt }
-          ];
-
-          if (existingText) {
-            messages.push({ role: 'assistant', content: existingText });
-            messages.push({ 
-              role: 'user', 
-              content: 'Teks Anda terpotong. Lanjutkan persis dari kata terakhir Anda di atas. JANGAN ulangi kalimat yang sudah ditulis. JANGAN gunakan kata pengantar. Langsung sambung ketikannya hingga tuntas termasuk Daftar Pustaka.' 
-            });
-          }
-
-          const params: any = {
-            model: 'deepseek-chat', // Use standard deepseek-chat model
-            messages: messages,
-            max_tokens: 8000,
-            stream: true
-          };
-          
-          const stream = await client.chat.completions.create(params);
-          for await (const chunk of stream as any) {
-            const delta = chunk.choices[0]?.delta?.content || '';
-            if (delta) yield delta;
-          }
-        }
-        return generateDeepSeek();
-    }
+    usedKeyIndex = keyIndex;
+    provider = await getActiveAiProvider();
     
     const genAI = new GoogleGenerativeAI(keyToUse);
     aiModel = genAI.getGenerativeModel({ model: modelName });
   }
 
-  const prompt = `Anda adalah seorang Profesor Pembimbing Akademik yang ahli dalam menyusun Bab 1: Latar Belakang Penelitian.
-Tugas Anda adalah menjahit 5 komponen narasi yang diberikan menjadi sebuah esai Latar Belakang (Bab 1) yang mengalir mulus, kohesif, dan meyakinkan.
-
+  let prompt = '';
+  const baseInstructions = `
 BERIKUT ADALAH BAHAN BAKU ANDA:
 1. PENEKANAN JUDUL/TOPIK: "${researchTopic}"
 2. GAMBARAN UMUM (Sari Kajian Pustaka):
@@ -566,43 +508,128 @@ Gap: ${gap}
 Novelty: ${novelty}
 6. DAFTAR REFERENSI LENGKAP (Metadata Pustaka):
 ${referencesList}
+`;
 
+  // Hitung distribusi paragraf secara dinamis berdasarkan input user
+  const p1Count = Math.max(1, Math.round(paragraphCount * 0.25)); // 25% untuk Konteks
+  const p2Count = Math.max(1, Math.round(paragraphCount * 0.40)); // 40% untuk Empiris & SOTA
+  const p3Count = Math.max(1, paragraphCount - p1Count - p2Count); // Sisanya (sekitar 35%) untuk Gap & Novelty
+
+  if (step === 1) {
+    prompt = `Anda adalah Profesor Pembimbing Akademik yang ahli dalam menyusun Bab 1: Latar Belakang Penelitian.
+${baseInstructions}
+TUGAS: Tuliskan HANYA Bagian 1 dari Latar Belakang. Anda WAJIB menulis TEPAT ${p1Count} paragraf untuk bagian ini (tidak boleh kurang, tidak boleh lebih). Fokus pada KONTEKS MAKRO dan GAMBARAN UMUM.
+INSTRUKSI KHUSUS TAHAP 1:
+- Terapkan struktur mikro P-E-E-L (Point-Evidence-Explanation-Link). Setiap klaim harus diikuti sitasi dari Bahan Baku.
+- Jangan menulis kesimpulan. Jangan membuat judul besar BAB 1 PENDAHULUAN. Langsung mulai dengan "### Latar Belakang Penelitian".
+- JANGAN menulis Daftar Pustaka.
+- SANGAT PENTING: Hitung jumlah paragraf yang Anda tulis. Pastikan persis ${p1Count} paragraf.`;
+  } else if (step === 2) {
+    prompt = `Anda adalah Profesor Pembimbing Akademik.
+${baseInstructions}
+TUGAS: Berikut adalah teks Latar Belakang yang baru disusun sebagian:
+${existingText || ''}
+
+Lanjutkan teks di atas secara mulus dengan menyisipkan KESENJANGAN EMPIRIS dan STATE OF THE ART (SOTA). Anda WAJIB menulis TEPAT ${p2Count} paragraf tambahan (tidak boleh kurang, tidak boleh lebih).
+INSTRUKSI KHUSUS TAHAP 2:
+- Terapkan struktur mikro P-E-E-L.
+- Jangan ulangi kalimat atau paragraf yang sudah ditulis sebelumnya. Jangan beri salam pengantar. Langsung sambung narasinya dari kata terakhir.
+- JANGAN menulis Daftar Pustaka.
+- SANGAT PENTING: Hitung jumlah paragraf baru yang Anda tulis. Pastikan persis ${p2Count} paragraf.`;
+  } else if (step === 3) {
+    prompt = `Anda adalah Profesor Pembimbing Akademik.
+${baseInstructions}
+TUGAS: Berikut teks Latar Belakang yang hampir selesai:
+${existingText || ''}
+
+Lanjutkan secara mulus dengan membahas RESEARCH GAP & NOVELTY sebagai penutup Latar Belakang. Anda WAJIB menulis TEPAT ${p3Count} paragraf tambahan (tidak boleh kurang, tidak boleh lebih).
+INSTRUKSI KHUSUS TAHAP 3:
+- Paragraf paling akhir WAJIB menggunakan struktur S-U-D (Synthesis-Urgency-Declaration) yang menegaskan pentingnya penelitian ini dilakukan (contoh: "Oleh karena itu, penelitian ini urgen dilakukan...").
+- Jangan bawa sitasi baru di paragraf paling akhir.
+- Jangan ulangi teks sebelumnya. Jangan beri salam pengantar.
+- JANGAN menulis Daftar Pustaka.
+- SANGAT PENTING: Hitung jumlah paragraf baru yang Anda tulis. Pastikan persis ${p3Count} paragraf.`;
+  } else if (step === 4) {
+    prompt = `Anda adalah Profesor Pembimbing Akademik.
+${baseInstructions}
+TUGAS: Berdasarkan KESELURUHAN teks Latar Belakang yang telah disusun berikut:
+${existingText || ''}
+
+Buatkan section "## Daftar Pustaka" HANYA untuk referensi/sitasi yang benar-benar muncul di teks tersebut.
+INSTRUKSI KHUSUS TAHAP 4:
+- Gunakan format penulisan berdasarkan informasi dari DAFTAR REFERENSI LENGKAP (poin 6 di bahan baku).
+- JANGAN mengarang judul atau jurnal jika tidak ada di bahan baku. 
+- Jangan beri salam pengantar, langsung mulai dengan baris ## Daftar Pustaka.`;
+  } else {
+    // Fallback if step is not provided (single-shot or continuation)
+    prompt = `Anda adalah seorang Profesor Pembimbing Akademik yang ahli dalam menyusun Bab 1: Latar Belakang Penelitian.
+${baseInstructions}
 INSTRUKSI PENULISAN:
-  - Alur logika harus DEDUKTIF ke INDUKTIF. Mulai dari Gambaran Umum -> Kesenjangan Empiris -> SOTA -> Research Gap -> Novelty -> Penegasan pentingnya penelitian ini dilakukan (merujuk ke Topik).
-  - STRUKTUR MIKRO PARAGRAF (SANGAT PENTING): 
-      a) Pastikan SETIAP paragraf (kecuali paragraf paling akhir) menerapkan struktur P-E-E-L (Point-Evidence-Explanation-Link). Artinya, DILARANG KERAS membuat paragraf opini kosong tanpa bukti/sitasi. Setiap kalimat utama (klaim) HARUS langsung diikuti oleh sitasi dari teori di bahan baku!
-      b) KHUSUS PARAGRAF PALING AKHIR: Gunakan struktur S-U-D (Synthesis-Urgency-Declaration). Jangan bawa sitasi baru lagi di akhir. Rangkum masalah, tunjukkan bahayanya jika dibiarkan (urgensi), lalu tutup dengan deklarasi bahwa "Oleh karena itu, penelitian ini sangat urgen untuk dilakukan."
-  - Buat sepanjang sekitar ${paragraphCount} paragraf utama yang padat dan bergaya bahasa akademis formal.
-  - PERTAHANKAN sitasi (kutipan dalam teks) yang ada di Gambaran Umum maupun SOTA (misalnya: Smith, 2023). Jangan mengarang sitasi baru yang tidak ada di sumber.
-- Gunakan transisi antar paragraf yang sangat halus. Pembaca tidak boleh sadar bahwa ini adalah gabungan dari 5 teks yang berbeda.
-- DI BAGIAN PALING AKHIR, Anda WAJIB membuat bagian "## Daftar Pustaka" yang berisi referensi dari sitasi-sitasi yang Anda sebutkan di teks.
-- SANGAT PENTING: Gunakan informasi dari "DAFTAR REFERENSI LENGKAP" (poin 6) untuk menulis Daftar Pustaka secara utuh (Penulis, Tahun, Judul, Jurnal). JANGAN MENGARANG judul atau nama jurnal jika tidak ada!
-- Output HANYA berupa teks Markdown Latar Belakang. JANGAN menuliskan judul besar "BAB 1: PENDAHULUAN". Langsung saja mulai dengan sub-judul "### Latar Belakang Penelitian".`;
+- Alur logika harus DEDUKTIF ke INDUKTIF. Mulai dari Gambaran Umum -> Kesenjangan Empiris -> SOTA -> Research Gap -> Novelty -> Penegasan.
+- STRUKTUR MIKRO PARAGRAF (SANGAT PENTING): 
+    a) Pastikan SETIAP paragraf (kecuali paragraf akhir) menerapkan struktur P-E-E-L. DILARANG KERAS membuat paragraf opini tanpa sitasi.
+    b) KHUSUS PARAGRAF AKHIR: Gunakan struktur S-U-D (Synthesis-Urgency-Declaration). Jangan bawa sitasi baru. Tutup dengan deklarasi bahwa "Oleh karena itu, penelitian ini sangat urgen untuk dilakukan."
+- Buat sepanjang sekitar ${paragraphCount} paragraf utama.
+- Output HANYA berupa teks Markdown Latar Belakang. JANGAN menuliskan judul besar "BAB 1: PENDAHULUAN". Langsung saja mulai dengan sub-judul "### Latar Belakang Penelitian".
+- DI BAGIAN PALING AKHIR, Anda WAJIB membuat bagian "## Daftar Pustaka".`;
+  }
 
-  try {
-    let result: any;
-    if (existingText) {
-      result = await aiModel.generateContentStream({
-        contents: [
-          { role: 'user', parts: [{ text: prompt }] },
-          { role: 'model', parts: [{ text: existingText }] },
-          { role: 'user', parts: [{ text: 'Teks Anda terpotong. Lanjutkan persis dari kata terakhir Anda di atas. JANGAN ulangi kalimat yang sudah ditulis. JANGAN gunakan kata pengantar. Langsung sambung ketikannya hingga tuntas termasuk Daftar Pustaka.' }] }
-        ]
-      });
-    } else {
-      result = await aiModel.generateContentStream(prompt);
-    }
+  // --- EXECUTE AI STREAM ---
+  if (provider === 'deepseek' && isPaidApi) {
+    const { getDeepSeekClient } = await import('./deepseek');
+    const reqIdx = (apiKeyIndex !== undefined && apiKeyIndex !== null) ? apiKeyIndex : undefined;
+    const { client, keyIndex } = getDeepSeekClient(reqIdx);
+    usedKeyIndex = keyIndex;
     
-    async function* streamGenerator() {
-      for await (const chunk of result.stream) {
-        const chunkText = chunk.text();
-        yield chunkText;
+    async function* generateDeepSeek() {
+      const messages: any[] = [
+        { role: 'system', content: 'Anda adalah asisten AI akademik yang ahli.' },
+        { role: 'user', content: prompt }
+      ];
+
+      if (!step && existingText) {
+        messages.push({ role: 'assistant', content: existingText });
+        messages.push({ 
+          role: 'user', 
+          content: 'Teks Anda terpotong. Lanjutkan persis dari kata terakhir Anda di atas tanpa salam atau pengantar.' 
+        });
+      }
+
+      const params: any = {
+        model: 'deepseek-v4-flash',
+        messages: messages,
+        max_tokens: 8000,
+        stream: true
+      };
+      
+      const stream = await client.chat.completions.create(params);
+      for await (const chunk of stream as any) {
+        const delta = chunk.choices[0]?.delta?.content || '';
+        if (delta) yield delta;
       }
     }
-    
-    return streamGenerator();
-  } catch (err: any) {
-    console.error('Error generating Latar Belakang:', err);
-    throw err;
+    return { stream: generateDeepSeek(), usedKeyIndex };
+  } else {
+    // GEMINI
+    async function* streamGenerator() {
+      let result: any;
+      if (!step && existingText) {
+        result = await aiModel.generateContentStream({
+          contents: [
+            { role: 'user', parts: [{ text: prompt }] },
+            { role: 'model', parts: [{ text: existingText }] },
+            { role: 'user', parts: [{ text: 'Teks Anda terpotong. Lanjutkan persis dari kata terakhir Anda.' }] }
+          ]
+        });
+      } else {
+        result = await aiModel.generateContentStream(prompt);
+      }
+      
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        if (chunkText) yield chunkText;
+      }
+    }
+    return { stream: streamGenerator(), usedKeyIndex };
   }
 }

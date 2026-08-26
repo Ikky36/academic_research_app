@@ -63,7 +63,7 @@ patchGenerativeModel();
  * Ini memastikan kunci API Paid hanya dipakai oleh Pro/Admin, 
  * sedangkan pengguna Free memakai kunci rotasi Free.
  */
-export function getGeminiApiKey(role: string, userApiKey?: string): { key: string, modelName: string } {
+export function getGeminiApiKey(role: string, userApiKey?: string, requestedIndex?: number): { key: string, modelName: string, keyIndex?: number } {
   // 1. Jika user memiliki API key sendiri (BYOK), prioritaskan
   if (userApiKey && userApiKey.trim() !== '') {
     return {
@@ -78,10 +78,14 @@ export function getGeminiApiKey(role: string, userApiKey?: string): { key: strin
     if (paidKeysEnv) {
       const paidKeys = paidKeysEnv.split(',').map(k => k.trim()).filter(Boolean);
       if (paidKeys.length > 0) {
-        const randomPaidKey = paidKeys[Math.floor(Math.random() * paidKeys.length)];
+        const idx = (typeof requestedIndex === 'number' && requestedIndex >= 0 && requestedIndex < paidKeys.length) 
+          ? requestedIndex 
+          : Math.floor(Math.random() * paidKeys.length);
+        
         return {
-          key: randomPaidKey,
-          modelName: 'gemini-2.5-flash-lite'
+          key: paidKeys[idx],
+          modelName: 'gemini-2.5-flash-lite',
+          keyIndex: idx
         };
       }
     }
@@ -99,12 +103,15 @@ export function getGeminiApiKey(role: string, userApiKey?: string): { key: strin
     throw new Error('No Gemini API keys are configured on the server.');
   }
 
-  // Rotasi acak sederhana
-  const randomKey = freeKeys[Math.floor(Math.random() * freeKeys.length)];
+  // Rotasi acak sederhana atau gunakan requestedIndex
+  const idx = (typeof requestedIndex === 'number' && requestedIndex >= 0 && requestedIndex < freeKeys.length)
+    ? requestedIndex
+    : Math.floor(Math.random() * freeKeys.length);
 
   return {
-    key: randomKey,
-    modelName: 'gemini-2.5-flash-lite' // Memaksa Free user pakai Lite
+    key: freeKeys[idx],
+    modelName: 'gemini-2.5-flash-lite',
+    keyIndex: idx
   };
 }
 
