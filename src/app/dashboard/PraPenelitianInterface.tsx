@@ -206,10 +206,24 @@ export default function PraPenelitianInterface({ projectId }: PraPenelitianInter
       </div>
 
       {messages.length > 0 && messages[messages.length - 1].isComplete ? (
-        <div style={{ padding: '20px', textAlign: 'center', backgroundColor: 'var(--primary-container)', color: 'var(--on-primary-container)', borderRadius: '12px', marginTop: '10px' }}>
-          <strong>✅ Brainstorming Selesai.</strong><br/>
-          Masalah empiris dan topik pencarian telah berhasil dirumuskan. Chat kini telah terkunci.<br/>
-          Silakan beralih ke tab <b>Penelitian Terdahulu</b> dan gunakan rekomendasi Topik Pencarian di atas untuk mencari literatur pendukung.
+        <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          <div style={{ padding: '20px', backgroundColor: 'var(--surface-variant)', border: '1px solid var(--outline-variant)', borderRadius: '12px' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '15px', color: 'var(--on-surface)', borderBottom: '1px solid var(--outline-variant)', paddingBottom: '10px' }}>
+              <span style={{ marginRight: '8px' }}>📄</span> 
+              Hasil Perumusan Kesenjangan Empiris
+            </h3>
+            <div className={styles.messageContent} style={{ color: 'var(--on-surface-variant)' }}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {messages[messages.length - 1].content}
+              </ReactMarkdown>
+            </div>
+          </div>
+          
+          <div style={{ padding: '15px', textAlign: 'center', backgroundColor: 'var(--primary-container)', color: 'var(--on-primary-container)', borderRadius: '12px' }}>
+            <strong>🎉 Brainstorming Selesai.</strong><br/>
+            Masalah empiris dan topik pencarian telah berhasil dirumuskan. Chat kini telah terkunci.<br/>
+            Silakan beralih ke tab <b>Penelitian Terdahulu</b> dan gunakan rekomendasi Topik Pencarian di atas untuk mencari literatur pendukung.
+          </div>
         </div>
       ) : (
         <div className={styles.inputArea}>
