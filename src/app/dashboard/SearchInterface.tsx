@@ -576,6 +576,79 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
               {loading ? 'Mencari...' : 'Cari'}
             </button>
           </div>
+
+          {/* Dynamic Database Helper Notification */}
+          <div style={{ marginTop: '15px' }}>
+            {source === 'scopus' && (
+              <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', padding: '15px', borderRadius: '8px', fontFamily: 'sans-serif' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', borderBottom: '2px solid #198754', paddingBottom: '8px' }}>
+                  <div style={{ fontSize: '18px' }}>✅</div>
+                  <strong style={{ margin: 0, color: '#198754', fontSize: '14px' }}>Scopus: Dukungan Boolean Penuh</strong>
+                </div>
+                <p style={{ fontSize: '12px', color: '#495057', lineHeight: '1.5', margin: '0 0 10px 0' }}>
+                  Scopus memproses logika Boolean secara murni di <i>server</i> mereka. Anda bebas menggunakan kueri kompleks untuk meraup literatur terbanyak.
+                </p>
+                <strong style={{ fontSize: '12px', color: '#212529' }}>Panduan & Contoh:</strong>
+                <ul style={{ fontSize: '12px', color: '#495057', lineHeight: '1.5', marginTop: '5px', paddingLeft: '20px', marginBottom: 0 }}>
+                  <li><b>Exact Phrase (Wajib untuk 2+ kata):</b> <code>"occupational safety"</code></li>
+                  <li><b>Pengelompokan (OR):</b> <code>("disability" OR "difabel")</code></li>
+                  <li><b>Kombinasi (AND):</b> <code>("occupational safety" OR "work safety") AND ("disability" OR "difabel")</code></li>
+                </ul>
+              </div>
+            )}
+
+            {(source === 'doaj' || source === 'core') && (
+              <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', padding: '15px', borderRadius: '8px', fontFamily: 'sans-serif' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', borderBottom: '2px solid #0dcaf0', paddingBottom: '8px' }}>
+                  <div style={{ fontSize: '18px' }}>🌐</div>
+                  <strong style={{ margin: 0, color: '#0dcaf0', fontSize: '14px' }}>{source.toUpperCase()}: Dukungan ElasticSearch</strong>
+                </div>
+                <p style={{ fontSize: '12px', color: '#495057', lineHeight: '1.5', margin: '0 0 10px 0' }}>
+                  Digerakkan oleh mesin tingkat lanjut. Logika Boolean dan pencarian frasa Anda dijamin akan diproses secara presisi.
+                </p>
+                <strong style={{ fontSize: '12px', color: '#212529' }}>Panduan & Contoh:</strong>
+                <ul style={{ fontSize: '12px', color: '#495057', lineHeight: '1.5', marginTop: '5px', paddingLeft: '20px', marginBottom: 0 }}>
+                  <li><b>Tanda Petik Ganda:</b> <code>"inclusive education"</code></li>
+                  <li><b>Logika Persilangan:</b> <code>"inclusive education" AND "workplace"</code></li>
+                  <li><b>Kombinasi Rumit:</b> <code>("inclusive education" OR "special education") AND "workplace"</code></li>
+                </ul>
+              </div>
+            )}
+
+            {(source === 'crossref' || source === 'semantic-scholar') && (
+              <div style={{ backgroundColor: '#fff9e6', border: '1px solid #ffecb5', padding: '15px', borderRadius: '8px', fontFamily: 'sans-serif' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', borderBottom: '2px solid #ffc107', paddingBottom: '8px' }}>
+                  <div style={{ fontSize: '18px' }}>⚠️</div>
+                  <strong style={{ margin: 0, color: '#b08102', fontSize: '14px' }}>{source === 'crossref' ? 'Crossref' : 'Semantic Scholar'}: Boolean Sangat Terbatas</strong>
+                </div>
+                <p style={{ fontSize: '12px', color: '#664d03', lineHeight: '1.5', margin: '0 0 10px 0' }}>
+                  Database ini <b>TIDAK</b> mendukung operasi <code>AND/OR</code>. Aplikasi ini melakukan trik membuang operator tersebut dan menyaring hasilnya di sistem lokal Anda. Jika hasil Anda kosong (0), ikuti taktik di bawah ini:
+                </p>
+                <strong style={{ fontSize: '12px', color: '#664d03' }}>Taktik Pencarian (Wajib Minimalis):</strong>
+                <ul style={{ fontSize: '12px', color: '#664d03', lineHeight: '1.5', marginTop: '5px', paddingLeft: '20px', marginBottom: 0 }}>
+                  <li><b>❌ JANGAN gunakan sinonim panjang:</b> <code>("occupational safety" OR "workplace safety" OR "work safety") AND disability</code> (Hasil berisiko kosong).</li>
+                  <li><b>✅ GUNAKAN irisan kata kunci inti:</b> <code>"occupational safety" AND disability</code> (Tanda petik tetap bekerja).</li>
+                </ul>
+              </div>
+            )}
+
+            {source === 'openalex' && (
+              <div style={{ backgroundColor: '#f8f9fa', border: '1px solid #dee2e6', padding: '15px', borderRadius: '8px', fontFamily: 'sans-serif' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', borderBottom: '2px solid #6c757d', paddingBottom: '8px' }}>
+                  <div style={{ fontSize: '18px' }}>💡</div>
+                  <strong style={{ margin: 0, color: '#495057', fontSize: '14px' }}>OpenAlex: Pencarian Hybrid</strong>
+                </div>
+                <p style={{ fontSize: '12px', color: '#495057', lineHeight: '1.5', margin: '0 0 10px 0' }}>
+                  Memproses Tanda Petik (<i>Exact Phrase</i>) secara murni dari <i>server</i> mereka, namun logika <code>AND/OR</code> disaring secara ketat di mesin lokal Anda.
+                </p>
+                <strong style={{ fontSize: '12px', color: '#212529' }}>Panduan & Contoh:</strong>
+                <ul style={{ fontSize: '12px', color: '#495057', lineHeight: '1.5', marginTop: '5px', paddingLeft: '20px', marginBottom: 0 }}>
+                  <li><b>Kekuatan Utama (Tanda Petik):</b> <code>"corporate social responsibility"</code></li>
+                  <li><b>Batasi Sinonim:</b> Jangan buat kueri terlalu panjang agar filter lokal bekerja maksimal. Contoh baik: <code>"inclusive education" AND "disability"</code></li>
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
       </form>
 
