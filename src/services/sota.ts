@@ -503,9 +503,10 @@ ${referencesList}
   const topicString = `1. PENEKANAN JUDUL/TOPIK: "${researchTopic}"`;
 
   // Hitung distribusi paragraf secara dinamis berdasarkan input user
-  const p1Count = Math.max(1, Math.round(paragraphCount * 0.25)); // 25% untuk Konteks
-  const p2Count = Math.max(1, Math.round(paragraphCount * 0.40)); // 40% untuk Empiris & SOTA
-  const p3Count = Math.max(1, paragraphCount - p1Count - p2Count); // Sisanya (sekitar 35%) untuk Gap & Novelty
+  const p1Count = Math.max(1, Math.round(paragraphCount * 0.20)); // 20% untuk Konteks Makro
+  const p2Count = Math.max(1, Math.round(paragraphCount * 0.30)); // 30% untuk Kesenjangan Empiris
+  const p3Count = Math.max(1, Math.round(paragraphCount * 0.30)); // 30% untuk Kajian SOTA
+  const p4Count = Math.max(1, paragraphCount - p1Count - p2Count - p3Count); // 20% (sisanya) untuk Gap & Novelty
 
   if (step === 1) {
     prompt = `Anda adalah Profesor Pembimbing Akademik yang ahli dalam menyusun Bab 1: Latar Belakang Penelitian.
