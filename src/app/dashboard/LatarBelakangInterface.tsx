@@ -221,27 +221,24 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
           
           <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <label htmlFor="p-count" style={{ fontSize: '14px', fontWeight: '500' }}>Estimasi Panjang:</label>
-              <select 
+              <label htmlFor="p-count" style={{ fontSize: '14px', fontWeight: '500' }}>Jumlah Paragraf:</label>
+              <input 
+                type="number"
                 id="p-count"
+                min={3}
+                max={50}
                 value={paragraphCount}
-                onChange={(e) => setParagraphCount(parseInt(e.target.value))}
+                onChange={(e) => setParagraphCount(parseInt(e.target.value) || 5)}
                 style={{ 
                   padding: '8px', 
                   borderRadius: '4px', 
                   border: '1px solid var(--border)', 
                   backgroundColor: 'var(--surface)', 
                   color: 'var(--on-surface)',
-                  minWidth: '180px',
-                  cursor: 'pointer'
+                  width: '100px'
                 }}
                 disabled={isGenerating}
-              >
-                <option value={5}>± 5 Paragraf (Ringkas)</option>
-                <option value={10}>± 10 Paragraf (Standar)</option>
-                <option value={15}>± 15 Paragraf (Mendetail)</option>
-                <option value={20}>± 20 Paragraf (Sangat Panjang)</option>
-              </select>
+              />
             </div>
             
             <button 
