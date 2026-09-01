@@ -506,7 +506,7 @@ ${referencesList}
   const p1Count = Math.max(1, Math.round(paragraphCount * 0.20)); // 20% untuk Konteks Makro
   const p2Count = Math.max(1, Math.round(paragraphCount * 0.30)); // 30% untuk Kesenjangan Empiris
   const p3Count = Math.max(1, Math.round(paragraphCount * 0.30)); // 30% untuk Kajian SOTA
-  const p4Count = Math.max(1, paragraphCount - p1Count - p2Count - p3Count); // 20% (sisanya) untuk Gap & Novelty
+  const p4Count = Math.max(1, paragraphCount - p1Count - p2Count - p3Count - 1); // Sisanya untuk Gap & Novelty (dikurangi 1 alokasi mutlak untuk Tahap 5)
 
   let previousContext = existingText || '';
   if (previousContext.length > 2000) {
