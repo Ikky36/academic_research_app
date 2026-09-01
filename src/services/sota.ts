@@ -513,11 +513,20 @@ ${referencesList}
     previousContext = previousContext.substring(previousContext.length - 2000);
   }
 
-  const contextPrompt = previousContext ? `\nKONTEKS SEBELUMNYA (Teks yang sudah ditulis sebelumnya):\n${previousContext}\n\nPENTING: Lanjutkan pembahasan secara mengalir agar tidak terjadi pengulangan kalimat/konsep, tanpa menuliskan sub-judul baru apapun!` : '';
+  const contextPrompt = previousContext ? `
+---
+[REFERENSI: TEKS SEBELUMNYA]
+Berikut adalah teks yang sudah ditulis di tahap sebelumnya. Anda hanya perlu membacanya agar gaya bahasa paragraf baru Anda bisa menyambung secara kohesif.
+... (potongan teks sebelumnya) ...
+${previousContext}
+---
+PENTING: Tulis PARAGRAF BARU Anda di bawah ini! JANGAN menyalin ulang atau mengulangi kalimat dari teks sebelumnya.` : '';
 
   const formatRule = `ATURAN FORMATTING MUTLAK:
-- JANGAN PERNAH mengawali paragraf dengan spasi atau tab (jangan di-indentasi manual).
-- JANGAN menggunakan tanda titik-titik (...) di awal teks. Mulailah paragraf baru dengan kalimat utuh.`;
+- JANGAN PERNAH mengawali paragraf dengan spasi atau tab (dilarang keras melakukan indentasi manual).
+- JANGAN menggunakan tanda elipsis atau titik-titik (...) di awal teks. Langsung mulai dengan huruf pertama dari kalimat utuh.`;
+
+  const countRule = (count: number) => `ATURAN JUMLAH PARAGRAF: Anda WAJIB mengekspansi Bahan Baku menjadi TEPAT ${count} paragraf terpisah (dilarang merangkumnya menjadi 1 paragraf jika diminta lebih dari 1).`;
 
   if (step === 1) {
     prompt = `Anda adalah Profesor Pembimbing Akademik yang ahli dalam menyusun Latar Belakang Penelitian.
@@ -528,13 +537,14 @@ ${filteredKp}
 ${referencesString}
 
 TUGAS ANDA SAAT INI: Tuliskan HANYA Bagian 1 (Konteks Makro).
-Anda WAJIB menulis TEPAT ${p1Count} paragraf. Fokus HANYA pada KONTEKS MAKRO dan GAMBARAN UMUM berdasarkan data Sari Kajian Pustaka.
+Fokus HANYA pada KONTEKS MAKRO dan GAMBARAN UMUM berdasarkan data Sari Kajian Pustaka.
 
 INSTRUKSI KHUSUS TAHAP 1:
 - Terapkan struktur mikro P-E-E-L (Point-Evidence-Explanation-Link). Setiap klaim harus diikuti sitasi dari Bahan Baku.
 - Teks harus mengalir (paragraf demi paragraf) TANPA sub-judul apapun (JANGAN membuat judul "Latar Belakang Penelitian").
 - JANGAN membahas Kesenjangan Empiris, Tabel SOTA, atau Research Gap di tahap ini!
 - JANGAN menulis Daftar Pustaka atau teks penanda urutan paragraf.
+${countRule(p1Count)}
 ${formatRule}`;
   } else if (step === 2) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
@@ -545,13 +555,13 @@ ${empiricalGap}
 ${referencesString}
 
 TUGAS ANDA SAAT INI: Tuliskan Bagian 2 (Kesenjangan Empiris).
-Anda WAJIB menulis TEPAT ${p2Count} paragraf tambahan.
 ${contextPrompt}
 
 INSTRUKSI KHUSUS TAHAP 2:
 - Terapkan struktur mikro P-E-E-L.
 - Teks harus mengalir tanpa sub-judul apapun.
 - JANGAN membahas Tabel SOTA atau Research Gap & Novelty di tahap ini!
+${countRule(p2Count)}
 ${formatRule}`;
   } else if (step === 3) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
@@ -562,12 +572,12 @@ ${sotaMarkdown}
 ${referencesString}
 
 TUGAS ANDA SAAT INI: Tuliskan Bagian 3 (Kajian State of the Art).
-Anda WAJIB menulis TEPAT ${p3Count} paragraf tambahan.
 ${contextPrompt}
 
 INSTRUKSI KHUSUS TAHAP 3:
 - Uraikan temuan dari penelitian terdahulu yang ada di Tabel SOTA menjadi narasi yang mengalir.
 - Teks harus mengalir tanpa sub-judul apapun.
+${countRule(p3Count)}
 ${formatRule}`;
   } else if (step === 4) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
@@ -578,13 +588,13 @@ Gap: ${gap}
 Novelty: ${novelty}
 ${referencesString}
 
-TUGAS ANDA SAAT INI: Tuliskan Bagian 4 (Research Gap & Novelty).
-Anda WAJIB menulis TEPAT ${p4Count} paragraf tambahan. Murni fokus membedah argumen novelty dan celah penelitian.
+TUGAS ANDA SAAT INI: Tuliskan Bagian 4 (Research Gap & Novelty). Murni fokus membedah argumen novelty dan celah penelitian.
 ${contextPrompt}
 
 INSTRUKSI KHUSUS TAHAP 4:
 - JANGAN membuat paragraf kesimpulan di akhir. Bagian ini hanya untuk mengelaborasi celah penelitian.
 - Jangan bawa sitasi baru. Teks harus mengalir tanpa sub-judul apapun.
+${countRule(p4Count)}
 ${formatRule}`;
   } else if (step === 5) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
@@ -592,7 +602,6 @@ BERIKUT ADALAH BAHAN BAKU ANDA:
 ${topicString}
 
 TUGAS ANDA SAAT INI: Tuliskan Bagian 5 (Resolusi Akhir) sebagai penutup mutlak Latar Belakang.
-Anda WAJIB menulis TEPAT 1 paragraf saja.
 ${contextPrompt}
 
 INSTRUKSI KHUSUS TAHAP 5:
@@ -601,6 +610,7 @@ INSTRUKSI KHUSUS TAHAP 5:
 - Contoh gaya penutupan: "Merespons berbagai kesenjangan tersebut, penelitian ini sangat urgen untuk dilakukan dengan mengangkat judul: ..."
 - Jangan bawa sitasi baru di paragraf ini.
 - Jangan menulis Daftar Pustaka.
+${countRule(1)}
 ${formatRule}`;
   } else if (step === 6) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
