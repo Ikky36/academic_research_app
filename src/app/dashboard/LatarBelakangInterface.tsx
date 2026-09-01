@@ -116,6 +116,7 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
           done = doneReading;
           const chunkValue = decoder.decode(value, { stream: true });
           accumulatedText += chunkValue;
+          accumulatedText = accumulatedText.replace(/^[ \t]+/gm, '');
           setLatarBelakang(accumulatedText);
         }
       }
@@ -163,6 +164,7 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
         done = doneReading;
         const chunkValue = decoder.decode(value, { stream: true });
         text += chunkValue;
+        text = text.replace(/^[ \t]+/gm, '');
         setLatarBelakang(text);
       }
       
