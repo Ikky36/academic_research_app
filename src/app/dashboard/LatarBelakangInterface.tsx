@@ -69,7 +69,7 @@ export default function LatarBelakangInterface({ projectId, isActive, isPaidApi 
       let accumulatedText = "";
       let currentApiKeyIndex: number | null = null;
 
-      for (let step = 1; step <= 5; step++) {
+      for (let step = 1; step <= 6; step++) {
         const response = await fetch('/api/latar-belakang', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

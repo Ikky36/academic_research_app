@@ -530,8 +530,7 @@ INSTRUKSI KHUSUS TAHAP 1:
 - Terapkan struktur mikro P-E-E-L (Point-Evidence-Explanation-Link). Setiap klaim harus diikuti sitasi dari Bahan Baku.
 - Teks harus mengalir (paragraf demi paragraf) TANPA sub-judul apapun (JANGAN membuat judul "Latar Belakang Penelitian").
 - JANGAN membahas Kesenjangan Empiris, Tabel SOTA, atau Research Gap di tahap ini!
-- JANGAN menulis Daftar Pustaka.
-- JANGAN menuliskan teks penanda urutan seperti "Paragraf 1:", "Paragraf 2:", dsb.`;
+- JANGAN menulis Daftar Pustaka atau teks penanda urutan paragraf.`;
   } else if (step === 2) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
 BERIKUT ADALAH BAHAN BAKU ANDA:
@@ -547,8 +546,7 @@ ${contextPrompt}
 INSTRUKSI KHUSUS TAHAP 2:
 - Terapkan struktur mikro P-E-E-L.
 - Teks harus mengalir tanpa sub-judul apapun.
-- JANGAN membahas Tabel SOTA atau Research Gap & Novelty di tahap ini!
-- JANGAN menulis Daftar Pustaka atau penanda urutan paragraf.`;
+- JANGAN membahas Tabel SOTA atau Research Gap & Novelty di tahap ini!`;
   } else if (step === 3) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
 BERIKUT ADALAH BAHAN BAKU ANDA:
@@ -563,8 +561,7 @@ ${contextPrompt}
 
 INSTRUKSI KHUSUS TAHAP 3:
 - Uraikan temuan dari penelitian terdahulu yang ada di Tabel SOTA menjadi narasi yang mengalir.
-- Teks harus mengalir tanpa sub-judul apapun.
-- JANGAN menulis Daftar Pustaka atau penanda urutan paragraf.`;
+- Teks harus mengalir tanpa sub-judul apapun.`;
   } else if (step === 4) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
 BERIKUT ADALAH BAHAN BAKU ANDA:
@@ -574,16 +571,29 @@ Gap: ${gap}
 Novelty: ${novelty}
 ${referencesString}
 
-TUGAS ANDA SAAT INI: Tuliskan Bagian 4 (Research Gap & Novelty) sebagai penutup Latar Belakang.
-Anda WAJIB menulis TEPAT ${p4Count} paragraf tambahan.
+TUGAS ANDA SAAT INI: Tuliskan Bagian 4 (Research Gap & Novelty).
+Anda WAJIB menulis TEPAT ${p4Count} paragraf tambahan. Murni fokus membedah argumen novelty dan celah penelitian.
 ${contextPrompt}
 
 INSTRUKSI KHUSUS TAHAP 4:
-- Paragraf paling akhir WAJIB menggunakan struktur S-U-D (Synthesis-Urgency-Declaration) yang menegaskan pentingnya penelitian ini dilakukan (contoh: "Oleh karena itu, penelitian ini urgen dilakukan...").
-- Jangan bawa sitasi baru di paragraf paling akhir.
-- Teks harus mengalir tanpa sub-judul apapun.
-- JANGAN menulis Daftar Pustaka atau penanda urutan paragraf.`;
+- JANGAN membuat paragraf kesimpulan di akhir. Bagian ini hanya untuk mengelaborasi celah penelitian.
+- Jangan bawa sitasi baru. Teks harus mengalir tanpa sub-judul apapun.`;
   } else if (step === 5) {
+    prompt = `Anda adalah Profesor Pembimbing Akademik.
+BERIKUT ADALAH BAHAN BAKU ANDA:
+${topicString}
+
+TUGAS ANDA SAAT INI: Tuliskan Bagian 5 (Resolusi Akhir) sebagai penutup mutlak Latar Belakang.
+Anda WAJIB menulis TEPAT 1 paragraf saja.
+${contextPrompt}
+
+INSTRUKSI KHUSUS TAHAP 5:
+- Paragraf ini WAJIB menggunakan struktur S-U-D (Synthesis-Urgency-Declaration). 
+- Anda HARUS menyintesis argumen sebelumnya secara singkat, menegaskan urgensi, dan sebagai klimaksnya, Anda WAJIB MENGUTIP SECARA EKSPLISIT Judul/Topik penelitian ini (sesuai bahan baku PENEKANAN JUDUL/TOPIK) sebagai resolusi/solusi yang ditawarkan.
+- Contoh gaya penutupan: "Merespons berbagai kesenjangan tersebut, penelitian ini sangat urgen untuk dilakukan dengan mengangkat judul: ..."
+- Jangan bawa sitasi baru di paragraf ini.
+- Jangan menulis Daftar Pustaka.`;
+  } else if (step === 6) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
 BERIKUT ADALAH BAHAN BAKU ANDA:
 ${topicString}
@@ -594,7 +604,7 @@ ${existingText || ''}
 
 Buatkan section "## Daftar Pustaka" HANYA untuk referensi/sitasi yang benar-benar muncul di teks tersebut.
 
-INSTRUKSI KHUSUS TAHAP 5:
+INSTRUKSI KHUSUS TAHAP 6:
 - Gunakan format penulisan berdasarkan informasi dari DAFTAR REFERENSI LENGKAP.
 - JANGAN mengarang judul atau jurnal jika tidak ada di bahan baku. 
 - Jangan beri salam pengantar, langsung mulai dengan baris ## Daftar Pustaka.`;
