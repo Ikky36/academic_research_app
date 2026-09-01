@@ -515,6 +515,10 @@ ${referencesList}
 
   const contextPrompt = previousContext ? `\nKONTEKS SEBELUMNYA (Teks yang sudah ditulis sebelumnya):\n${previousContext}\n\nPENTING: Lanjutkan pembahasan secara mengalir agar tidak terjadi pengulangan kalimat/konsep, tanpa menuliskan sub-judul baru apapun!` : '';
 
+  const formatRule = `ATURAN FORMATTING MUTLAK:
+- JANGAN PERNAH mengawali paragraf dengan spasi atau tab (jangan di-indentasi manual).
+- JANGAN menggunakan tanda titik-titik (...) di awal teks. Mulailah paragraf baru dengan kalimat utuh.`;
+
   if (step === 1) {
     prompt = `Anda adalah Profesor Pembimbing Akademik yang ahli dalam menyusun Latar Belakang Penelitian.
 BERIKUT ADALAH BAHAN BAKU ANDA:
@@ -530,7 +534,8 @@ INSTRUKSI KHUSUS TAHAP 1:
 - Terapkan struktur mikro P-E-E-L (Point-Evidence-Explanation-Link). Setiap klaim harus diikuti sitasi dari Bahan Baku.
 - Teks harus mengalir (paragraf demi paragraf) TANPA sub-judul apapun (JANGAN membuat judul "Latar Belakang Penelitian").
 - JANGAN membahas Kesenjangan Empiris, Tabel SOTA, atau Research Gap di tahap ini!
-- JANGAN menulis Daftar Pustaka atau teks penanda urutan paragraf.`;
+- JANGAN menulis Daftar Pustaka atau teks penanda urutan paragraf.
+${formatRule}`;
   } else if (step === 2) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
 BERIKUT ADALAH BAHAN BAKU ANDA:
@@ -546,7 +551,8 @@ ${contextPrompt}
 INSTRUKSI KHUSUS TAHAP 2:
 - Terapkan struktur mikro P-E-E-L.
 - Teks harus mengalir tanpa sub-judul apapun.
-- JANGAN membahas Tabel SOTA atau Research Gap & Novelty di tahap ini!`;
+- JANGAN membahas Tabel SOTA atau Research Gap & Novelty di tahap ini!
+${formatRule}`;
   } else if (step === 3) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
 BERIKUT ADALAH BAHAN BAKU ANDA:
@@ -561,7 +567,8 @@ ${contextPrompt}
 
 INSTRUKSI KHUSUS TAHAP 3:
 - Uraikan temuan dari penelitian terdahulu yang ada di Tabel SOTA menjadi narasi yang mengalir.
-- Teks harus mengalir tanpa sub-judul apapun.`;
+- Teks harus mengalir tanpa sub-judul apapun.
+${formatRule}`;
   } else if (step === 4) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
 BERIKUT ADALAH BAHAN BAKU ANDA:
@@ -577,7 +584,8 @@ ${contextPrompt}
 
 INSTRUKSI KHUSUS TAHAP 4:
 - JANGAN membuat paragraf kesimpulan di akhir. Bagian ini hanya untuk mengelaborasi celah penelitian.
-- Jangan bawa sitasi baru. Teks harus mengalir tanpa sub-judul apapun.`;
+- Jangan bawa sitasi baru. Teks harus mengalir tanpa sub-judul apapun.
+${formatRule}`;
   } else if (step === 5) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
 BERIKUT ADALAH BAHAN BAKU ANDA:
@@ -592,7 +600,8 @@ INSTRUKSI KHUSUS TAHAP 5:
 - Anda HARUS menyintesis argumen sebelumnya secara singkat, menegaskan urgensi, dan sebagai klimaksnya, Anda WAJIB MENGUTIP SECARA EKSPLISIT Judul/Topik penelitian ini (sesuai bahan baku PENEKANAN JUDUL/TOPIK) sebagai resolusi/solusi yang ditawarkan.
 - Contoh gaya penutupan: "Merespons berbagai kesenjangan tersebut, penelitian ini sangat urgen untuk dilakukan dengan mengangkat judul: ..."
 - Jangan bawa sitasi baru di paragraf ini.
-- Jangan menulis Daftar Pustaka.`;
+- Jangan menulis Daftar Pustaka.
+${formatRule}`;
   } else if (step === 6) {
     prompt = `Anda adalah Profesor Pembimbing Akademik.
 BERIKUT ADALAH BAHAN BAKU ANDA:
