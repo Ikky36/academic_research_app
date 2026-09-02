@@ -136,7 +136,9 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
 
   const handleGenerate = async () => {
     if (!approach || !gap) {
-      setError('Pendekatan atau Research Gap belum diisi. Silakan kembali ke Tab Kajian Pustaka dan Tahap 1 terlebih dahulu.');
+      const errMsg = 'Pendekatan atau Research Gap belum diisi. Silakan kembali ke Tab Kajian Pustaka dan Tahap 1 terlebih dahulu.';
+      setError(errMsg);
+      alert(errMsg);
       return;
     }
 
@@ -146,17 +148,26 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
     // Get user API key if any
     const userKey = localStorage.getItem('user_api_key') || undefined;
 
-    const res = await generateMetodologiAction(projectId, approach, gap, novelty, chatSummary, userKey, isPaidApi);
-    
-    if (!res.error && res.result) {
-      setMetodologiResult(res.result);
-      saveProjectState(projectId, 'metodologi_result', res.result);
-      updateWizardStep(3);
-    } else {
-      setError(res.error || 'Terjadi kesalahan saat menyusun Metodologi.');
+    try {
+      const res = await generateMetodologiAction(projectId, approach, gap, novelty, chatSummary, userKey, isPaidApi);
+      
+      if (!res.error && res.result) {
+        setMetodologiResult(res.result);
+        saveProjectState(projectId, 'metodologi_result', res.result);
+        updateWizardStep(3);
+      } else {
+        const errMsg = res.error || 'Terjadi kesalahan saat menyusun Metodologi.';
+        setError(errMsg);
+        alert('Gagal menyusun Metodologi:\n\n' + errMsg);
+      }
+    } catch (e: any) {
+      console.error(e);
+      const errMsg = e.message || 'Terjadi kesalahan jaringan atau waktu tunggu Vercel habis (timeout 504).';
+      setError(errMsg);
+      alert('Error Jaringan:\n\n' + errMsg + '\n\nTips: Jika ini adalah Timeout (waktu habis), ini disebabkan oleh batasan server gratis Vercel (10 detik). Metodologi terlalu panjang untuk diproses dalam 10 detik.');
+    } finally {
+      setIsGenerating(false);
     }
-    
-    setIsGenerating(false);
   };
 
   const copyToClipboard = () => {
