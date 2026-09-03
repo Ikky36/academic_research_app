@@ -30,33 +30,65 @@ export async function generateMetodologiAction(
     const genAI = new GoogleGenerativeAI(apiKey);
     const geminiModel = genAI.getGenerativeModel({ model: modelName });
 
-    // 2. Identify specific method category based on Gap & Novelty
-    const identifyPrompt = `
-Berdasarkan informasi berikut:
-Pendekatan yang dipilih: ${pendekatan}
-Research Gap: ${gap}
-Novelty: ${novelty}
+    // 2. Bilingual Keyword Extraction for RAG Search
+    const extractKeywordsPrompt = `
+Anda adalah ahli metodologi penelitian.
+Berdasarkan rangkuman wawancara berikut:
+Pendekatan: ${pendekatan}
+Rangkuman: ${summary}
 
-Sebutkan 1 (satu) Kategori Metode Penelitian spesifik yang paling tepat untuk penelitian ini. 
-Hanya sebutkan namanya saja (misalnya: "Kualitatif Studi Kasus", "Kuantitatif Eksperimen", "Research and Development (R&D)", "Mix Method", dll). Jangan tambahkan penjelasan apapun.
+Tugas Anda:
+Ekstrak teknik-teknik metodologi yang spesifik (seperti desain/pendekatan metode, teknik pengumpulan data, teknik analisis data, atau teknik sampling) dari rangkuman di atas.
+Untuk setiap teknik yang Anda temukan, Anda WAJIB memberikan istilahnya dalam Bahasa Indonesia DAN sinonim/terjemahan lazimnya dalam Bahasa Inggris.
+
+FORMAT OUTPUT SANGAT KETAT:
+Keluarkan HANYA array JSON berisi string kata-kata kunci tersebut. Jangan menambahkan penjelasan, markdown, atau teks apa pun di luar array JSON.
+Contoh Output:
+["Studi Kasus", "Case Study", "Purposive Sampling", "Sampel Purposif", "Analisis Tematik", "Thematic Analysis"]
 `;
     
-    let methodCategory: string;
-    if (provider === 'deepseek' && isPaidApi) {
-      console.log('[Metodologi] Using DeepSeek (think-medium) for method identification');
-      methodCategory = await callDeepSeekWithRetry(identifyPrompt, 'Anda adalah dosen metodologi penelitian.', 'think-medium');
-    } else {
-      const identifyResult = await geminiModel.generateContent(identifyPrompt);
-      methodCategory = identifyResult.response.text().trim();
+    let searchKeywords: string[] = [];
+    try {
+      if (provider === 'deepseek' && isPaidApi) {
+        console.log('[Metodologi] Using DeepSeek (non-think) for bilingual keyword extraction');
+        const keywordsJsonStr = await callDeepSeekWithRetry(extractKeywordsPrompt, 'Anda adalah sistem pengekstrak JSON yang sangat akurat.', 'non-think', true);
+        searchKeywords = JSON.parse(keywordsJsonStr);
+      } else {
+        const jsonGeminiModel = genAI.getGenerativeModel({ model: modelName, generationConfig: { responseMimeType: "application/json" } });
+        const keywordsResult = await jsonGeminiModel.generateContent(extractKeywordsPrompt);
+        searchKeywords = JSON.parse(keywordsResult.response.text().trim());
+      }
+    } catch (e) {
+      console.error('Error parsing keywords, falling back to basic approach', e);
+      searchKeywords = [pendekatan]; // fallback
     }
 
-    // 3. Query relevant chunks from database (RAG)
-    // We fetch all chunks that might be relevant to the method category
-    const { data: chunks, error: chunksError } = await supabase
-      .from('methodology_chunks')
-      .select('content, page_start, page_end, methodology_books(title, author, year)')
-      .ilike('method_category', `%${methodCategory.split(' ')[0]}%`)
-      .limit(40);
+    if (!Array.isArray(searchKeywords) || searchKeywords.length === 0) {
+      searchKeywords = [pendekatan];
+    }
+
+    // 3. Query relevant chunks from database (Keyword-Driven RAG)
+    let chunks: any[] | null = null;
+    let chunksError: any = null;
+    
+    if (searchKeywords.length > 0) {
+      // Build the .or() conditions dynamically
+      const orConditions = searchKeywords.map(kw => {
+        const safeKw = kw.replace(/'/g, "''"); // Escape single quotes
+        return `method_category.ilike.%${safeKw}%,content.ilike.%${safeKw}%`;
+      }).join(',');
+      
+      console.log(`[Metodologi] Querying database with keywords:`, searchKeywords);
+      
+      const res = await supabase
+        .from('methodology_chunks')
+        .select('content, page_start, page_end, methodology_books(title, author, year)')
+        .or(orConditions)
+        .limit(20);
+        
+      chunks = res.data;
+      chunksError = res.error;
+    }
 
     if (chunksError) {
       console.error('Error fetching methodology chunks:', chunksError);
@@ -83,7 +115,6 @@ Tugas Anda adalah menulis Metodologi Penelitian yang lengkap, komprehensif, dan 
 
 Informasi Penelitian:
 - Pendekatan: ${pendekatan}
-- Metode Spesifik: ${methodCategory}
 - Gap: ${gap}
 - Novelty: ${novelty}
 
@@ -100,7 +131,7 @@ INSTRUKSI WAJIB:
 3. Buat sub-bab yang sistematis (contoh: 3.1 Pendekatan dan Jenis Penelitian, 3.2 Prosedur/Tahapan Penelitian, 3.3 Teknik Pengumpulan Data, 3.4 Teknik Analisis Data). SANGAT PENTING: Mulailah dokumen DENGAN TEPAT judul "## METODOLOGI PENELITIAN" (Tanpa kata "BAB III"). DILARANG KERAS memberikan kalimat pengantar atau basa-basi apa pun sebelum atau sesudah judul tersebut. Langsung masuk ke konten akademik.
 4. SANGAT PENTING: Kurangi penggunaan poin-poin (bullet points / numbered lists) seminimal mungkin. Utamakan penjelasan dalam bentuk narasi paragraf akademik yang mengalir dan kohesif antar kalimatnya.
 5. Khusus pada bagian **Prosedur/Tahapan Penelitian**, rancang langkah-langkahnya agar benar-benar menjawab *Research Gap* dan *Novelty* di atas.
-${hasContext ? '6. PRIORITAS MUTLAK: Anda WAJIB merujuk dan menyintesis DARI SEBANYAK MUNGKIN BUKU BERBEDA yang disediakan di REFERENSI BUKU METODOLOGI. Dilarang keras hanya mengutip dari 1 atau 2 buku saja jika ada banyak referensi penulis yang berbeda. Semakin banyak buku yang Anda kutip secara relevan, semakin baik. Setiap kali Anda menggunakan informasi dari referensi, sisipkan kutipan (sitasi) format APA (Contoh: Sugiyono, 2015: 45) di akhir kalimat/paragraf.\n7. Di bagian paling akhir, tambahkan sub-judul "## Daftar Pustaka Buku Metodologi" dan susun referensi SEMUA buku yang Anda kutip tadi sesuai format APA. SANGAT PENTING: Jangan menggunakan bullet points/nomor untuk daftar pustaka, tuliskan sebagai paragraf biasa yang dipisahkan baris kosong, urutkan sesuai abjad.' : '6. Karena belum ada buku rujukan metodologi di sistem, susunlah tahapan penelitian berdasarkan standar akademik umum yang lazim untuk metode ' + methodCategory + '.\n7. Di bagian paling akhir, tambahkan sub-judul "## Daftar Pustaka Buku Metodologi" dan susun referensi standar sesuai format APA tanpa menggunakan bullet points/nomor.'}
+${hasContext ? '6. Rujuk dan sintesis referensi buku yang relevan dari REFERENSI BUKU METODOLOGI yang disediakan. Setiap kali Anda menggunakan informasi dari referensi, sisipkan kutipan (sitasi) format APA (Contoh: Sugiyono, 2015: 45) di akhir kalimat/paragraf.\n7. Di bagian paling akhir, tambahkan sub-judul "## Daftar Pustaka Buku Metodologi" dan susun referensi buku yang Anda kutip tadi sesuai format APA. SANGAT PENTING: Jangan menggunakan bullet points/nomor untuk daftar pustaka, tuliskan sebagai paragraf biasa yang dipisahkan baris kosong, urutkan sesuai abjad.' : '6. Karena belum ada buku rujukan metodologi di sistem, susunlah tahapan penelitian berdasarkan standar akademik umum yang lazim untuk metode ini.\n7. Di bagian paling akhir, tambahkan sub-judul "## Daftar Pustaka Buku Metodologi" dan susun referensi standar sesuai format APA tanpa menggunakan bullet points/nomor.'}
 `;
 
     let finalMarkdown: string;
