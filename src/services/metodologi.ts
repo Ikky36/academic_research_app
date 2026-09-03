@@ -148,7 +148,7 @@ ${hasContext ? '6. Rujuk dan sintesis referensi buku yang relevan dari REFERENSI
   } catch (err: any) {
     const { logErrorToAdmin, FRIENDLY_ERROR_MESSAGE } = await import('@/utils/logger');
     await logErrorToAdmin('Metodologi_Generate', err);
-    return { error: "DEBUG ERROR: " + (err.message || String(err)) };
+    return { error: FRIENDLY_ERROR_MESSAGE };
   }
 }
 

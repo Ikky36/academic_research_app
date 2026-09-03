@@ -146,24 +146,17 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
     // Get user API key if any
     const userKey = localStorage.getItem('user_api_key') || undefined;
 
-    try {
-      const res = await generateMetodologiAction(projectId, approach, gap, novelty, chatSummary, userKey, isPaidApi);
-      
-      if (!res.error && res.result) {
-        setMetodologiResult(res.result);
-        saveProjectState(projectId, 'metodologi_result', res.result);
-        updateWizardStep(3);
-      } else {
-        alert("ERROR API Backend: " + (res.error || 'Terjadi kesalahan saat menyusun Metodologi.'));
-        setError(res.error || 'Terjadi kesalahan saat menyusun Metodologi.');
-      }
-    } catch (err: any) {
-      console.error("Metodologi Error:", err);
-      alert("ERROR Jaringan/Sistem: " + (err.message || String(err)));
-      setError("Gagal memproses ke server: " + (err.message || String(err)));
-    } finally {
-      setIsGenerating(false);
+    const res = await generateMetodologiAction(projectId, approach, gap, novelty, chatSummary, userKey, isPaidApi);
+    
+    if (!res.error && res.result) {
+      setMetodologiResult(res.result);
+      saveProjectState(projectId, 'metodologi_result', res.result);
+      updateWizardStep(3);
+    } else {
+      setError(res.error || 'Terjadi kesalahan saat menyusun Metodologi.');
     }
+    
+    setIsGenerating(false);
   };
 
   const copyToClipboard = () => {
