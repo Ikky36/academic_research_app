@@ -21,19 +21,21 @@ export async function POST(req: Request) {
     }
 
     // 1. Fetch the 5 required states
-    const statesToFetch = [
+    const requiredStates = [
       'kp_result', 
       'empirical_gap_narrative', 
       'sota_markdown', 
       'selected_gap', 
       'research_topic'
     ];
+    const optionalStates = ['selected_title'];
+    const allStatesToFetch = [...requiredStates, ...optionalStates];
 
     const { data: states, error: stateError } = await supabase
       .from('project_states')
       .select('state_key, state_value')
       .eq('project_id', projectId)
-      .in('state_key', statesToFetch);
+      .in('state_key', allStatesToFetch);
 
     if (stateError) throw stateError;
 
@@ -43,7 +45,7 @@ export async function POST(req: Request) {
     });
 
     // Check if any required state is missing
-    const missing = statesToFetch.filter(k => !stateMap[k]);
+    const missing = requiredStates.filter(k => !stateMap[k]);
     if (missing.length > 0) {
       return NextResponse.json({ error: `Missing prerequisites: ${missing.join(', ')}` }, { status: 400 });
     }
@@ -113,13 +115,15 @@ export async function POST(req: Request) {
     }
 
     // 4. Generate with AI (Streaming)
+    const finalTopicToUse = stateMap['selected_title'] || stateMap['research_topic'];
+    
     const { stream: aiStream, usedKeyIndex } = await generateLatarBelakang(
       filteredKp,
       stateMap['empirical_gap_narrative'],
       stateMap['sota_markdown'],
       gapData.gap,
       gapData.novelty,
-      stateMap['research_topic'],
+      finalTopicToUse,
       paragraphCount || 5,
       referencesList,
       existingText,
