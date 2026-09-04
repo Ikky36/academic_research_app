@@ -183,7 +183,7 @@ export default function RekomendasiJudulInterface({ projectId, isActive, isPaidA
                     className={selectedTitle === title ? styles.btnPrimary : styles.btnSecondary}
                     style={{ whiteSpace: "nowrap" }}
                   >
-                    {selectedTitle === title ? "? Terpilih" : "Pilih Judul Ini"}
+                    {selectedTitle === title ? "✓ Terpilih" : "Pilih Judul Ini"}
                   </button>
                 </div>
               ))}
