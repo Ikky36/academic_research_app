@@ -228,6 +228,7 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
           item.description,
           item.keywords,
           approach,
+          gap,
           userKey,
           isPaidApi
         );

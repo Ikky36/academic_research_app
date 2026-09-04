@@ -413,6 +413,7 @@ export async function generateMethodologySubchapter(
   description: string,
   keywords: string[],
   pendekatan: string,
+  gap: string,
   userApiKey?: string,
   isPaidApi?: boolean
 ): Promise<{ content?: string, booksCited?: any[], error?: string }> {

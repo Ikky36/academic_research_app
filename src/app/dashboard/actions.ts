@@ -743,8 +743,9 @@ export async function generateMethodologySubchapterAction(
   description: string,
   keywords: string[],
   pendekatan: string,
+  gap: string,
   userApiKey?: string,
   isPaidApi?: boolean
 ) {
-  return await generateMethodologySubchapter(title, description, keywords, pendekatan, userApiKey, isPaidApi);
+  return await generateMethodologySubchapter(title, description, keywords, pendekatan, gap, userApiKey, isPaidApi);
 }
