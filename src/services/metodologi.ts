@@ -369,6 +369,15 @@ Untuk SETIAP sub-bab, hasilkan:
 2. "description": Poin-poin spesifik hasil kesepakatan bimbingan untuk sub-bab ini.
 3. "keywords": Array berisi kata kunci teknis (WAJIB Bilingual Indonesia & Inggris) yang relevan HANYA untuk sub-bab ini guna keperluan pencarian di database (Misal: ["Purposive Sampling", "Sampel Bertujuan"]).
 
+OUTPUT WAJIB JSON ARRAY OBJECT SEPERTI CONTOH BERIKUT:
+[
+  {
+    "title": "3.1 Desain Penelitian",
+    "description": "Penelitian ini menggunakan desain Explanatory Sequential...",
+    "keywords": ["Mixed Methods", "Explanatory Sequential"]
+  }
+]
+
 Output HANYA array of JSON object tanpa markdown.`;
 
     let text: string;
