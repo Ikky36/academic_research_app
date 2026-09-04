@@ -114,8 +114,6 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
   const updateOutline = (newOutline: MetodologiOutlineItem[]) => {
     setOutline(newOutline);
     saveProjectState(projectId, "metodologi_outline", JSON.stringify(newOutline));
-      setMetodologiResult("");
-    }
   };
 
   const resetChat = () => {
