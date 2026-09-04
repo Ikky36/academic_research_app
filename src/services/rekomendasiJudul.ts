@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { callDeepSeekWithRetry } from "@/utils/deepseek";
+import { callDeepSeekWithRetry } from "./deepseek";
 
 export async function generateTitleRecommendations(
   gap: string,
