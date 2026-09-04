@@ -114,17 +114,6 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
   const updateOutline = (newOutline: MetodologiOutlineItem[]) => {
     setOutline(newOutline);
     saveProjectState(projectId, "metodologi_outline", JSON.stringify(newOutline));
-  };
-
-  // Chat Logic
-  
-  const resetChat = () => {
-    if (confirm("Apakah Anda yakin ingin mengulang bimbingan dari awal? Seluruh riwayat percakapan metodologi akan dihapus.")) {
-      setHasStartedChat(false);
-      updateChatHistory([]);
-      updateIsChatComplete(false);
-      updateChatSummary("");
-      updateOutline([]);
       setMetodologiResult("");
     }
   };
