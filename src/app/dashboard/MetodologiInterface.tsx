@@ -1,12 +1,17 @@
-'use client';
 
-import { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import styles from './KajianPustakaInterface.module.css'; // Reuse styles
-import { saveProjectState, getProjectState } from '@/services/projectState';
-import { generateMetodologiAction, continueMethodologyChatAction } from './actions';
-import { ChatMessage } from '@/services/metodologi';
+"use client";
+
+import { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import styles from "./KajianPustakaInterface.module.css";
+import { saveProjectState, getProjectState } from "@/services/projectState";
+import { 
+  generateMetodologiAction, 
+  continueMethodologyChatAction,
+  generateMethodologyOutlineAction,
+  generateMethodologySubchapterAction
+} from "./actions";
 
 interface MetodologiInterfaceProps {
   projectId: string;
@@ -16,147 +21,249 @@ interface MetodologiInterfaceProps {
   isPaidApi?: boolean;
 }
 
+export interface ChatMessage {
+  role: "ai" | "user";
+  text: string;
+  options?: string[];
+}
+
+export interface MetodologiOutlineItem {
+  title: string;
+  description: string;
+  keywords: string[];
+}
+
 export default function MetodologiInterface({ projectId, isActive, limits, role, isPaidApi }: MetodologiInterfaceProps) {
-  // State
-  const [approach, setApproach] = useState('');
-  const [gap, setGap] = useState('');
-  const [novelty, setNovelty] = useState('');
-  
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState('');
-  const [wizardStep, setWizardStep] = useState(1); // 1: Setup, 2: Chatting, 3: Result
-  const [isAiThinking, setIsAiThinking] = useState(false);
-  const [isChatComplete, setIsChatComplete] = useState(false);
-  const [chatSummary, setChatSummary] = useState('');
-  
-  // Helpers to persist state
-  const updateChatHistory = (newHistory: ChatMessage[]) => {
-    setChatHistory(newHistory);
-    saveProjectState(projectId, 'metodologi_chat', JSON.stringify(newHistory));
-  };
-  
-  const updateWizardStep = (newStep: number) => {
-    setWizardStep(newStep);
-    saveProjectState(projectId, 'metodologi_wizard', newStep.toString());
-  };
-  
-  const updateIsChatComplete = (isComplete: boolean) => {
-    setIsChatComplete(isComplete);
-    saveProjectState(projectId, 'metodologi_chatComplete', isComplete.toString());
-  };
-  
-  const updateChatSummary = (summary: string) => {
-    setChatSummary(summary);
-    saveProjectState(projectId, 'metodologi_summary', summary);
+  const [step, setStepState] = useState(1);
+  const setStep = (newStep: number) => {
+    setStepState(newStep);
+    saveProjectState(projectId, "metodologi_step", newStep.toString());
   };
 
-  const [metodologiResult, setMetodologiResult] = useState('');
+  // Step 1: Bimbingan Metodologi
+  const [approach, setApproach] = useState("");
+  const [gap, setGap] = useState("");
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [isAiThinking, setIsAiThinking] = useState(false);
+  const [isChatComplete, setIsChatComplete] = useState(false);
+  const [chatSummary, setChatSummary] = useState("");
+  const [hasStartedChat, setHasStartedChat] = useState(false);
+
+  // Step 2: Smart Outline
+  const [outline, setOutline] = useState<MetodologiOutlineItem[]>([]);
+  const [isGeneratingOutline, setIsGeneratingOutline] = useState(false);
+
+  // Step 3: Hasil Akhir
+  const [metodologiResult, setMetodologiResult] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState('');
+  const [completedSubBabs, setCompletedSubBabs] = useState(0);
+
+  const [error, setError] = useState("");
   const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
     if (isActive && projectId) {
-      // Load prerequisites from Supabase
       Promise.all([
-        getProjectState(projectId, 'kp_approach'),
-        getProjectState(projectId, 'selected_gap'),
-        getProjectState(projectId, 'metodologi_result'),
-        getProjectState(projectId, 'metodologi_chat'),
-        getProjectState(projectId, 'metodologi_wizard'),
-        getProjectState(projectId, 'metodologi_chatComplete'),
-        getProjectState(projectId, 'metodologi_summary')
-      ]).then(([savedApproach, savedGap, savedResult, savedChatHistory, savedStep, savedChatComplete, savedSummary]) => {
+        getProjectState(projectId, "kp_approach"),
+        getProjectState(projectId, "selected_gap"),
+        getProjectState(projectId, "metodologi_result"),
+        getProjectState(projectId, "metodologi_chat"),
+        getProjectState(projectId, "metodologi_chatComplete"),
+        getProjectState(projectId, "metodologi_summary"),
+        getProjectState(projectId, "metodologi_step"),
+        getProjectState(projectId, "metodologi_outline")
+      ]).then(([savedApproach, savedGap, savedResult, savedChat, savedComplete, savedSummary, savedStep, savedOutline]) => {
         if (savedApproach) setApproach(savedApproach);
         if (savedGap) setGap(savedGap);
-        
-        // We assume novelty is derived from gap or stored similarly. Let's just use gap if novelty isn't explicitly saved, or try to load novelty if it exists.
-        // For now, we'll just pass gap as novelty or use it combined.
-        setNovelty(savedGap || '');
-
         if (savedResult) setMetodologiResult(savedResult);
-        if (savedChatHistory) setChatHistory(JSON.parse(savedChatHistory));
-        if (savedStep) setWizardStep(parseInt(savedStep, 10));
-        if (savedChatComplete) setIsChatComplete(savedChatComplete === 'true');
+        if (savedChat) {
+          try {
+            const parsed = JSON.parse(savedChat);
+            setChatHistory(parsed);
+            if (parsed.length > 0) setHasStartedChat(true);
+          } catch(e) {}
+        }
+        if (savedComplete === "true") setIsChatComplete(true);
         if (savedSummary) setChatSummary(savedSummary);
+        if (savedStep) setStepState(parseInt(savedStep));
+        if (savedOutline) {
+          try {
+            setOutline(JSON.parse(savedOutline));
+          } catch(e) {}
+        }
       });
     }
   }, [isActive, projectId]);
 
+  const updateChatHistory = (newHistory: ChatMessage[]) => {
+    setChatHistory(newHistory);
+    saveProjectState(projectId, "metodologi_chat", JSON.stringify(newHistory));
+  };
+
+  const updateIsChatComplete = (status: boolean) => {
+    setIsChatComplete(status);
+    saveProjectState(projectId, "metodologi_chatComplete", status ? "true" : "false");
+  };
+
+  const updateChatSummary = (summary: string) => {
+    setChatSummary(summary);
+    saveProjectState(projectId, "metodologi_summary", summary);
+  };
+
+  const updateOutline = (newOutline: MetodologiOutlineItem[]) => {
+    setOutline(newOutline);
+    saveProjectState(projectId, "metodologi_outline", JSON.stringify(newOutline));
+  };
+
+  // Chat Logic
   const startChat = async () => {
     if (!approach || !gap) {
-      setError('Pendekatan atau Research Gap belum diisi.');
+      setError("Pendekatan atau Research Gap belum diisi.");
       return;
     }
-
-    updateWizardStep(2);
+    setError("");
+    setHasStartedChat(true);
     setIsAiThinking(true);
-    setError('');
 
-    const userKey = localStorage.getItem('user_api_key') || undefined;
+    const userKey = localStorage.getItem("user_api_key") || undefined;
     const res = await continueMethodologyChatAction(approach, gap, [], userKey, isPaidApi);
 
     if (res.error) {
       setError(res.error);
-      setIsAiThinking(false);
-      return;
+      setHasStartedChat(false);
+    } else {
+      const initHistory: ChatMessage[] = [{
+        role: "ai",
+        text: res.nextQuestion || "Silakan mulai...",
+        options: res.options || []
+      }];
+      updateChatHistory(initHistory);
     }
-    
-    updateChatHistory([{ role: 'ai', text: res.nextQuestion || 'Halo, mari kita mulai merumuskan metodologi Anda.', options: res.options }]);
     setIsAiThinking(false);
   };
 
-  const sendChatMessage = async (overrideText?: string) => {
-    const textToSend = typeof overrideText === 'string' ? overrideText : chatInput;
+  const sendChatMessage = async (textOverride?: string) => {
+    const textToSend = textOverride || chatInput;
     if (!textToSend.trim() || isAiThinking) return;
-    
-    const newHistory: ChatMessage[] = [...chatHistory, { role: 'user', text: textToSend }];
+
+    setError("");
+    const newHistory = [...chatHistory, { role: "user" as const, text: textToSend }];
     updateChatHistory(newHistory);
-    setChatInput('');
+    setChatInput("");
     setIsAiThinking(true);
-    
-    const userKey = localStorage.getItem('user_api_key') || undefined;
+
+    const userKey = localStorage.getItem("user_api_key") || undefined;
     const res = await continueMethodologyChatAction(approach, gap, newHistory, userKey, isPaidApi);
-    
+
     if (res.error) {
       setError(res.error);
-      setIsAiThinking(false);
-      return;
-    }
-    
-    if (res.isComplete) {
-      updateIsChatComplete(true);
-      updateChatSummary(res.summary || '');
-      updateChatHistory([...newHistory, { role: 'ai', text: 'Terima kasih, informasi sudah cukup lengkap! Anda sekarang dapat mulai membuat Metodologi.' }]);
     } else {
-      updateChatHistory([...newHistory, { role: 'ai', text: res.nextQuestion || 'Mohon jelaskan lebih detail.', options: res.options }]);
+      const aiReply: ChatMessage = {
+        role: "ai",
+        text: res.isComplete ? (res.summary || "Wawancara selesai.") : (res.nextQuestion || "Ada lagi?"),
+        options: res.options || []
+      };
+      updateChatHistory([...newHistory, aiReply]);
+      
+      if (res.isComplete) {
+        updateIsChatComplete(true);
+        if (res.summary) updateChatSummary(res.summary);
+      }
     }
     setIsAiThinking(false);
   };
 
-  const handleGenerate = async () => {
-    if (!approach || !gap) {
-      setError('Pendekatan atau Research Gap belum diisi. Silakan kembali ke Tab Kajian Pustaka dan Tahap 1 terlebih dahulu.');
+  const generateOutline = async () => {
+    if (!chatSummary && chatHistory.length === 0) return;
+    setIsGeneratingOutline(true);
+    setError("");
+
+    const userKey = localStorage.getItem("user_api_key") || undefined;
+    
+    // Create a fallback summary if needed
+    const summaryToUse = chatSummary || "User telah menjawab pertanyaan struktur kampus.";
+
+    const res = await generateMethodologyOutlineAction(approach, summaryToUse, userKey, isPaidApi);
+    if (res.error) {
+      setError(res.error);
+    } else if (res.outline) {
+      updateOutline(res.outline);
+      setStep(2);
+    }
+    setIsGeneratingOutline(false);
+  };
+
+  const handleGenerateHasilAkhir = async () => {
+    if (outline.length === 0) {
+      setError("Outline belum tersedia.");
       return;
     }
-
+    
     setIsGenerating(true);
-    setError('');
-    
-    // Get user API key if any
-    const userKey = localStorage.getItem('user_api_key') || undefined;
+    setError("");
+    setCompletedSubBabs(0);
+    setStep(3);
+    setMetodologiResult("");
 
-    const res = await generateMetodologiAction(projectId, approach, gap, novelty, chatSummary, userKey, isPaidApi);
-    
-    if (!res.error && res.result) {
-      setMetodologiResult(res.result);
-      saveProjectState(projectId, 'metodologi_result', res.result);
-      updateWizardStep(3);
-    } else {
-      setError(res.error || 'Terjadi kesalahan saat menyusun Metodologi.');
+    const userKey = localStorage.getItem("user_api_key") || undefined;
+    let combinedResult = "";
+    let masterBibliography: any[] = [];
+
+    try {
+      for (let i = 0; i < outline.length; i++) {
+        const item = outline[i];
+        const res = await generateMethodologySubchapterAction(
+          item.title,
+          item.description,
+          item.keywords,
+          approach,
+          userKey,
+          isPaidApi
+        );
+
+        if (res.error) {
+          throw new Error(res.error);
+        }
+
+        combinedResult += res.content + "\n\n";
+        setMetodologiResult(combinedResult);
+        saveProjectState(projectId, "metodologi_result", combinedResult);
+        
+        if (res.booksCited && res.booksCited.length > 0) {
+          masterBibliography = [...masterBibliography, ...res.booksCited];
+        }
+        
+        setCompletedSubBabs(i + 1);
+      }
+
+      // Auto-Compile Daftar Pustaka
+      if (masterBibliography.length > 0) {
+        // Remove duplicates based on title and author combination
+        const uniqueBooks = Array.from(new Map(masterBibliography.map(book => 
+          [`${book.title}-${book.author}`, book]
+        )).values());
+        
+        // Sort alphabetically by author
+        uniqueBooks.sort((a, b) => (a.author || "").localeCompare(b.author || ""));
+
+        let daftarPustaka = "## Daftar Pustaka Metodologi\n\n";
+        uniqueBooks.forEach(book => {
+          const author = book.author || "Penulis Tidak Diketahui";
+          const year = book.year ? `(${book.year})` : "(n.d.)";
+          const title = book.title || "Judul Tidak Diketahui";
+          daftarPustaka += `${author}. ${year}. *${title}*.\n\n`;
+        });
+
+        combinedResult += daftarPustaka;
+        setMetodologiResult(combinedResult);
+        saveProjectState(projectId, "metodologi_result", combinedResult);
+      }
+    } catch (err: any) {
+      setError(err.message || "Terjadi kesalahan saat menyusun Metodologi.");
+    } finally {
+      setIsGenerating(false);
     }
-    
-    setIsGenerating(false);
   };
 
   const copyToClipboard = () => {
@@ -166,40 +273,67 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
     });
   };
 
-  const clearResult = () => {
-    if (confirm('Anda yakin ingin menghapus hasil Metodologi ini dan mengulang dari awal?')) {
-      setMetodologiResult('');
-      updateWizardStep(1);
-      updateChatHistory([]);
-      updateIsChatComplete(false);
-      updateChatSummary('');
-      saveProjectState(projectId, 'metodologi_result', '');
-    }
-  };
-
-  if (!isActive) return null;
-
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>Metodologi Penelitian</h2>
-      <p className={styles.subtitle}>
-        AI akan merumuskan tahapan metodologi secara otomatis berdasarkan Pendekatan ({approach || 'Belum diatur'}) dan Gap penelitian Anda, merujuk langsung pada buku metodologi di database.
-      </p>
+      <div className={styles.header}>
+        <h2>Metodologi Penelitian</h2>
+        <p>AI akan menyusun Metodologi Penelitian sesuai dengan panduan struktur kampus Anda.</p>
+      </div>
 
-      {error && <div className={styles.errorBanner}>❌ {error}</div>}
+      <div className={styles.wizardHeader}>
+        <div 
+          className={styles.progressLine} 
+          style={{ width: `${(step - 1) * 50}%` }}
+        />
+        <div 
+          className={`${styles.stepIndicator} ${step >= 1 ? styles.active : ""} ${isChatComplete ? styles.completed : ""} ${step === 1 ? styles.current : ""}`} 
+          onClick={() => setStep(1)} 
+          style={{cursor: "pointer"}}
+        >
+          <div className={styles.stepNumber}>{isChatComplete ? "o"" : "1"}</div>
+          <div className={styles.stepLabel}>Bimbingan Metodologi</div>
+        </div>
+        <div 
+          className={`${styles.stepIndicator} ${step >= 2 ? styles.active : ""} ${outline.length > 0 ? styles.completed : ""} ${step === 2 ? styles.current : ""}`} 
+          onClick={() => isChatComplete && setStep(2)} 
+          style={{cursor: isChatComplete ? "pointer" : "default"}}
+        >
+          <div className={styles.stepNumber}>{outline.length > 0 ? "o"" : "2"}</div>
+          <div className={styles.stepLabel}>Smart Outline</div>
+        </div>
+        <div 
+          className={`${styles.stepIndicator} ${step === 3 ? styles.active : ""} ${metodologiResult && !isGenerating ? styles.completed : ""} ${step === 3 ? styles.current : ""}`}
+          onClick={() => metodologiResult.length > 0 && setStep(3)}
+          style={{cursor: metodologiResult.length > 0 ? "pointer" : "default"}}
+        >
+          <div className={styles.stepNumber}>{(metodologiResult && !isGenerating) ? "o"" : "3"}</div>
+          <div className={styles.stepLabel}>Hasil Akhir</div>
+        </div>
+      </div>
 
-      {!metodologiResult && wizardStep === 1 && (
-        <div className={styles.stepContainer}>
-          <div className={styles.infoBox}>
-            <p><strong>Pendekatan:</strong></p>
+      {error && step !== 3 && (
+        <div className={`${styles.alert} ${styles.error}`}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <div>
+            <h4 style={{ margin: "0 0 4px 0", fontWeight: "bold" }}>Error</h4>
+            <p style={{ margin: 0, fontSize: "14px" }}>{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 1: BIMBINGAN METODOLOGI */}
+      {step === 1 && (
+        <div className={styles.wizardContent}>
+          <div style={{ marginBottom: "20px" }}>
+            <p><strong>Pendekatan (Approach):</strong></p>
             <select 
               className={styles.input} 
               value={approach}
               onChange={(e) => {
                 setApproach(e.target.value);
-                saveProjectState(projectId, 'kp_approach', e.target.value);
+                saveProjectState(projectId, "kp_approach", e.target.value);
               }}
-              style={{ marginBottom: '10px', padding: '8px', width: '100%', borderRadius: '6px', border: '1px solid var(--border)', backgroundColor: 'var(--surface-container-high)', color: 'var(--on-surface)' }}
+              style={{ marginBottom: "10px", padding: "8px", width: "100%", borderRadius: "6px", border: "1px solid var(--border)", backgroundColor: "var(--surface-container-high)", color: "var(--on-surface)" }}
             >
               <option value="">-- Pilih Pendekatan --</option>
               <option value="Kuantitatif">Kuantitatif</option>
@@ -207,177 +341,225 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
               <option value="Mixed Methods">Mixed Methods</option>
               <option value="Research & Development (R&D)">Research & Development (R&D)</option>
               <option value="Kajian Pustaka (Literature Review)">Kajian Pustaka (Literature Review)</option>
-              <option value="Tafsir/Kajian Tokoh">Tafsir/Kajian Tokoh</option>
-              <option value="Eksperimen">Eksperimen</option>
-              <option value="Tindakan Kelas (PTK)">Tindakan Kelas (PTK)</option>
             </select>
-
-            <p><strong>Research Gap:</strong> {gap ? gap.substring(0, 100) + '...' : '-'}</p>
           </div>
+
+          {!hasStartedChat ? (
+            <button 
+              onClick={startChat} 
+              disabled={isAiThinking || !approach || !gap}
+              className={styles.btnPrimary}
+              style={{ width: "100%", padding: "12px", justifyContent: "center" }}
+            >
+              {isAiThinking ? "Menyiapkan Bimbingan..." : "Mulai Bimbingan Metodologi"}
+            </button>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: "400px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "15px", marginBottom: "20px", maxHeight: "400px", overflowY: "auto", padding: "10px", backgroundColor: "var(--surface-container-lowest)", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                {chatHistory.map((msg, index) => (
+                  <div key={index} style={{
+                    alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                    backgroundColor: msg.role === "user" ? "var(--primary-container)" : "var(--surface-container-high)",
+                    color: msg.role === "user" ? "var(--on-primary-container)" : "var(--on-surface)",
+                    padding: "10px 15px",
+                    borderRadius: "12px",
+                    maxWidth: "80%",
+                    borderBottomRightRadius: msg.role === "user" ? "0" : "12px",
+                    borderBottomLeftRadius: msg.role === "ai" ? "0" : "12px",
+                  }}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ p: ({node, ...props}) => <p style={{margin: 0}} {...props} /> }}>
+                      {msg.text}
+                    </ReactMarkdown>
+                    {msg.options && msg.options.length > 0 && index === chatHistory.length - 1 && !isAiThinking && (
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "12px" }}>
+                        {msg.options.map((opt, i) => (
+                          <button 
+                            key={i} 
+                            onClick={() => sendChatMessage(opt)}
+                            className={styles.btnSecondary}
+                            style={{ padding: "6px 12px", fontSize: "0.85rem", borderRadius: "20px", border: "1px solid var(--primary)", backgroundColor: "var(--surface)", color: "var(--primary)", cursor: "pointer" }}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {isAiThinking && (
+                  <div style={{ alignSelf: "flex-start", backgroundColor: "var(--surface-container-high)", color: "var(--on-surface-variant)", padding: "10px 15px", borderRadius: "12px", maxWidth: "80%", borderBottomLeftRadius: "0" }}>
+                    <span className={styles.loadingText}>AI sedang mengetik...</span>
+                  </div>
+                )}
+              </div>
+
+              {!isChatComplete ? (
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    style={{ flex: 1, padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", backgroundColor: "var(--surface)", color: "var(--on-surface)" }}
+                    placeholder="Ketik jawaban Anda..."
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") sendChatMessage();
+                    }}
+                    disabled={isAiThinking}
+                  />
+                  <button 
+                    onClick={() => sendChatMessage()} 
+                    disabled={isAiThinking || !chatInput.trim()}
+                    className={styles.btnPrimary}
+                  >
+                    Kirim
+                  </button>
+                </div>
+              ) : (
+                <div style={{ padding: "15px", backgroundColor: "var(--surface-container-low)", borderRadius: "8px", border: "1px solid var(--primary)", marginBottom: "20px" }}>
+                  <p style={{ margin: 0, color: "var(--primary)", fontWeight: "bold" }}>o. Bimbingan Selesai! Semua elemen sudah terkumpul.</p>
+                  <button 
+                    onClick={generateOutline} 
+                    disabled={isGeneratingOutline}
+                    className={styles.btnPrimary}
+                    style={{ width: "100%", marginTop: "15px", justifyContent: "center" }}
+                  >
+                    {isGeneratingOutline ? "Mengekstrak Outline..." : "Lanjut ke Smart Outline"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* STEP 2: SMART OUTLINE */}
+      {step === 2 && (
+        <div className={styles.wizardContent}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+            <h3 style={{ margin: 0 }}>Smart Outline Metodologi</h3>
+            <button 
+              onClick={() => {
+                const newItem = { title: "Sub-bab Baru", description: "Deskripsi", keywords: [] };
+                updateOutline([...outline, newItem]);
+              }}
+              className={styles.btnSecondary}
+            >
+              + Tambah Sub-bab
+            </button>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+            {outline.map((item, index) => (
+              <div key={index} style={{ padding: "15px", backgroundColor: "var(--surface-container-low)", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                <input 
+                  type="text" 
+                  value={item.title}
+                  onChange={(e) => {
+                    const newOutline = [...outline];
+                    newOutline[index].title = e.target.value;
+                    updateOutline(newOutline);
+                  }}
+                  style={{ width: "100%", padding: "8px", marginBottom: "10px", fontWeight: "bold", border: "1px solid var(--border)", borderRadius: "4px", backgroundColor: "var(--surface)" }}
+                />
+                <textarea 
+                  value={item.description}
+                  onChange={(e) => {
+                    const newOutline = [...outline];
+                    newOutline[index].description = e.target.value;
+                    updateOutline(newOutline);
+                  }}
+                  rows={3}
+                  style={{ width: "100%", padding: "8px", marginBottom: "10px", border: "1px solid var(--border)", borderRadius: "4px", backgroundColor: "var(--surface)", resize: "vertical" }}
+                />
+                <input 
+                  type="text" 
+                  value={item.keywords.join(", ")}
+                  onChange={(e) => {
+                    const newOutline = [...outline];
+                    newOutline[index].keywords = e.target.value.split(",").map(k => k.trim()).filter(k => k);
+                    updateOutline(newOutline);
+                  }}
+                  placeholder="Kata Kunci Bilingual (pisahkan dengan koma)"
+                  style={{ width: "100%", padding: "8px", border: "1px solid var(--border)", borderRadius: "4px", backgroundColor: "var(--surface)" }}
+                />
+                <button 
+                  onClick={() => {
+                    const newOutline = [...outline];
+                    newOutline.splice(index, 1);
+                    updateOutline(newOutline);
+                  }}
+                  className={styles.btnSecondary}
+                  style={{ marginTop: "10px", color: "var(--error)" }}
+                >
+                  Hapus Sub-bab
+                </button>
+              </div>
+            ))}
+          </div>
+
           <button 
-            onClick={startChat} 
-            disabled={isAiThinking || !approach || !gap}
-            className={styles.generateButton}
+            onClick={handleGenerateHasilAkhir}
+            disabled={isGenerating}
+            className={styles.btnPrimary}
+            style={{ width: "100%", marginTop: "20px", justifyContent: "center", padding: "12px" }}
           >
-            {isAiThinking ? 'Menyiapkan AI...' : 'Mulai Bimbingan Metodologi'}
+            Lanjut ke Hasil Akhir
           </button>
         </div>
       )}
 
-      {!metodologiResult && wizardStep === 2 && (
-        <div className={styles.stepContainer}>
-          <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: 'var(--surface-container-high)', borderRadius: '8px', borderLeft: '4px solid var(--primary)' }}>
-            <h3 style={{ marginTop: 0, color: 'var(--primary)' }}>Bimbingan Interaktif Metodologi</h3>
-            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--on-surface-variant)' }}>
-              Jawablah pertanyaan AI satu per satu. Jika Anda bingung, Anda bisa meminta saran kepada AI. Percakapan akan selesai otomatis jika elemen penelitian sudah lengkap.
-            </p>
-          </div>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '20px', maxHeight: '400px', overflowY: 'auto', padding: '10px', backgroundColor: 'var(--surface-container-lowest)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-            {chatHistory.map((msg, index) => (
-              <div key={index} style={{
-                alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                backgroundColor: msg.role === 'user' ? 'var(--primary-container)' : 'var(--surface-container-high)',
-                color: msg.role === 'user' ? 'var(--on-primary-container)' : 'var(--on-surface)',
-                padding: '10px 15px',
-                borderRadius: '12px',
-                maxWidth: '80%',
-                borderBottomRightRadius: msg.role === 'user' ? '0' : '12px',
-                borderBottomLeftRadius: msg.role === 'ai' ? '0' : '12px',
-              }}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ p: ({node, ...props}) => <p style={{margin: 0}} {...props} /> }}>
-                  {msg.text}
-                </ReactMarkdown>
-                {msg.options && msg.options.length > 0 && index === chatHistory.length - 1 && !isAiThinking && (
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
-                    {msg.options.map((opt, i) => (
-                      <button 
-                        key={i} 
-                        onClick={() => sendChatMessage(opt)}
-                        className={styles.btnSecondary}
-                        style={{ padding: '6px 12px', fontSize: '0.85rem', borderRadius: '20px', border: '1px solid var(--primary)', backgroundColor: 'var(--surface)', color: 'var(--primary)', cursor: 'pointer' }}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                    <button 
-                        onClick={() => { 
-                          const inputEl = document.getElementById('chat-input');
-                          if (inputEl) inputEl.focus(); 
-                        }}
-                        className={styles.btnSecondary}
-                        style={{ padding: '6px 12px', fontSize: '0.85rem', borderRadius: '20px', border: '1px solid var(--border)', backgroundColor: 'transparent', color: 'var(--on-surface-variant)', cursor: 'pointer' }}
-                      >
-                        Lainnya (Ketik Sendiri)
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-            {isAiThinking && (
-              <div style={{ alignSelf: 'flex-start', backgroundColor: 'var(--surface-container-high)', color: 'var(--on-surface-variant)', padding: '10px 15px', borderRadius: '12px', maxWidth: '80%', borderBottomLeftRadius: '0' }}>
-                <span className={styles.loadingText}>AI sedang mengetik...</span>
-              </div>
-            )}
-          </div>
-
-          {!isChatComplete ? (
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <input
-                id="chat-input"
-                type="text"
-                className={styles.input}
-                style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', backgroundColor: 'var(--surface)', color: 'var(--on-surface)' }}
-                placeholder="Ketik jawaban Anda..."
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') sendChatMessage();
-                }}
-                disabled={isAiThinking}
-              />
-              <button 
-                onClick={() => sendChatMessage()} 
-                disabled={isAiThinking || !chatInput.trim()}
-                className={styles.generateButton}
-                style={{ width: 'auto', padding: '0 20px' }}
-              >
-                Kirim
-              </button>
+      {/* STEP 3: HASIL AKHIR */}
+      {step === 3 && (
+        <div className={styles.wizardContent}>
+          {isGenerating ? (
+            <div style={{ padding: "40px 20px", backgroundColor: "var(--surface-container-high)", borderRadius: "12px", textAlign: "center", border: "1px solid var(--border)" }}>
+              <div className={styles.loaderLarge}></div>
+              <h3 style={{ margin: "20px 0 10px 0", color: "var(--on-surface)" }}>Menyusun Draft Bab Metodologi...</h3>
+              <p style={{ margin: 0, color: "var(--on-surface-variant)" }}>
+                Menyelesaikan Sub-bab {completedSubBabs} dari {outline.length}...
+              </p>
+              {completedSubBabs < outline.length && (
+                <p style={{ marginTop: "10px", fontSize: "0.9rem", color: "var(--primary)" }}>
+                  Targeted RAG: Sedang mensintesis "{outline[completedSubBabs]?.title}"
+                </p>
+              )}
             </div>
           ) : (
-            <div style={{ padding: '15px', backgroundColor: 'var(--surface-container-low)', borderRadius: '8px', border: '1px solid var(--primary)', marginBottom: '20px' }}>
-              <p style={{ margin: 0, color: 'var(--primary)', fontWeight: 'bold' }}>✅ Wawancara Selesai! Semua elemen sudah terkumpul.</p>
+            <div className={styles.resultContainer} style={{ marginTop: 0 }}>
+              <div className={styles.resultHeader}>
+                <h3 style={{ margin: 0 }}>Draft Final Bab Metodologi</h3>
+                <div className={styles.actionButtons}>
+                  <button onClick={copyToClipboard} className={styles.btnSecondary}>
+                    {copySuccess ? "Tersalin!" : "Copy Text"}
+                  </button>
+                </div>
+              </div>
+              <div className={styles.markdownContent} style={{ padding: "20px", backgroundColor: "var(--surface-container-lowest)", borderRadius: "8px", border: "1px solid var(--border)", marginTop: "15px" }}>
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h3: ({node, ...props}) => <h3 {...props} style={{ marginTop: "1.5em", marginBottom: "0.5em", color: "var(--on-surface)" }}>{props.children}</h3>,
+                    h2: ({node, ...props}) => {
+                      const isDaftarPustaka = String(props.children).includes("Daftar Pustaka");
+                      return (
+                        <h2 {...props} style={isDaftarPustaka ? { color: "#3b82f6", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "0.5rem", marginTop: "2.5rem", marginBottom: "1.5rem", fontSize: "1.5rem" } : { marginTop: "1.5em", marginBottom: "0.5em", color: "var(--on-surface)" }}>
+                          {props.children}
+                        </h2>
+                      );
+                    },
+                    p: ({node, ...props}) => (
+                      <p {...props} style={{ marginBottom: "1.2rem", lineHeight: "1.8", textIndent: "2rem", textAlign: "justify" }}>
+                        {props.children}
+                      </p>
+                    )
+                  }}
+                >
+                  {metodologiResult}
+                </ReactMarkdown>
+              </div>
             </div>
           )}
-
-          <div style={{ display: 'flex', gap: '15px', marginTop: '25px' }}>
-            <button 
-              onClick={() => {
-                updateWizardStep(1);
-                updateChatHistory([]);
-                updateIsChatComplete(false);
-              }}  
-              className={styles.btnSecondary}
-              style={{ flex: 1, justifyContent: 'center', backgroundColor: 'var(--surface-variant)', border: 'none' }}
-            >
-              Kembali ke Awal
-            </button>
-            <button 
-              onClick={handleGenerate} 
-              disabled={isGenerating || !isChatComplete}
-              className={styles.btnPrimary}
-              style={{ flex: 2, justifyContent: 'center', opacity: isChatComplete ? 1 : 0.5, cursor: isChatComplete ? 'pointer' : 'not-allowed' }}
-            >
-              {isGenerating ? 'Menyusun Metodologi...' : 'Buat Metodologi Sekarang'}
-            </button>
-          </div>
-          
-          {isGenerating && (
-            <div style={{ marginTop: '25px', padding: '25px', backgroundColor: 'var(--surface-container-high)', borderRadius: '12px', textAlign: 'center', border: '1px solid var(--border)' }}>
-              <div className={styles.loaderLarge}></div>
-              <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: 'var(--on-surface)', fontSize: '16px' }}>Menyusun Metodologi...</p>
-              <p style={{ margin: 0, color: 'var(--on-surface-variant)', fontSize: '14px' }}>Menggunakan referensi buku dan rangkuman diskusi Anda...</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {metodologiResult && (
-        <div className={styles.resultContainer}>
-          <div className={styles.resultHeader}>
-            <h3>Hasil Metodologi</h3>
-            <div className={styles.actionButtons}>
-              <button onClick={copyToClipboard} className={styles.actionButton}>
-                {copySuccess ? 'Tersalin!' : 'Copy Text'}
-              </button>
-              <button onClick={clearResult} className={styles.actionButton + ' ' + styles.dangerButton}>
-                Ulangi
-              </button>
-            </div>
-          </div>
-          <div className={styles.markdownContent}>
-            <ReactMarkdown 
-              remarkPlugins={[remarkGfm]}
-              components={{
-                h2: ({node, ...props}) => {
-                  const isDaftarPustaka = String(props.children).includes('Daftar Pustaka');
-                  return (
-                    <h2 {...props} style={isDaftarPustaka ? { color: '#3b82f6', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginTop: '2.5rem', marginBottom: '1.5rem', fontSize: '1.5rem' } : { marginTop: '1.5em', marginBottom: '0.5em', color: 'var(--on-surface)' }}>
-                      {props.children}
-                    </h2>
-                  );
-                },
-                p: ({node, ...props}) => (
-                  <p {...props} style={{ marginBottom: '1.2rem', lineHeight: '1.8', textIndent: '2rem', textAlign: 'justify' }}>
-                    {props.children}
-                  </p>
-                )
-              }}
-            >
-              {metodologiResult}
-            </ReactMarkdown>
-          </div>
         </div>
       )}
     </div>

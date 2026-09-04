@@ -726,3 +726,25 @@ export async function loadPreResearchChatAction(projectId: string) {
     return { error: e.message };
   }
 }
+
+import { generateMethodologyOutline, generateMethodologySubchapter } from '@/services/metodologi';
+
+export async function generateMethodologyOutlineAction(
+  pendekatan: string,
+  summary: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+) {
+  return await generateMethodologyOutline(pendekatan, summary, userApiKey, isPaidApi);
+}
+
+export async function generateMethodologySubchapterAction(
+  title: string,
+  description: string,
+  keywords: string[],
+  pendekatan: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+) {
+  return await generateMethodologySubchapter(title, description, keywords, pendekatan, userApiKey, isPaidApi);
+}
