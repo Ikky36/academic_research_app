@@ -12,6 +12,7 @@ import LatarBelakangInterface from './LatarBelakangInterface'
 import InstrumenInterface from './InstrumenInterface'
 import PraPenelitianInterface from './PraPenelitianInterface'
 import RekomendasiJudulInterface from './RekomendasiJudulInterface'
+import RekomendasiJudulInterface from './RekomendasiJudulInterface'
 import Sidebar from './Sidebar'
 import styles from './page.module.css'
 
@@ -152,7 +153,13 @@ export default async function DashboardPage({
             className={activeTab === 'metodologi' ? styles.activeTab : styles.tab}
           >
             Metodologi
-          </Link>
+            </Link>
+            <Link 
+              href={`/dashboard?tab=rekomendasi-judul&project=${activeProject?.id}`} 
+              className={activeTab === 'rekomendasi-judul' ? styles.activeTab : styles.tab}
+            >
+              Rekomendasi Judul
+            </Link>
           <Link 
             href={`/dashboard?tab=latar-belakang&project=${activeProject?.id}`} 
             className={activeTab === 'latar-belakang' ? styles.activeTab : styles.tab}
@@ -193,6 +200,9 @@ export default async function DashboardPage({
               </div>
               <div style={{ display: activeTab === 'metodologi' ? 'block' : 'none' }}>
                 <MetodologiInterface key={`met-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'metodologi'} limits={limits} role={role} isPaidApi={isPaidApi} />
+              </div>
+              <div style={{ display: activeTab === 'rekomendasi-judul' ? 'block' : 'none' }}>
+                <RekomendasiJudulInterface key={`rj-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'rekomendasi-judul'} isPaidApi={isPaidApi} />
               </div>
               <div style={{ display: activeTab === 'latar-belakang' ? 'block' : 'none' }}>
                 <LatarBelakangInterface key={`lb-${activeProject.id}`} projectId={activeProject.id} isActive={activeTab === 'latar-belakang'} isPaidApi={isPaidApi} />
