@@ -12,7 +12,6 @@ import LatarBelakangInterface from './LatarBelakangInterface'
 import InstrumenInterface from './InstrumenInterface'
 import PraPenelitianInterface from './PraPenelitianInterface'
 import RekomendasiJudulInterface from './RekomendasiJudulInterface'
-import RekomendasiJudulInterface from './RekomendasiJudulInterface'
 import Sidebar from './Sidebar'
 import styles from './page.module.css'
 
