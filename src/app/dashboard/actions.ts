@@ -749,3 +749,14 @@ export async function generateMethodologySubchapterAction(
 ) {
   return await generateMethodologySubchapter(title, description, keywords, pendekatan, gap, userApiKey, isPaidApi);
 }
+
+import { generateTitleRecommendations } from "@/services/rekomendasiJudul";
+
+export async function generateTitleRecommendationsAction(
+  gap: string,
+  methodologySummary: string,
+  userApiKey?: string,
+  isPaidApi?: boolean
+) {
+  return await generateTitleRecommendations(gap, methodologySummary, userApiKey, isPaidApi);
+}

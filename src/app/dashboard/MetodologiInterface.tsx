@@ -124,6 +124,8 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
       updateChatSummary("");
       updateOutline([]);
       setMetodologiResult("");
+      saveProjectState(projectId, "metodologi_result", "");
+      setStep(1);
     }
   };
 
