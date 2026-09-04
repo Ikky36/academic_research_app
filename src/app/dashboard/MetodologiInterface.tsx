@@ -478,7 +478,7 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
                     newOutline[index].title = e.target.value;
                     updateOutline(newOutline);
                   }}
-                  style={{ width: "100%", padding: "8px", marginBottom: "10px", fontWeight: "bold", border: "1px solid var(--border)", borderRadius: "4px", backgroundColor: "var(--surface)" }}
+                  style={{ width: "100%", padding: "8px", marginBottom: "10px", fontWeight: "bold", border: "1px solid var(--border)", borderRadius: "4px", backgroundColor: "var(--surface)", color: "var(--on-surface)" }}
                 />
                 <textarea 
                   value={item.description}
@@ -488,7 +488,7 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
                     updateOutline(newOutline);
                   }}
                   rows={3}
-                  style={{ width: "100%", padding: "8px", marginBottom: "10px", border: "1px solid var(--border)", borderRadius: "4px", backgroundColor: "var(--surface)", resize: "vertical" }}
+                  style={{ width: "100%", padding: "8px", marginBottom: "10px", border: "1px solid var(--border)", borderRadius: "4px", backgroundColor: "var(--surface)", color: "var(--on-surface)", resize: "vertical" }}
                 />
                 <input 
                   type="text" 
@@ -499,7 +499,7 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
                     updateOutline(newOutline);
                   }}
                   placeholder="Kata Kunci Bilingual (pisahkan dengan koma)"
-                  style={{ width: "100%", padding: "8px", border: "1px solid var(--border)", borderRadius: "4px", backgroundColor: "var(--surface)" }}
+                  style={{ width: "100%", padding: "8px", border: "1px solid var(--border)", borderRadius: "4px", backgroundColor: "var(--surface)", color: "var(--on-surface)" }}
                 />
                 <button 
                   onClick={() => {
