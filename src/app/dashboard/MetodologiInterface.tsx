@@ -117,6 +117,29 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
   };
 
   // Chat Logic
+  
+  const resetChat = () => {
+    if (confirm("Apakah Anda yakin ingin mengulang bimbingan dari awal? Seluruh riwayat percakapan metodologi akan dihapus.")) {
+      setHasStartedChat(false);
+      updateChatHistory([]);
+      updateIsChatComplete(false);
+      updateChatSummary("");
+      updateOutline([]);
+      setMetodologiResult("");
+    }
+  };
+
+  const resetChat = () => {
+    if (confirm("Apakah Anda yakin ingin mengulang bimbingan dari awal? Seluruh riwayat percakapan metodologi akan dihapus.")) {
+      setHasStartedChat(false);
+      updateChatHistory([]);
+      updateIsChatComplete(false);
+      updateChatSummary("");
+      updateOutline([]);
+      setMetodologiResult("");
+    }
+  };
+
   const startChat = async () => {
     if (!approach || !gap) {
       setError("Pendekatan atau Research Gap belum diisi.");
@@ -325,7 +348,18 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
       {step === 1 && (
         <div className={styles.wizardContent}>
           <div style={{ marginBottom: "20px" }}>
-            <p><strong>Pendekatan (Approach):</strong></p>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <p style={{ margin: 0 }}><strong>Pendekatan (Approach):</strong></p>
+              {hasStartedChat && (
+                <button 
+                  onClick={resetChat} 
+                  className={styles.btnSecondary} 
+                  style={{ padding: "4px 12px", fontSize: "0.85rem", color: "var(--error)", borderColor: "var(--error)" }}
+                >
+                  Ulangi Bimbingan
+                </button>
+              )}
+            </div>
             <select 
               className={styles.input} 
               value={approach}
