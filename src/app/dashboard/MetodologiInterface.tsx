@@ -1,4 +1,4 @@
-﻿
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -395,17 +395,14 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
 
               {!isChatComplete ? (
                 <div style={{ display: "flex", gap: "10px" }}>
-                  <input
-                    type="text"
+                  <textarea
                     className={styles.input}
-                    style={{ flex: 1, padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", backgroundColor: "var(--surface)", color: "var(--on-surface)" }}
+                    style={{ flex: 1, padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", backgroundColor: "var(--surface)", color: "var(--on-surface)", resize: "vertical", minHeight: "45px" }}
                     placeholder="Ketik jawaban Anda..."
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") sendChatMessage();
-                    }}
                     disabled={isAiThinking}
+                    rows={2}
                   />
                   <button 
                     onClick={() => sendChatMessage()} 
