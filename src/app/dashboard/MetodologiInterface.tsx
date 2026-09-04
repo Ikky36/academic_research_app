@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import { useState, useEffect } from "react";
@@ -290,7 +290,7 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
           onClick={() => setStep(1)} 
           style={{cursor: "pointer"}}
         >
-          <div className={styles.stepNumber}>{isChatComplete ? "o"" : "1"}</div>
+          <div className={styles.stepNumber}>{isChatComplete ? '✓' : "1"}</div>
           <div className={styles.stepLabel}>Bimbingan Metodologi</div>
         </div>
         <div 
@@ -298,7 +298,7 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
           onClick={() => isChatComplete && setStep(2)} 
           style={{cursor: isChatComplete ? "pointer" : "default"}}
         >
-          <div className={styles.stepNumber}>{outline.length > 0 ? "o"" : "2"}</div>
+          <div className={styles.stepNumber}>{outline.length > 0 ? '✓' : "2"}</div>
           <div className={styles.stepLabel}>Smart Outline</div>
         </div>
         <div 
@@ -306,7 +306,7 @@ export default function MetodologiInterface({ projectId, isActive, limits, role,
           onClick={() => metodologiResult.length > 0 && setStep(3)}
           style={{cursor: metodologiResult.length > 0 ? "pointer" : "default"}}
         >
-          <div className={styles.stepNumber}>{(metodologiResult && !isGenerating) ? "o"" : "3"}</div>
+          <div className={styles.stepNumber}>{(metodologiResult && !isGenerating) ? '✓' : "3"}</div>
           <div className={styles.stepLabel}>Hasil Akhir</div>
         </div>
       </div>

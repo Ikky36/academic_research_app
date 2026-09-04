@@ -1,143 +1,571 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const content = `
+"use client";
 
-const srcPath = path.join(__dirname, 'src', 'app', 'dashboard', 'InstrumenInterface.tsx');
-let content = fs.readFileSync(srcPath, 'utf8');
+import { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import styles from "./KajianPustakaInterface.module.css";
+import { saveProjectState, getProjectState } from "@/services/projectState";
+import { 
+  generateMetodologiAction, 
+  continueMethodologyChatAction,
+  generateMethodologyOutlineAction,
+  generateMethodologySubchapterAction
+} from "./actions";
 
-// 1. State changes
-content = content.replace(
-  `  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);\n  const [activeInstrument, setActiveInstrument] = useState<string | null>(null);`,
-  `  type InstrumentData = { id: string, instrument_type: string, name: string | null, status: string };\n  const [instruments, setInstruments] = useState<InstrumentData[]>([]);\n  const [activeInstrumentId, setActiveInstrumentId] = useState<string | null>(null);\n  const [newInstrumentType, setNewInstrumentType] = useState(INSTRUMENT_TYPES[0]);\n  const [newInstrumentName, setNewInstrumentName] = useState('');`
-);
+interface MetodologiInterfaceProps {
+  projectId: string;
+  isActive: boolean;
+  limits: any;
+  role: string;
+  isPaidApi?: boolean;
+}
 
-content = content.replace(
-  `  // Status mapping\n  const [instrumentStatus, setInstrumentStatus] = useState<Record<string, string>>({});`,
-  ``
-);
+export interface ChatMessage {
+  role: "ai" | "user";
+  text: string;
+  options?: string[];
+}
 
-// 2. loadInstruments
-content = content.replace(
-  /const loadInstruments = async \(\) => \{[\s\S]*?  \};\n/,
-  `const loadInstruments = async () => {\n    const supabase = createClient();\n    const { data } = await supabase.from('project_instruments').select('*').eq('project_id', projectId);\n    if (data) {\n      setInstruments(data);\n      const { data: filesData } = await supabase.from('instrument_reference_chunks').select('id, instrument_id, filename').eq('project_id', projectId);\n      if (filesData) setUploadedFiles(filesData);\n    }\n  };\n`
-);
+export interface MetodologiOutlineItem {
+  title: string;
+  description: string;
+  keywords: string[];
+}
 
-// 3. handleTypeToggle -> handleAddInstrument & handleRemove
-content = content.replace(
-  /const handleTypeToggle = async \(type: string\) => \{[\s\S]*?  \};\n/,
-  `const handleAddInstrument = async () => {\n    if (!newInstrumentType) return;\n    const supabase = createClient();\n    const { data, error } = await supabase.from('project_instruments').insert({\n      project_id: projectId,\n      instrument_type: newInstrumentType,\n      name: newInstrumentName || newInstrumentType,\n      status: 'pending'\n    }).select().single();\n    if (data) {\n      setInstruments([...instruments, data]);\n      setNewInstrumentName('');\n    }\n  };\n\n  const handleRemoveInstrument = async (id: string) => {\n    if (confirm('Yakin ingin menghapus instrumen ini? Data chat akan hilang.')) {\n      const supabase = createClient();\n      await supabase.from('project_instruments').delete().eq('id', id);\n      setInstruments(instruments.filter(i => i.id !== id));\n      if (activeInstrumentId === id) setActiveInstrumentId(null);\n    }\n  };\n`
-);
+export default function MetodologiInterface({ projectId, isActive, limits, role, isPaidApi }: MetodologiInterfaceProps) {
+  const [step, setStepState] = useState(1);
+  const setStep = (newStep: number) => {
+    setStepState(newStep);
+    saveProjectState(projectId, "metodologi_step", newStep.toString());
+  };
 
-// 4. handleStartInstrument
-content = content.replace(
-  /const handleStartInstrument = async \(type: string\) => \{[\s\S]*?setActiveInstrument\(type\);[\s\S]*?\.eq\('instrument_type', type\)\.single\(\);[\s\S]*?initChat\(type\);[\s\S]*?\}\n  \};\n/,
-  `const handleStartInstrument = async (id: string, type: string) => {\n    setActiveInstrumentId(id);\n    const supabase = createClient();\n    const { data } = await supabase.from('project_instruments').select('*').eq('id', id).single();\n    \n    if (data) {\n      setChatHistory(data.chat_history || []);\n      \n      if ((type === 'Tes Prestasi' || type === 'Skala') && data.chat_history) {\n         try {\n           const bpData = data.chat_history.find((m: any) => m.role === 'blueprint_data');\n           if (bpData && bpData.text) setBlueprintData(JSON.parse(bpData.text));\n           const domData = data.chat_history.find((m: any) => m.role === 'blueprint_domains');\n           if (domData && domData.text) setSelectedDomains(JSON.parse(domData.text));\n           const latentVarData = data.chat_history.find((m: any) => m.role === 'latent_var_name');\n           if (latentVarData && latentVarData.text) setSkalaLatentVarName(latentVarData.text);\n           const conceptsData = data.chat_history.find((m: any) => m.role === 'skala_concepts');\n           if (conceptsData && conceptsData.text) setSkalaConcepts(JSON.parse(conceptsData.text));\n           const synthesizedDefData = data.chat_history.find((m: any) => m.role === 'synthesized_def');\n           if (synthesizedDefData && synthesizedDefData.text) setSkalaSynthesizedDef(synthesizedDefData.text);\n         } catch(e) {}\n      }\n\n      if (data.status === 'completed' && data.final_result) {\n        setFinalResult(data.final_result);\n        setIsChatComplete(true);\n      } else {\n        setFinalResult('');\n        setIsChatComplete(false);\n        if (type !== 'Tes Prestasi' && type !== 'Skala' && (!data.chat_history || data.chat_history.length === 0)) {\n          initChat(id, type, data.name);\n        }\n      }\n    }\n  };\n`
-);
+  // Step 1: Bimbingan Metodologi
+  const [approach, setApproach] = useState("");
+  const [gap, setGap] = useState("");
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [isAiThinking, setIsAiThinking] = useState(false);
+  const [isChatComplete, setIsChatComplete] = useState(false);
+  const [chatSummary, setChatSummary] = useState("");
+  const [hasStartedChat, setHasStartedChat] = useState(false);
 
-// 5. initChat
-content = content.replace(
-  /const initChat = async \(type: string\) => \{[\s\S]*?generateInstrumentQuestionsAction\(projectId, type, pendekatan, variables, gap, '', isPaidApi\);[\s\S]*?saveState\(type, newHistory, 'in_progress'\);[\s\S]*?saveState\(type, newHistory, 'in_progress'\);[\s\S]*?\}\n  };\n/,
-  `const initChat = async (id: string, type: string, name: string | null) => {\n    setIsChatting(true);\n    const res = await generateInstrumentQuestionsAction(projectId, id, type, name || type, pendekatan, variables, gap, '', isPaidApi);\n    if (res.questions && res.questions.length > 0) {\n      const firstMsg = \`Mari kita susun instrumen **\${name || type}**. Untuk memulainya, saya perlu beberapa informasi:\\n\\n\` + res.questions.map((q, i) => \`\${i+1}. \${q}\`).join('\\n');\n      const newHistory: ChatMessage[] = [{ role: 'ai', text: firstMsg }];\n      setChatHistory(newHistory);\n      saveState(id, newHistory, 'in_progress');\n    } else {\n      const newHistory: ChatMessage[] = [{ role: 'ai', text: 'Mari kita susun instrumen ini. Ceritakan secara singkat fokus yang ingin Anda ukur/tanyakan.' }];\n      setChatHistory(newHistory);\n      saveState(id, newHistory, 'in_progress');\n    }\n    setIsChatting(false);\n  };\n`
-);
+  // Step 2: Smart Outline
+  const [outline, setOutline] = useState<MetodologiOutlineItem[]>([]);
+  const [isGeneratingOutline, setIsGeneratingOutline] = useState(false);
 
-// 6. generateLatentDef
-content = content.replace(
-  /saveState\('Skala', newHistory as ChatMessage\[\], 'in_progress'\);/g,
-  `if (activeInstrumentId) saveState(activeInstrumentId, newHistory as ChatMessage[], 'in_progress');`
-);
+  // Step 3: Hasil Akhir
+  const [metodologiResult, setMetodologiResult] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [completedSubBabs, setCompletedSubBabs] = useState(0);
 
-// 7. saveState
-content = content.replace(
-  /const saveState = async \(type: string, history: ChatMessage\[\], status: string, finalStr: string = ''\) => \{[\s\S]*?\.eq\('project_id', projectId\)\.eq\('instrument_type', type\);[\s\S]*?setInstrumentStatus\(prev => \(\{ \.\.\.prev, \[type\]: status \}\)\);[\s\S]*?};\n/,
-  `const saveState = async (id: string, history: ChatMessage[], status: string, finalStr: string = '') => {\n    const supabase = createClient();\n    await supabase.from('project_instruments').update({\n      chat_history: history,\n      status: status,\n      final_result: finalStr,\n      updated_at: new Date().toISOString()\n    }).eq('id', id);\n    setInstruments(prev => prev.map(i => i.id === id ? { ...i, status } : i));\n  };\n`
-);
+  const [error, setError] = useState("");
+  const [copySuccess, setCopySuccess] = useState(false);
 
-// Helper for active instrument data
-content = content.replace(
-  `  const sendMessage = async () => {`,
-  `  const activeInstData = instruments.find(i => i.id === activeInstrumentId);\n\n  const sendMessage = async () => {`
-);
+  useEffect(() => {
+    if (isActive && projectId) {
+      Promise.all([
+        getProjectState(projectId, "kp_approach"),
+        getProjectState(projectId, "selected_gap"),
+        getProjectState(projectId, "metodologi_result"),
+        getProjectState(projectId, "metodologi_chat"),
+        getProjectState(projectId, "metodologi_chatComplete"),
+        getProjectState(projectId, "metodologi_summary"),
+        getProjectState(projectId, "metodologi_step"),
+        getProjectState(projectId, "metodologi_outline")
+      ]).then(([savedApproach, savedGap, savedResult, savedChat, savedComplete, savedSummary, savedStep, savedOutline]) => {
+        if (savedApproach) setApproach(savedApproach);
+        if (savedGap) setGap(savedGap);
+        if (savedResult) setMetodologiResult(savedResult);
+        if (savedChat) {
+          try {
+            const parsed = JSON.parse(savedChat);
+            setChatHistory(parsed);
+            if (parsed.length > 0) setHasStartedChat(true);
+          } catch(e) {}
+        }
+        if (savedComplete === "true") setIsChatComplete(true);
+        if (savedSummary) setChatSummary(savedSummary);
+        if (savedStep) setStepState(parseInt(savedStep));
+        if (savedOutline) {
+          try {
+            setOutline(JSON.parse(savedOutline));
+          } catch(e) {}
+        }
+      });
+    }
+  }, [isActive, projectId]);
 
-// 8. sendMessage
-content = content.replace(
-  /if \(!inputMessage\.trim\(\) \|\| !activeInstrument\) return;\n/g,
-  `if (!inputMessage.trim() || !activeInstrumentId || !activeInstData) return;\n`
-);
-content = content.replace(
-  /await saveState\(activeInstrument, newHistory, 'in_progress'\);/g,
-  `await saveState(activeInstrumentId, newHistory, 'in_progress');`
-);
-content = content.replace(
-  /const res = await continueInstrumentChatAction\(projectId, activeInstrument, pendekatan, variables, newHistory, '', isPaidApi\);/g,
-  `const res = await continueInstrumentChatAction(projectId, activeInstrumentId, activeInstData.instrument_type, activeInstData.name || activeInstData.instrument_type, pendekatan, variables, newHistory, '', isPaidApi);`
-);
+  const updateChatHistory = (newHistory: ChatMessage[]) => {
+    setChatHistory(newHistory);
+    saveProjectState(projectId, "metodologi_chat", JSON.stringify(newHistory));
+  };
 
-// 9. generateFinal
-content = content.replace(
-  /const generateFinal = async \(\) => \{[\s\S]*?if \(!activeInstrument\) return;[\s\S]*?if \(activeInstrument === 'Tes Prestasi' && blueprintData\) \{[\s\S]*?generateFinalInstrumentAction\(activeInstrument, variables, contextData, subject, subjectDescription, undefined, isPaidApi\);[\s\S]*?saveState\(activeInstrument, chatHistory, 'completed', res\.result\);[\s\S]*?};\n/,
-  `const generateFinal = async () => {\n    if (!activeInstrumentId || !activeInstData) return;\n    setIsGeneratingFinal(true);\n    let contextData = chatSummary;\n    if (activeInstData.instrument_type === 'Tes Prestasi' && blueprintData) {\n      contextData = JSON.stringify(blueprintData);\n    }\n    const res = await generateFinalInstrumentAction(activeInstData.instrument_type, activeInstData.name || activeInstData.instrument_type, variables, contextData, subject, subjectDescription, undefined, isPaidApi);\n    setIsGeneratingFinal(false);\n    if (res.result) {\n      setFinalResult(res.result);\n      await saveState(activeInstrumentId, chatHistory, 'completed', res.result);\n    } else {\n      alert(res.error || 'Gagal generate instrumen');\n    }\n  };\n`
-);
+  const updateIsChatComplete = (status: boolean) => {
+    setIsChatComplete(status);
+    saveProjectState(projectId, "metodologi_chatComplete", status ? "true" : "false");
+  };
 
-// 10. handleFileUpload
-content = content.replace(
-  /if \(files\.length === 0 \|\| !activeInstrument\) return;/g,
-  `if (files.length === 0 || !activeInstrumentId || !activeInstData) return;`
-);
-content = content.replace(
-  /const currentFiles = uploadedFiles\.filter\(f => f\.instrument_type === activeInstrument\)\.length;/g,
-  `const currentFiles = uploadedFiles.filter(f => f.instrument_id === activeInstrumentId).length;`
-);
-content = content.replace(
-  /instrumentType: activeInstrument/g,
-  `instrumentId: activeInstrumentId`
-);
+  const updateChatSummary = (summary: string) => {
+    setChatSummary(summary);
+    saveProjectState(projectId, "metodologi_summary", summary);
+  };
 
-// 11. copyBlueprintTable
-content = content.replace(
-  /if \(activeInstrument === 'Tes Prestasi'\) \{/g,
-  `if (activeInstData?.instrument_type === 'Tes Prestasi') {`
-);
+  const updateOutline = (newOutline: MetodologiOutlineItem[]) => {
+    setOutline(newOutline);
+    saveProjectState(projectId, "metodologi_outline", JSON.stringify(newOutline));
+  };
 
-// 12. generateBlueprint
-content = content.replace(
-  /if \(activeInstrument === 'Tes Prestasi' && selectedDomains\.length === 0\) return alert\('Pilih minimal satu domain!'\);/g,
-  `if (activeInstData?.instrument_type === 'Tes Prestasi' && selectedDomains.length === 0) return alert('Pilih minimal satu domain!');`
-);
-content = content.replace(
-  /const res = await generateBlueprintAction\(projectId, activeInstrument \|\| '', selectedDomains, variables, gap, manualTopics, subject, subjectDescription, isPaidApi\);/g,
-  `if(!activeInstData) return;\n    const res = await generateBlueprintAction(projectId, activeInstrumentId, activeInstData.instrument_type, activeInstData.name || activeInstData.instrument_type, selectedDomains, variables, gap, manualTopics, subject, subjectDescription, isPaidApi);`
-);
-content = content.replace(
-  /const newHistory = activeInstrument === 'Tes Prestasi' \?/g,
-  `const newHistory = activeInstData.instrument_type === 'Tes Prestasi' ?`
-);
-content = content.replace(
-  /await saveState\(activeInstrument \|\| '', newHistory as ChatMessage\[\], 'in_progress'\);/g,
-  `await saveState(activeInstrumentId, newHistory as ChatMessage[], 'in_progress');`
-);
+  // Chat Logic
+  const startChat = async () => {
+    if (!approach || !gap) {
+      setError("Pendekatan atau Research Gap belum diisi.");
+      return;
+    }
+    setError("");
+    setHasStartedChat(true);
+    setIsAiThinking(true);
 
-// 13. updateBlueprintRow
-content = content.replace(
-  /const newHistory = activeInstrument === 'Tes Prestasi' \?/g,
-  `const newHistory = activeInstData?.instrument_type === 'Tes Prestasi' ?`
-);
-content = content.replace(
-  /saveState\(activeInstrument \|\| '', newHistory as ChatMessage\[\], 'in_progress'\);/g,
-  `if (activeInstrumentId) saveState(activeInstrumentId, newHistory as ChatMessage[], 'in_progress');`
-);
+    const userKey = localStorage.getItem("user_api_key") || undefined;
+    const res = await continueMethodologyChatAction(approach, gap, [], userKey, isPaidApi);
 
-// 14. Render UI changes (the !activeInstrument -> !activeInstrumentId block)
-content = content.replace(
-  /if \(!activeInstrument\) \{[\s\S]*?return \([\s\S]*?<div className=\{styles\.formGroup\}>[\s\S]*?<label>Pilih Instrumen yang Dibutuhkan<\/label>[\s\S]*?<div className=\{styles\.checkboxGrid\}>[\s\S]*?\{INSTRUMENT_TYPES\.map\(type => \([\s\S]*?<label key=\{type\} className=\{styles\.checkboxLabel\}>[\s\S]*?<input [\s\S]*?type="checkbox" [\s\S]*?checked=\{selectedTypes\.includes\(type\)\}[\s\S]*?onChange=\{.*\}[\s\S]*?\/>[\s\S]*?\{type\}[\s\S]*?<\/label>[\s\S]*?\)\)\}[\s\S]*?<\/div>[\s\S]*?<p[\s\S]*?\*Anda dapat memilih lebih dari satu instrumen jika menggunakan Mixed Methods atau butuh triangulasi\.[\s\S]*?<\/p>[\s\S]*?<\/div>[\s\S]*?\{selectedTypes\.length > 0 && \([\s\S]*?<div className=\{styles\.instrumentList\}>[\s\S]*?<h3 style=\{\{ marginBottom: '8px' \}\}>Instrumen Proyek Ini<\/h3>[\s\S]*?\{selectedTypes\.map\(type => \([\s\S]*?<div key=\{type\} className=\{styles\.instrumentCard\}>[\s\S]*?<div>[\s\S]*?<h3>\{type\}<\/h3>[\s\S]*?<span className=\{`\$\{styles\.statusBadge\} \$\{instrumentStatus\[type\] === 'completed' \? styles\.statusCompleted : instrumentStatus\[type\] === 'in_progress' \? styles\.statusInProgress : styles\.statusPending\}`\}>[\s\S]*?\{instrumentStatus\[type\] === 'completed' \? 'Selesai' : instrumentStatus\[type\] === 'in_progress' \? 'Sedang Dikerjakan' : 'Belum Dimulai'\}[\s\S]*?<\/span>[\s\S]*?<\/div>[\s\S]*?<button className=\{styles\.btnPrimary\} onClick=\{.*handleStartInstrument\(type\).*\}>[\s\S]*?\{instrumentStatus\[type\] === 'completed' \? 'Lihat Hasil' : instrumentStatus\[type\] === 'in_progress' \? 'Lanjutkan' : 'Mulai Rancang'\}[\s\S]*?<\/button>[\s\S]*?<\/div>[\s\S]*?\)\)\}[\s\S]*?<\/div>[\s\S]*?\)\}[\s\S]*?<\/div>[\s\S]*?<\/div>[\s\S]*?\);\n  \}/,
-  `if (!activeInstrumentId) {\n    return (\n      <div className={styles.container}>\n        <div className={styles.header}>\n          <h2 className={styles.title}>Instrumen Penelitian</h2>\n          <p className={styles.subtitle}>Pilih dan rancang instrumen penelitian Anda dipandu oleh AI.</p>\n        </div>\n\n        <div className={styles.content}>\n          <div className={styles.formGroup}>\n            <label>Tambah Instrumen Baru</label>\n            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '8px' }}>\n               <select className={styles.chatInput} value={newInstrumentType} onChange={e => setNewInstrumentType(e.target.value)} style={{ padding: '8px', borderRadius: '8px' }}>\n                 {INSTRUMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}\n               </select>\n               <input className={styles.chatInput} type="text" placeholder="Nama Spesifik (Misal: Kuesioner Siswa)" value={newInstrumentName} onChange={e => setNewInstrumentName(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: '8px' }} />\n               <button className={styles.btnPrimary} onClick={handleAddInstrument}>Tambah</button>\n            </div>\n          </div>\n\n          {instruments.length > 0 && (\n            <div className={styles.instrumentList}>\n              <h3 style={{ marginBottom: '8px' }}>Instrumen Proyek Ini</h3>\n              {instruments.map(inst => (\n                <div key={inst.id} className={styles.instrumentCard} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>\n                  <div>\n                    <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>\n                       {inst.name || inst.instrument_type} \n                       <span style={{ fontSize: '12px', fontWeight: 'normal', color: '#666', background: '#eee', padding: '2px 6px', borderRadius: '4px' }}>{inst.instrument_type}</span>\n                    </h3>\n                    <div style={{ marginTop: '8px' }}>\n                      <span className={\`\${styles.statusBadge} \${inst.status === 'completed' ? styles.statusCompleted : inst.status === 'in_progress' ? styles.statusInProgress : styles.statusPending}\`}>\n                        {inst.status === 'completed' ? 'Selesai' : inst.status === 'in_progress' ? 'Sedang Dikerjakan' : 'Belum Dimulai'}\n                      </span>\n                    </div>\n                  </div>\n                  <div style={{ display: 'flex', gap: '8px' }}>\n                    <button className={styles.btnSecondary} onClick={() => handleRemoveInstrument(inst.id)} style={{ color: 'red', borderColor: 'red' }}>Hapus</button>\n                    <button className={styles.btnPrimary} onClick={() => handleStartInstrument(inst.id, inst.instrument_type)}>\n                      {inst.status === 'completed' ? 'Lihat Hasil' : inst.status === 'in_progress' ? 'Lanjutkan' : 'Mulai Rancang'}\n                    </button>\n                  </div>\n                </div>\n              ))}\n            </div>\n          )}\n        </div>\n      </div>\n    );\n  }`
-);
+    if (res.error) {
+      setError(res.error);
+      setHasStartedChat(false);
+    } else {
+      const initHistory: ChatMessage[] = [{
+        role: "ai",
+        text: res.nextQuestion || "Silakan mulai...",
+        options: res.options || []
+      }];
+      updateChatHistory(initHistory);
+    }
+    setIsAiThinking(false);
+  };
 
-// 15. The main active view render logic
-content = content.replace(/setActiveInstrument\(null\)/g, `setActiveInstrumentId(null)`);
-content = content.replace(/\{activeInstrument\}/g, `{activeInstData?.name || activeInstData?.instrument_type}`);
-content = content.replace(/activeInstrument !==/g, `activeInstData?.instrument_type !==`);
-content = content.replace(/activeInstrument ===/g, `activeInstData?.instrument_type ===`);
-// uploadedFiles filter
-content = content.replace(/f\.instrument_type === activeInstData\?\.instrument_type/g, `f.instrument_id === activeInstrumentId`);
+  const sendChatMessage = async (textOverride?: string) => {
+    const textToSend = textOverride || chatInput;
+    if (!textToSend.trim() || isAiThinking) return;
 
-fs.writeFileSync(path.join(__dirname, 'src', 'app', 'dashboard', 'InstrumenInterface_temp.tsx'), content);
-console.log('Done refactoring via node');
+    setError("");
+    const newHistory = [...chatHistory, { role: "user" as const, text: textToSend }];
+    updateChatHistory(newHistory);
+    setChatInput("");
+    setIsAiThinking(true);
+
+    const userKey = localStorage.getItem("user_api_key") || undefined;
+    const res = await continueMethodologyChatAction(approach, gap, newHistory, userKey, isPaidApi);
+
+    if (res.error) {
+      setError(res.error);
+    } else {
+      const aiReply: ChatMessage = {
+        role: "ai",
+        text: res.isComplete ? (res.summary || "Wawancara selesai.") : (res.nextQuestion || "Ada lagi?"),
+        options: res.options || []
+      };
+      updateChatHistory([...newHistory, aiReply]);
+      
+      if (res.isComplete) {
+        updateIsChatComplete(true);
+        if (res.summary) updateChatSummary(res.summary);
+      }
+    }
+    setIsAiThinking(false);
+  };
+
+  const generateOutline = async () => {
+    if (!chatSummary && chatHistory.length === 0) return;
+    setIsGeneratingOutline(true);
+    setError("");
+
+    const userKey = localStorage.getItem("user_api_key") || undefined;
+    
+    // Create a fallback summary if needed
+    const summaryToUse = chatSummary || "User telah menjawab pertanyaan struktur kampus.";
+
+    const res = await generateMethodologyOutlineAction(approach, summaryToUse, userKey, isPaidApi);
+    if (res.error) {
+      setError(res.error);
+    } else if (res.outline) {
+      updateOutline(res.outline);
+      setStep(2);
+    }
+    setIsGeneratingOutline(false);
+  };
+
+  const handleGenerateHasilAkhir = async () => {
+    if (outline.length === 0) {
+      setError("Outline belum tersedia.");
+      return;
+    }
+    
+    setIsGenerating(true);
+    setError("");
+    setCompletedSubBabs(0);
+    setStep(3);
+    setMetodologiResult("");
+
+    const userKey = localStorage.getItem("user_api_key") || undefined;
+    let combinedResult = "";
+    let masterBibliography: any[] = [];
+
+    try {
+      for (let i = 0; i < outline.length; i++) {
+        const item = outline[i];
+        const res = await generateMethodologySubchapterAction(
+          item.title,
+          item.description,
+          item.keywords,
+          approach,
+          userKey,
+          isPaidApi
+        );
+
+        if (res.error) {
+          throw new Error(res.error);
+        }
+
+        combinedResult += res.content + "\\n\\n";
+        setMetodologiResult(combinedResult);
+        saveProjectState(projectId, "metodologi_result", combinedResult);
+        
+        if (res.booksCited && res.booksCited.length > 0) {
+          masterBibliography = [...masterBibliography, ...res.booksCited];
+        }
+        
+        setCompletedSubBabs(i + 1);
+      }
+
+      // Auto-Compile Daftar Pustaka
+      if (masterBibliography.length > 0) {
+        // Remove duplicates based on title and author combination
+        const uniqueBooks = Array.from(new Map(masterBibliography.map(book => 
+          [\`\${book.title}-\${book.author}\`, book]
+        )).values());
+        
+        // Sort alphabetically by author
+        uniqueBooks.sort((a, b) => (a.author || "").localeCompare(b.author || ""));
+
+        let daftarPustaka = "## Daftar Pustaka Metodologi\\n\\n";
+        uniqueBooks.forEach(book => {
+          const author = book.author || "Penulis Tidak Diketahui";
+          const year = book.year ? \`(\${book.year})\` : "(n.d.)";
+          const title = book.title || "Judul Tidak Diketahui";
+          daftarPustaka += \`\${author}. \${year}. *\${title}*.\\n\\n\`;
+        });
+
+        combinedResult += daftarPustaka;
+        setMetodologiResult(combinedResult);
+        saveProjectState(projectId, "metodologi_result", combinedResult);
+      }
+    } catch (err: any) {
+      setError(err.message || "Terjadi kesalahan saat menyusun Metodologi.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(metodologiResult).then(() => {
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    });
+  };
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h2>Metodologi Penelitian</h2>
+        <p>AI akan menyusun Metodologi Penelitian sesuai dengan panduan struktur kampus Anda.</p>
+      </div>
+
+      <div className={styles.wizardHeader}>
+        <div 
+          className={styles.progressLine} 
+          style={{ width: \`\${(step - 1) * 50}%\` }}
+        />
+        <div 
+          className={\`\${styles.stepIndicator} \${step >= 1 ? styles.active : ""} \${isChatComplete ? styles.completed : ""} \${step === 1 ? styles.current : ""}\`} 
+          onClick={() => setStep(1)} 
+          style={{cursor: "pointer"}}
+        >
+          <div className={styles.stepNumber}>{isChatComplete ? "o"" : "1"}</div>
+          <div className={styles.stepLabel}>Bimbingan Metodologi</div>
+        </div>
+        <div 
+          className={\`\${styles.stepIndicator} \${step >= 2 ? styles.active : ""} \${outline.length > 0 ? styles.completed : ""} \${step === 2 ? styles.current : ""}\`} 
+          onClick={() => isChatComplete && setStep(2)} 
+          style={{cursor: isChatComplete ? "pointer" : "default"}}
+        >
+          <div className={styles.stepNumber}>{outline.length > 0 ? "o"" : "2"}</div>
+          <div className={styles.stepLabel}>Smart Outline</div>
+        </div>
+        <div 
+          className={\`\${styles.stepIndicator} \${step === 3 ? styles.active : ""} \${metodologiResult && !isGenerating ? styles.completed : ""} \${step === 3 ? styles.current : ""}\`}
+          onClick={() => metodologiResult.length > 0 && setStep(3)}
+          style={{cursor: metodologiResult.length > 0 ? "pointer" : "default"}}
+        >
+          <div className={styles.stepNumber}>{(metodologiResult && !isGenerating) ? "o"" : "3"}</div>
+          <div className={styles.stepLabel}>Hasil Akhir</div>
+        </div>
+      </div>
+
+      {error && step !== 3 && (
+        <div className={\`\${styles.alert} \${styles.error}\`}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <div>
+            <h4 style={{ margin: "0 0 4px 0", fontWeight: "bold" }}>Error</h4>
+            <p style={{ margin: 0, fontSize: "14px" }}>{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 1: BIMBINGAN METODOLOGI */}
+      {step === 1 && (
+        <div className={styles.wizardContent}>
+          <div style={{ marginBottom: "20px" }}>
+            <p><strong>Pendekatan (Approach):</strong></p>
+            <select 
+              className={styles.input} 
+              value={approach}
+              onChange={(e) => {
+                setApproach(e.target.value);
+                saveProjectState(projectId, "kp_approach", e.target.value);
+              }}
+              style={{ marginBottom: "10px", padding: "8px", width: "100%", borderRadius: "6px", border: "1px solid var(--border)", backgroundColor: "var(--surface-container-high)", color: "var(--on-surface)" }}
+            >
+              <option value="">-- Pilih Pendekatan --</option>
+              <option value="Kuantitatif">Kuantitatif</option>
+              <option value="Kualitatif">Kualitatif</option>
+              <option value="Mixed Methods">Mixed Methods</option>
+              <option value="Research & Development (R&D)">Research & Development (R&D)</option>
+              <option value="Kajian Pustaka (Literature Review)">Kajian Pustaka (Literature Review)</option>
+            </select>
+          </div>
+
+          {!hasStartedChat ? (
+            <button 
+              onClick={startChat} 
+              disabled={isAiThinking || !approach || !gap}
+              className={styles.btnPrimary}
+              style={{ width: "100%", padding: "12px", justifyContent: "center" }}
+            >
+              {isAiThinking ? "Menyiapkan Bimbingan..." : "Mulai Bimbingan Metodologi"}
+            </button>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: "400px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "15px", marginBottom: "20px", maxHeight: "400px", overflowY: "auto", padding: "10px", backgroundColor: "var(--surface-container-lowest)", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                {chatHistory.map((msg, index) => (
+                  <div key={index} style={{
+                    alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                    backgroundColor: msg.role === "user" ? "var(--primary-container)" : "var(--surface-container-high)",
+                    color: msg.role === "user" ? "var(--on-primary-container)" : "var(--on-surface)",
+                    padding: "10px 15px",
+                    borderRadius: "12px",
+                    maxWidth: "80%",
+                    borderBottomRightRadius: msg.role === "user" ? "0" : "12px",
+                    borderBottomLeftRadius: msg.role === "ai" ? "0" : "12px",
+                  }}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ p: ({node, ...props}) => <p style={{margin: 0}} {...props} /> }}>
+                      {msg.text}
+                    </ReactMarkdown>
+                    {msg.options && msg.options.length > 0 && index === chatHistory.length - 1 && !isAiThinking && (
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "12px" }}>
+                        {msg.options.map((opt, i) => (
+                          <button 
+                            key={i} 
+                            onClick={() => sendChatMessage(opt)}
+                            className={styles.btnSecondary}
+                            style={{ padding: "6px 12px", fontSize: "0.85rem", borderRadius: "20px", border: "1px solid var(--primary)", backgroundColor: "var(--surface)", color: "var(--primary)", cursor: "pointer" }}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {isAiThinking && (
+                  <div style={{ alignSelf: "flex-start", backgroundColor: "var(--surface-container-high)", color: "var(--on-surface-variant)", padding: "10px 15px", borderRadius: "12px", maxWidth: "80%", borderBottomLeftRadius: "0" }}>
+                    <span className={styles.loadingText}>AI sedang mengetik...</span>
+                  </div>
+                )}
+              </div>
+
+              {!isChatComplete ? (
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    style={{ flex: 1, padding: "10px", borderRadius: "6px", border: "1px solid var(--border)", backgroundColor: "var(--surface)", color: "var(--on-surface)" }}
+                    placeholder="Ketik jawaban Anda..."
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") sendChatMessage();
+                    }}
+                    disabled={isAiThinking}
+                  />
+                  <button 
+                    onClick={() => sendChatMessage()} 
+                    disabled={isAiThinking || !chatInput.trim()}
+                    className={styles.btnPrimary}
+                  >
+                    Kirim
+                  </button>
+                </div>
+              ) : (
+                <div style={{ padding: "15px", backgroundColor: "var(--surface-container-low)", borderRadius: "8px", border: "1px solid var(--primary)", marginBottom: "20px" }}>
+                  <p style={{ margin: 0, color: "var(--primary)", fontWeight: "bold" }}>o. Bimbingan Selesai! Semua elemen sudah terkumpul.</p>
+                  <button 
+                    onClick={generateOutline} 
+                    disabled={isGeneratingOutline}
+                    className={styles.btnPrimary}
+                    style={{ width: "100%", marginTop: "15px", justifyContent: "center" }}
+                  >
+                    {isGeneratingOutline ? "Mengekstrak Outline..." : "Lanjut ke Smart Outline"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* STEP 2: SMART OUTLINE */}
+      {step === 2 && (
+        <div className={styles.wizardContent}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+            <h3 style={{ margin: 0 }}>Smart Outline Metodologi</h3>
+            <button 
+              onClick={() => {
+                const newItem = { title: "Sub-bab Baru", description: "Deskripsi", keywords: [] };
+                updateOutline([...outline, newItem]);
+              }}
+              className={styles.btnSecondary}
+            >
+              + Tambah Sub-bab
+            </button>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+            {outline.map((item, index) => (
+              <div key={index} style={{ padding: "15px", backgroundColor: "var(--surface-container-low)", borderRadius: "8px", border: "1px solid var(--border)" }}>
+                <input 
+                  type="text" 
+                  value={item.title}
+                  onChange={(e) => {
+                    const newOutline = [...outline];
+                    newOutline[index].title = e.target.value;
+                    updateOutline(newOutline);
+                  }}
+                  style={{ width: "100%", padding: "8px", marginBottom: "10px", fontWeight: "bold", border: "1px solid var(--border)", borderRadius: "4px", backgroundColor: "var(--surface)" }}
+                />
+                <textarea 
+                  value={item.description}
+                  onChange={(e) => {
+                    const newOutline = [...outline];
+                    newOutline[index].description = e.target.value;
+                    updateOutline(newOutline);
+                  }}
+                  rows={3}
+                  style={{ width: "100%", padding: "8px", marginBottom: "10px", border: "1px solid var(--border)", borderRadius: "4px", backgroundColor: "var(--surface)", resize: "vertical" }}
+                />
+                <input 
+                  type="text" 
+                  value={item.keywords.join(", ")}
+                  onChange={(e) => {
+                    const newOutline = [...outline];
+                    newOutline[index].keywords = e.target.value.split(",").map(k => k.trim()).filter(k => k);
+                    updateOutline(newOutline);
+                  }}
+                  placeholder="Kata Kunci Bilingual (pisahkan dengan koma)"
+                  style={{ width: "100%", padding: "8px", border: "1px solid var(--border)", borderRadius: "4px", backgroundColor: "var(--surface)" }}
+                />
+                <button 
+                  onClick={() => {
+                    const newOutline = [...outline];
+                    newOutline.splice(index, 1);
+                    updateOutline(newOutline);
+                  }}
+                  className={styles.btnSecondary}
+                  style={{ marginTop: "10px", color: "var(--error)" }}
+                >
+                  Hapus Sub-bab
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button 
+            onClick={handleGenerateHasilAkhir}
+            disabled={isGenerating}
+            className={styles.btnPrimary}
+            style={{ width: "100%", marginTop: "20px", justifyContent: "center", padding: "12px" }}
+          >
+            Lanjut ke Hasil Akhir
+          </button>
+        </div>
+      )}
+
+      {/* STEP 3: HASIL AKHIR */}
+      {step === 3 && (
+        <div className={styles.wizardContent}>
+          {isGenerating ? (
+            <div style={{ padding: "40px 20px", backgroundColor: "var(--surface-container-high)", borderRadius: "12px", textAlign: "center", border: "1px solid var(--border)" }}>
+              <div className={styles.loaderLarge}></div>
+              <h3 style={{ margin: "20px 0 10px 0", color: "var(--on-surface)" }}>Menyusun Draft Bab Metodologi...</h3>
+              <p style={{ margin: 0, color: "var(--on-surface-variant)" }}>
+                Menyelesaikan Sub-bab {completedSubBabs} dari {outline.length}...
+              </p>
+              {completedSubBabs < outline.length && (
+                <p style={{ marginTop: "10px", fontSize: "0.9rem", color: "var(--primary)" }}>
+                  Targeted RAG: Sedang mensintesis "{outline[completedSubBabs]?.title}"
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className={styles.resultContainer} style={{ marginTop: 0 }}>
+              <div className={styles.resultHeader}>
+                <h3 style={{ margin: 0 }}>Draft Final Bab Metodologi</h3>
+                <div className={styles.actionButtons}>
+                  <button onClick={copyToClipboard} className={styles.btnSecondary}>
+                    {copySuccess ? "Tersalin!" : "Copy Text"}
+                  </button>
+                </div>
+              </div>
+              <div className={styles.markdownContent} style={{ padding: "20px", backgroundColor: "var(--surface-container-lowest)", borderRadius: "8px", border: "1px solid var(--border)", marginTop: "15px" }}>
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h3: ({node, ...props}) => <h3 {...props} style={{ marginTop: "1.5em", marginBottom: "0.5em", color: "var(--on-surface)" }}>{props.children}</h3>,
+                    h2: ({node, ...props}) => {
+                      const isDaftarPustaka = String(props.children).includes("Daftar Pustaka");
+                      return (
+                        <h2 {...props} style={isDaftarPustaka ? { color: "#3b82f6", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "0.5rem", marginTop: "2.5rem", marginBottom: "1.5rem", fontSize: "1.5rem" } : { marginTop: "1.5em", marginBottom: "0.5em", color: "var(--on-surface)" }}>
+                          {props.children}
+                        </h2>
+                      );
+                    },
+                    p: ({node, ...props}) => (
+                      <p {...props} style={{ marginBottom: "1.2rem", lineHeight: "1.8", textIndent: "2rem", textAlign: "justify" }}>
+                        {props.children}
+                      </p>
+                    )
+                  }}
+                >
+                  {metodologiResult}
+                </ReactMarkdown>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+`
+fs.writeFileSync("src/app/dashboard/MetodologiInterface.tsx", content);
+
