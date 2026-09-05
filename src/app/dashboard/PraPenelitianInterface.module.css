@@ -1,12 +1,10 @@
 .container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 200px); /* Adjust based on your layout to fit within the viewport */
   min-height: 500px;
   background-color: #f9fafb;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
-  overflow: hidden;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
@@ -31,7 +29,6 @@
 
 .chatHistory {
   flex: 1;
-  overflow-y: auto;
   padding: 24px;
   display: flex;
   flex-direction: column;
