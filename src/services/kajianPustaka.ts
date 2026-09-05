@@ -177,20 +177,23 @@ Untuk setiap Sub-Bab Utama, Anda WAJIB membuat TEPAT 4 sub-sub-bab yang merepres
 
 NAMUN PENTING: Sesuaikan dan rangkai judul-judul sub-sub-bab tersebut secara linguistik dengan nama variabel/topik Sub-Bab Utamanya agar judulnya unik, elegan, dan tidak terlihat repetitif/copy-paste di Daftar Isi.
 
-KEMBALIKAN OUTPUT HANYA DALAM FORMAT JSON ARRAY OBJECTS, di mana setiap objek memiliki struktur {"title": "Judul Sub-bab", "subChapters": ["Sub-sub-bab 1", "Sub-sub-bab 2", "Sub-sub-bab 3", "Sub-sub-bab 4"]}.
-
-Contoh Output:
-[
+  KEMBALIKAN OUTPUT HANYA DALAM FORMAT JSON OBJECT dengan key "outline" yang berisi array of objects, di mana setiap objek memiliki struktur {"title": "Judul Sub-bab", "subChapters": ["Sub-sub-bab 1", "Sub-sub-bab 2", "Sub-sub-bab 3", "Sub-sub-bab 4"]}.
+  
+  Contoh Output:
   {
-    "title": "Motivasi Belajar",
-    "subChapters": [
-      "Akar Teoretis dan Konsep Dasar Motivasi Belajar",
-      "Dimensi Psikologis dan Karakteristik Siswa Termotivasi",
-      "Tren Penelitian Terkini tentang Motivasi di Kelas",
-      "Kesenjangan Literatur dalam Studi Motivasi Belajar"
+    "outline": [
+      {
+        "title": "Motivasi Belajar",
+        "subChapters": [
+          "Akar Teoretis dan Konsep Dasar Motivasi Belajar",
+          "Dimensi Psikologis dan Karakteristik Siswa Termotivasi",
+          "Tren Penelitian Terkini tentang Motivasi di Kelas",
+          "Kesenjangan Literatur dalam Studi Motivasi Belajar"
+        ]
+      }
     ]
   }
-]`;
+`;
 
   let attempts = 0;
   while (attempts < 3) {
@@ -205,7 +208,10 @@ Contoh Output:
       }
       text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
       
-      const parsed = JSON.parse(text);
+      let parsed = JSON.parse(text);
+      if (parsed.outline && Array.isArray(parsed.outline)) {
+        parsed = parsed.outline;
+      }
       if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'object' && parsed[0].title) {
         return parsed as OutlineItem[];
       }
