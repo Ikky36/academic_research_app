@@ -90,12 +90,15 @@ export default async function DashboardPage({
           <div className={styles.headerSpacer}></div>
           <div className={styles.headerRightControls}>
             {canUseByok && <SettingsButton />}
-          {role === 'admin' && (
-            <Link href="/admin" className={styles.adminButton}>Admin Dashboard</Link>
-          )}
-          <div className={styles.userPill}>
-            {user.email}
-          </div>
+            {role === 'admin' && (
+              <Link href="/admin" className={styles.adminButton}>Admin Dashboard</Link>
+            )}
+            <div className={styles.creditPill} title="Saldo Kredit (1 Proyek Utuh = ~3300 Kredit)">
+              🪙 {credits.toLocaleString("id-ID")}
+            </div>
+            <div className={styles.userPill}>
+              {user.email}
+            </div>
           <form action="/auth/signout" method="post">
             <button className={styles.logoutButton}>Sign Out</button>
           </form>

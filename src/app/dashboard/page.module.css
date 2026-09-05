@@ -56,6 +56,21 @@
   letter-spacing: -0.5px;
 }
 
+.creditPill {
+  background: #fdf6e3;
+  color: #b45309;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  border: 1px solid #fef3c7;
+  cursor: help;
+}
+
 .userPill {
   background: var(--surface-container-high);
   border: 1px solid var(--border);
