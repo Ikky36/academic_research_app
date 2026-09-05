@@ -173,10 +173,10 @@ const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uplo
       <div className={styles.cardActions}>
         <button 
           onClick={() => handleSave(res)} 
-          disabled={savedDois.has(res.doi || res.title)}
-          className={savedDois.has(res.doi || res.title) ? styles.savedButton : styles.saveButton}
+          disabled={savedDois.has(res.doi) || !res.doi}
+          className={savedDois.has(res.doi) ? styles.savedButton : styles.saveButton}
         >
-          {savedDois.has(res.doi || res.title) ? 'Tersimpan' : 'Simpan ke Proyek'}
+          {savedDois.has(res.doi) ? 'Tersimpan' : 'Simpan ke Proyek'}
         </button>
         
         { (res.pdfLink || res.doi) && (
@@ -364,7 +364,7 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
   const handleSave = async (ref: any) => {
     try {
       await saveReference(projectId, ref);
-      setSavedDois(new Set([...savedDois, ref.doi || ref.title]));
+      setSavedDois(new Set([...savedDois, ref.doi]));
     } catch (err) {
       alert('Gagal menyimpan referensi');
     }
@@ -435,11 +435,10 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
     let successCount = 0;
     
     for (const ref of results) {
-      const id = ref.doi || ref.title;
-      if (!savedDois.has(id)) {
+      if (!savedDois.has(ref.doi) && ref.doi) {
         try {
           await saveReference(projectId, ref);
-          setSavedDois(prev => new Set([...prev, id]));
+          setSavedDois(prev => new Set([...prev, ref.doi]));
           successCount++;
         } catch (err) {
           console.error("Gagal menyimpan", ref.doi);
