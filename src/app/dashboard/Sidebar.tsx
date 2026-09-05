@@ -72,6 +72,8 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
     const res = await renameProjectAction(id, newTitle.trim());
     if (!res.success) {
       alert('Gagal mengganti nama proyek: ' + res.error);
+    } else {
+      router.refresh();
     }
   };
   const handleConnectGoogle = async () => {

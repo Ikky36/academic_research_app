@@ -819,7 +819,7 @@ export async function renameProjectAction(projectId: string, newTitle: string) {
 
     const { error } = await supabase
       .from('projects')
-      .update({ title: newTitle, updated_at: new Date().toISOString() })
+      .update({ title: newTitle })
       .eq('id', projectId)
       .eq('user_id', user.id); // Security: only owner can rename
 
