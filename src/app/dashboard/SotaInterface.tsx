@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { getSavedReferencesAction, generateSotaChunkAction, clearReferencesAction, deleteReferenceAction, deleteReferencesBulkAction, logClientErrorAction } from './actions';
@@ -9,6 +10,7 @@ import { generateRIS } from '@/utils/exportFormatters';
 import styles from './SotaInterface.module.css';
 
 export default function SotaInterface({ projectId, isActive, limits, role, isPaidApi }: { projectId: string, isActive?: boolean, limits?: any, role?: string, isPaidApi?: boolean }) {
+  const router = useRouter();
   const [references, setReferences] = useState<any[]>([]);
   const [loadingRefs, setLoadingRefs] = useState(true);
   

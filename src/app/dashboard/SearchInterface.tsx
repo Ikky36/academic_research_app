@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { searchPapers, saveReference, generateAIQueryAction, uploadToDriveAction } from './actions';
 import styles from './SearchInterface.module.css';
 
@@ -217,6 +218,7 @@ const ResultCard = ({ res, index, highlightTerms, savedDois, uploadingDois, uplo
 };
 
 export default function SearchInterface({ projectId, limits, role }: { projectId: string, limits?: any, role?: string }) {
+  const router = useRouter();
   const [topic, setTopic] = useState('');
   const [booleanQuery, setBooleanQuery] = useState('');
   const [generatingAI, setGeneratingAI] = useState(false);
@@ -312,8 +314,8 @@ export default function SearchInterface({ projectId, limits, role }: { projectId
       setError(e.message || 'Terjadi kesalahan saat menghubungi AI.');
     } finally {
       setGeneratingAI(false);
+      router.refresh();
     }
-    setGeneratingAI(false);
   };
 
   const executeSearch = async (currentPage: number, currentLimit: number) => {
