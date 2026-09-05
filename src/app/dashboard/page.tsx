@@ -43,8 +43,8 @@ export default async function DashboardPage({
   if (!projects || projects.length === 0) {
     const { data: newProject } = await supabase
       .from('projects')
-      .insert([{ user_id: user.id, title: 'Proyek Riset Pertama Saya' }])
-      .select('id, title')
+      .insert([{ user_id: user.id, title: 'Proyek Baru' }])
+      .select()
       .single()
     projects = newProject ? [newProject] : []
   }

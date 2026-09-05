@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createProjectAction, deleteProjectAction } from './actions';
+import { createProjectAction, deleteProjectAction, renameProjectAction } from './actions';
 import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
 import styles from './Sidebar.module.css';
@@ -64,6 +64,16 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
     }
   };
 
+  
+  const handleRenameProject = async (id: string, currentTitle: string) => {
+    const newTitle = prompt("Masukkan nama proyek baru:", currentTitle);
+    if (!newTitle || newTitle.trim() === "" || newTitle === currentTitle) return;
+
+    const res = await renameProjectAction(id, newTitle.trim());
+    if (!res.success) {
+      alert('Gagal mengganti nama proyek: ' + res.error);
+    }
+  };
   const handleConnectGoogle = async () => {
     setIsLinking(true);
     const supabase = createClient();
@@ -137,6 +147,14 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
                 <span className={styles.projectIcon}>📁</span>
                 <span className={styles.projectTitle}>{p.title}</span>
               </div>
+              <div style={{display:'flex'}}><button 
+                onClick={() => handleRenameProject(p.id, p.title)} 
+                className={styles.deleteBtn}
+                style={{ marginRight: '4px' }}
+                title="Ganti Nama Proyek"
+              >
+                ✏️
+              </button>
               <button 
                 onClick={() => handleDeleteProject(p.id, p.title)} 
                 className={styles.deleteBtn} 
@@ -144,7 +162,7 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
                 title="Hapus Proyek"
               >
                 ×
-              </button>
+              </button></div>
             </div>
           ))}
         </div>

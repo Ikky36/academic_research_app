@@ -1,4 +1,5 @@
 'use server'
+import { revalidatePath } from 'next/cache';
 import { consumeCredits } from "@/utils/creditManager";
 
 import { createClient } from '@/utils/supabase/server'
@@ -808,4 +809,24 @@ export async function generateTitleRecommendationsAction(
     if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
   }
   return await generateTitleRecommendations(gap, methodologySummary, userApiKey, isPaidApi);
+}
+
+export async function renameProjectAction(projectId: string, newTitle: string) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Not authenticated' };
+
+    const { error } = await supabase
+      .from('projects')
+      .update({ title: newTitle, updated_at: new Date().toISOString() })
+      .eq('id', projectId)
+      .eq('user_id', user.id); // Security: only owner can rename
+
+    if (error) throw error;
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message };
+  }
 }
