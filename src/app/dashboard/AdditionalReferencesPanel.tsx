@@ -317,7 +317,7 @@ export default function AdditionalReferencesPanel({ projectId, isPaidApi, limits
         Referensi Tambahan
       </h3>
       <p style={{ color: 'var(--on-surface-variant)', fontSize: '14px', marginBottom: '24px' }}>
-        Anda dapat mengunggah file PDF buku atau jurnal tambahan secara spesifik untuk mengekstrak <strong>Teori, Konsep Utama, Aspek/Karakteristik, Operasional, maupun Hasil Penelitian</strong>. Hasil ekstraksi ini akan dibaca oleh AI saat menyusun Kajian Pustaka Anda.
+        Anda dapat mengunggah file referensi atau jurnal tambahan secara spesifik untuk mengekstrak <strong>Teori, Konsep Utama, Aspek/Karakteristik, Operasional, maupun Hasil Penelitian</strong>. Hasil ekstraksi ini akan dibaca oleh AI saat menyusun Kajian Pustaka Anda.
       </p>
 
       {error && (

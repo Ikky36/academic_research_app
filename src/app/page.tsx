@@ -39,7 +39,7 @@ export default function Home() {
               <div className={styles.stepNumber}>1</div>
               <Search className={styles.stepIcon} size={40} strokeWidth={1.5} />
               <h3>Cari atau Unggah</h3>
-              <p>Telusuri miliaran jurnal via Scopus/Crossref atau unggah langsung file PDF buku/jurnal yang sudah Anda miliki.</p>
+              <p>Telusuri miliaran jurnal via Scopus/Crossref atau unggah langsung file referensi/jurnal yang sudah Anda miliki.</p>
             </div>
             
             <div className={styles.stepCard}>
@@ -82,8 +82,8 @@ export default function Home() {
                 <Search size={28} />
               </div>
               <h3>Pencarian Terpadu Terpusat</h3>
-              <p>Telusuri database jurnal raksasa dari <mark>Scopus</mark> dan <mark>Crossref</mark> secara bersamaan dalam satu pintu tanpa perlu berpindah-pindah tab.</p>
-              <p className={styles.en}>Search through giant journal databases from Scopus and Crossref simultaneously in one place.</p>
+              <p>Telusuri database jurnal raksasa secara bersamaan dalam satu pintu tanpa perlu berpindah-pindah tab.</p>
+              <p className={styles.en}>Search through giant journal databases simultaneously in one place.</p>
             </div>
 
             <div className={styles.bentoCard}>
@@ -108,18 +108,18 @@ export default function Home() {
               <div className={styles.iconWrapper}>
                 <FileText size={28} />
               </div>
-              <h3>Draft Kajian Pustaka & Metodologi Otomatis</h3>
-              <p>Hasilkan paragraf <strong>Kajian Pustaka</strong>, <strong>Literature Review</strong>, hingga <strong>Metodologi</strong> dari PDF buku metodologi Anda secara terstruktur.</p>
-              <p className={styles.en}>Generate structured Literature Review (Chapter II) and Methodology (Chapter III) drafts from your methodology books.</p>
+              <h3>Draft Kajian Pustaka & Metodologi Otomatis dengan Latar Belakang</h3>
+              <p>Hasilkan paragraf <strong>Kajian Pustaka</strong>, <strong>Literature Review</strong>, hingga <strong>Metodologi</strong> dari referensi metodologi Anda secara terstruktur.</p>
+              <p className={styles.en}>Generate structured Literature Review (Chapter II) and Methodology (Chapter III) drafts from your methodology references.</p>
             </div>
             
             <div className={styles.bentoCard}>
               <div className={styles.iconWrapper}>
                 <ShieldCheck size={28} />
               </div>
-              <h3>Sistem Multi-Tier & Admin</h3>
-              <p>Manajemen pengguna dengan tingkatan akun (Free, Pro, Admin), fitur manajemen kuota, dan sinkronisasi PDF eksternal via Google Drive untuk peladen.</p>
-              <p className={styles.en}>User management with account tiers, quota features, and external PDF sync via Google Drive for server processing.</p>
+              <h3>Kisi-kisi Instrumen</h3>
+              <p>Hasilkan draf kisi-kisi instrumen dari referensi teori utama (grand theory/middle theory) Anda.</p>
+              <p className={styles.en}>Generate instrument blueprints from your main theoretical references.</p>
             </div>
           </div>
         </section>
