@@ -358,22 +358,19 @@ export async function setAiProviderAction(provider: 'gemini' | 'deepseek'): Prom
 }
 
 export async function updateUserCreditsAction(userId: string, newCredits: number) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  try {
+    const supabase = await requireAdmin();
+    const { error } = await supabase.from("profiles").update({ credits: newCredits }).eq("id", userId);
 
-  if (!user) return { error: "Not authenticated" };
+    if (error) {
+      console.error("Error updating credits:", error);
+      return { error: error.message };
+    }
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "admin") return { error: "Not authorized" };
-
-  const adminSupabase = getAdminClient();
-  const { error } = await adminSupabase.from("profiles").update({ credits: newCredits }).eq("id", userId);
-
-  if (error) {
-    console.error("Error updating credits:", error);
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (error: any) {
     return { error: error.message };
   }
-
-  revalidatePath("/admin");
-  return { success: true };
 }
+

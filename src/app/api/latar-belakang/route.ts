@@ -1,3 +1,4 @@
+import { consumeCredits } from "@/utils/creditManager";
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { generateLatarBelakang } from '@/services/sota';

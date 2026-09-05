@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction, getSyncedBooksAction, getBookChunksAction, deleteSyncedBookAction, getErrorLogsAction, deleteErrorLogAction, getAiProviderAction, setAiProviderAction } from './actions';
+import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction, getSyncedBooksAction, getBookChunksAction, deleteSyncedBookAction, getErrorLogsAction, deleteErrorLogAction, getAiProviderAction, setAiProviderAction, updateUserCreditsAction } from './actions';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
@@ -15,6 +15,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<any[]>([]);
   const [limits, setLimits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   

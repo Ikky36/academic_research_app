@@ -1,4 +1,5 @@
 'use server'
+import { consumeCredits } from "@/utils/creditManager";
 
 import { createClient } from '@/utils/supabase/server'
 import { searchCrossref } from '@/services/crossref'
