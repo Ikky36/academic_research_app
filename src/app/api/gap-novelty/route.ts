@@ -15,6 +15,11 @@ export async function POST(req: NextRequest) {
     }
 
     const { sotaMarkdown, researchTopic, projectId, gapType, educationLevel, isPaidApi } = await req.json();
+  const hasCredits = await consumeCredits(150);
+  if (!hasCredits) {
+    return NextResponse.json({ error: "Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin." }, { status: 402 });
+  }
+
 
     if (!sotaMarkdown || !researchTopic) {
       return NextResponse.json({ error: 'Missing sotaMarkdown or researchTopic' }, { status: 400 });

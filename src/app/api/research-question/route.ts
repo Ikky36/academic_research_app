@@ -15,6 +15,11 @@ export async function POST(req: NextRequest) {
     }
 
     const { gapText, noveltyText, researchTopic, educationLevel, isPaidApi } = await req.json();
+  const hasCredits = await consumeCredits(50);
+  if (!hasCredits) {
+    return NextResponse.json({ error: "Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin." }, { status: 402 });
+  }
+
 
     if (!gapText || !researchTopic) {
       return NextResponse.json({ error: 'Missing gapText or researchTopic' }, { status: 400 });

@@ -14,6 +14,11 @@ export async function POST(req: Request) {
     }
 
     const { researchTopic, educationLevel, gapText, noveltyText, researchQuestion, isPaidApi } = await req.json();
+  const hasCredits = await consumeCredits(50);
+  if (!hasCredits) {
+    return NextResponse.json({ error: "Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin." }, { status: 402 });
+  }
+
 
     if (!researchTopic || !gapText || !researchQuestion) {
       return NextResponse.json({ error: 'Data tidak lengkap. Pastikan Topik, Gap, dan RQ sudah ada.' }, { status: 400 });

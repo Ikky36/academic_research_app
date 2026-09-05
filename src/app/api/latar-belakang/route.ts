@@ -82,6 +82,15 @@ export async function POST(req: Request) {
     if (profile?.api_key) {
       userApiKey = profile.api_key;
     }
+    if (!userApiKey && !isPaidApi) {
+      const isLanjutkan = existingText ? true : false;
+      const cost = isLanjutkan ? 10 : 450;
+      const hasCredits = await consumeCredits(cost);
+      if (!hasCredits) {
+        return NextResponse.json({ error: "Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin." }, { status: 402 });
+      }
+    }
+
 
     // 3.5. Fetch References
     const kpResultForRefs = stateMap['kp_result'] || '';

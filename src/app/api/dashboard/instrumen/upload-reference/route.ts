@@ -4,6 +4,11 @@ import { createClient } from '@/utils/supabase/server';
 export async function POST(req: NextRequest) {
   try {
     const { text, fileName, projectId, instrumentId } = await req.json();
+  const hasCredits = await consumeCredits(20);
+  if (!hasCredits) {
+    return NextResponse.json({ error: "Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin." }, { status: 402 });
+  }
+
 
     if (!text || !fileName || !projectId || !instrumentId) {
       return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });

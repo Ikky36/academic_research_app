@@ -119,6 +119,33 @@ export default function AdminDashboard() {
     setLoading(false);
   };
 
+  const handleUpdateCredits = async (userId: string, currentCredits: number) => {
+    const newCreditsStr = prompt("Masukkan jumlah kredit baru:", currentCredits?.toString() || "0");
+    if (newCreditsStr === null) return; // cancelled
+    
+    const newCredits = parseInt(newCreditsStr);
+    if (isNaN(newCredits)) {
+      alert("Harap masukkan angka yang valid.");
+      return;
+    }
+
+    if (confirm(`Anda yakin ingin mengubah saldo kredit menjadi ${newCredits}?`)) {
+      setLoadingAction(userId);
+      try {
+        const res = await updateUserCreditsAction(userId, newCredits);
+        if (res.error) alert("Gagal update kredit: " + res.error);
+        else {
+          alert("Kredit berhasil diperbarui!");
+          // Optimistic update locally
+          setUsers(users.map(u => u.id === userId ? { ...u, credits: newCredits } : u));
+        }
+      } catch (err) {
+        alert("Gagal update kredit: " + err);
+      }
+      setLoadingAction(null);
+    }
+  };
+
   const handleRoleChange = async (userId: string, currentRole: string, newRole: string) => {
     if (currentRole === newRole) return;
     if (!confirm(`Ubah tipe akun menjadi ${newRole.toUpperCase()}?`)) return;
@@ -364,6 +391,7 @@ export default function AdminDashboard() {
                   <tr>
                     <th>Email Pengguna</th>
                     <th>Tipe Akun</th>
+                    <th>Kredit</th>
                     <th>Tgl Mendaftar</th>
                     <th>Akses BYOK</th>
                     <th>Override Paid API</th>

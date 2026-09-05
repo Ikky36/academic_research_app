@@ -735,6 +735,46 @@ export async function generateMethodologyOutlineAction(
   userApiKey?: string,
   isPaidApi?: boolean
 ) {
+  if (!userApiKey) {
+    const hasCredits = await consumeCredits(75);
+    if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
+  }
+  if (!userApiKey) {
+    const hasCredits = await consumeCredits(25);
+    if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
+  }
+  if (!userApiKey) {
+    const hasCredits = await consumeCredits(25);
+    if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
+  }
+  if (!userApiKey) {
+    const hasCredits = await consumeCredits(75);
+    if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
+  }
+  if (!userApiKey) {
+    const hasCredits = await consumeCredits(25);
+    if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
+  }
+  if (!userApiKey) {
+    const hasCredits = await consumeCredits(25);
+    if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
+  }
+  if (!userApiKey) {
+    const hasCredits = await consumeCredits(100);
+    if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
+  }
+  if (!userApiKey) {
+    const hasCredits = await consumeCredits(150);
+    if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
+  }
+  if (!userApiKey) {
+    const hasCredits = await consumeCredits(100);
+    if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
+  }
+  if (!userApiKey) {
+    const hasCredits = await consumeCredits(250);
+    if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
+  }
   return await generateMethodologyOutline(pendekatan, summary, userApiKey, isPaidApi);
 }
 
@@ -747,6 +787,10 @@ export async function generateMethodologySubchapterAction(
   userApiKey?: string,
   isPaidApi?: boolean
 ) {
+  if (!userApiKey) {
+    const hasCredits = await consumeCredits(150);
+    if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
+  }
   return await generateMethodologySubchapter(title, description, keywords, pendekatan, gap, userApiKey, isPaidApi);
 }
 
@@ -758,5 +802,9 @@ export async function generateTitleRecommendationsAction(
   userApiKey?: string,
   isPaidApi?: boolean
 ) {
+  if (!userApiKey) {
+    const hasCredits = await consumeCredits(50);
+    if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
+  }
   return await generateTitleRecommendations(gap, methodologySummary, userApiKey, isPaidApi);
 }

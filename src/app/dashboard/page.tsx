@@ -56,8 +56,9 @@ export default async function DashboardPage({
   const activeProject = projects?.find(p => p.id === activeProjectId) || projects?.[0];
 
   // Fetch user role
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  const { data: profile } = await supabase.from('profiles').select('role, credits').eq('id', user.id).single();
   const role = profile?.role || 'free';
+  const credits = profile?.credits || 0;
   const canUseByok = user.user_metadata?.can_use_byok === true;
   
   // Fetch tier limits

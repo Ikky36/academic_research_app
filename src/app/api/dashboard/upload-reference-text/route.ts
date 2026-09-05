@@ -10,6 +10,11 @@ export const maxDuration = 300; // 5 minutes max on Vercel Pro
 export async function POST(req: NextRequest) {
   try {
     const { text, fileName, metadata, referenceId, projectId } = await req.json();
+  const hasCredits = await consumeCredits(20);
+  if (!hasCredits) {
+    return NextResponse.json({ error: "Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin." }, { status: 402 });
+  }
+
     
     if (!text) {
       return NextResponse.json({ error: 'Text content is required' }, { status: 400 });
