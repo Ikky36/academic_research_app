@@ -408,6 +408,7 @@ export default function AdminDashboard() {
                           {u.role.toUpperCase()}
                         </span>
                       </td>
+                      <td>{u.credits || 0} <button onClick={() => handleUpdateCredits(u.id, u.credits)} disabled={loadingAction === u.id} style={{marginLeft:"8px", fontSize:"12px", padding:"2px 6px", cursor:"pointer", borderRadius:"4px", border:"1px solid #ccc", background:"#f9fafb"}}>✏️ Edit</button></td>
                       <td>{new Date(u.created_at).toLocaleDateString('id-ID')}</td>
                       <td>
                         <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
