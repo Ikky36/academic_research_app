@@ -70,7 +70,12 @@ export async function continueMethodologyChatAction(
 
 export async function generateAIQueryAction(topic: string, problem: string, userApiKey?: string) {
   try {
+    if (!userApiKey) {
+      const hasCredits = await consumeCredits(15);
+      if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
+    }
     const query = await generateBooleanQuery(topic, problem, userApiKey);
+    revalidatePath('/dashboard');
     return { query };
   } catch (e: any) {
     return { error: e.message };
@@ -172,7 +177,12 @@ export async function getSavedReferencesAction(projectId: string) {
 
 export async function generateSotaChunkAction(referencesChunk: any[], startIndex: number, userApiKey?: string, isPaidApi?: boolean) {
   try {
+    if (!userApiKey) {
+      const hasCredits = await consumeCredits(35);
+      if (!hasCredits) throw new Error("Saldo Kredit Tidak Mencukupi! Silakan hubungi Admin.");
+    }
     const sotaMarkdown = await generateSotaChunk(referencesChunk, startIndex, userApiKey, isPaidApi);
+    revalidatePath('/dashboard');
     return { data: sotaMarkdown };
   } catch (e: any) {
     return { error: e.message };
