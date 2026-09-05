@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 
 export const metadata = {
-  title: 'Perbarui Kata Sandi - Pusat Riset Akademik',
+  title: 'Perbarui Kata Sandi - Asisten Riset Akademik',
 };
 
 export default async function UpdatePasswordPage() {

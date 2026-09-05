@@ -2,7 +2,7 @@ import styles from '../login/page.module.css';
 import ForgotPasswordForm from './ForgotPasswordForm';
 
 export const metadata = {
-  title: 'Lupa Kata Sandi - Pusat Riset Akademik',
+  title: 'Lupa Kata Sandi - Asisten Riset Akademik',
 };
 
 export default async function ForgotPasswordPage({

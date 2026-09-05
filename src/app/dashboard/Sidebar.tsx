@@ -111,8 +111,8 @@ export default function Sidebar({ projects, currentProjectId, activeTab, limits,
       
       <div className={styles.brand}>
         <Link href="/" style={{ textDecoration: 'none', display: 'block' }}>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '1.4rem', color: 'var(--primary-dark)' }}>P</span> Pusat Riset Akademik
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.2rem' }}>
+            Asisten Riset Akademik
           </h1>
           <p>AI THESIS ASSISTANT</p>
         </Link>
