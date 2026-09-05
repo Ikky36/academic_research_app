@@ -93,7 +93,7 @@ export default async function DashboardPage({
             {role === 'admin' && (
               <Link href="/admin" className={styles.adminButton}>Admin Dashboard</Link>
             )}
-            <div className={styles.creditPill} title="Saldo Kredit (1 Proyek Utuh = ~3300 Kredit)">
+            <div className={styles.creditPill}>
               🪙 {credits.toLocaleString("id-ID")}
             </div>
             <div className={styles.userPill}>
