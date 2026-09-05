@@ -108,7 +108,7 @@ export default function Home() {
               <div className={styles.iconWrapper}>
                 <FileText size={28} />
               </div>
-              <h3>Draft Kajian Pustaka & Metodologi Otomatis dengan Latar Belakang</h3>
+              <h3>Draft Kajian Pustaka, Metodologi & Latar Belakang Otomatis</h3>
               <p>Hasilkan paragraf <strong>Kajian Pustaka</strong>, <strong>Literature Review</strong>, hingga <strong>Metodologi</strong> dari referensi metodologi Anda secara terstruktur.</p>
               <p className={styles.en}>Generate structured Literature Review (Chapter II) and Methodology (Chapter III) drafts from your methodology references.</p>
             </div>
