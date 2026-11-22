@@ -3,6 +3,8 @@
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 const supabaseAdmin = createSupabaseClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -371,6 +373,123 @@ export async function updateUserCreditsAction(userId: string, newCredits: number
     return { success: true };
   } catch (error: any) {
     return { error: error.message };
+  }
+}
+
+export async function impersonateUserAction(targetUserId: string) {
+  try {
+    const supabase = await requireAdmin();
+    const { data: { user: adminUser } } = await supabase.auth.getUser();
+    if (!adminUser || !adminUser.email) {
+      return { error: 'Sesi Admin tidak valid atau tidak ditemukan.' };
+    }
+
+    // Ambil data profil pengguna tujuan
+    const { data: targetProfile, error: profileErr } = await supabaseAdmin
+      .from('profiles')
+      .select('id, email')
+      .eq('id', targetUserId)
+      .single();
+
+    if (profileErr || !targetProfile?.email) {
+      return { error: 'Pengguna tujuan tidak ditemukan.' };
+    }
+
+    // Cegah admin mengimpersonasi akunnya sendiri
+    if (targetProfile.id === adminUser.id || targetProfile.email === adminUser.email) {
+      return { error: 'Anda sudah berada di akun admin ini.' };
+    }
+
+    // Generate link (magic link OTP) untuk target user
+    const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: targetProfile.email,
+    });
+
+    if (linkErr || !linkData?.properties?.hashed_token) {
+      return { error: linkErr?.message || 'Gagal menghasilkan token impersonasi.' };
+    }
+
+    // Simpan email admin di cookie sebelum berganti sesi
+    const cookieStore = await cookies();
+    cookieStore.set('impersonator_admin_email', adminUser.email, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 4, // 4 jam
+    });
+
+    // Verifikasi OTP pada browser saat ini untuk mengaktifkan sesi target user
+    const { error: verifyErr } = await supabase.auth.verifyOtp({
+      token_hash: linkData.properties.hashed_token,
+      type: 'magiclink'
+    });
+
+    if (verifyErr) {
+      cookieStore.delete('impersonator_admin_email');
+      return { error: `Gagal mengalihkan sesi: ${verifyErr.message}` };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error in impersonateUserAction:', err);
+    return { error: err.message || 'Terjadi kesalahan pada server saat impersonasi.' };
+  }
+}
+
+export async function stopImpersonationAction() {
+  let shouldRedirectUrl: string | null = null;
+  try {
+    const cookieStore = await cookies();
+    const adminEmail = cookieStore.get('impersonator_admin_email')?.value;
+    if (!adminEmail) {
+      shouldRedirectUrl = '/login';
+    } else {
+      // Validasi kembali bahwa email tersebut adalah admin di profiles
+      const { data: adminProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('role')
+        .eq('email', adminEmail)
+        .single();
+
+      if (adminProfile?.role !== 'admin') {
+        cookieStore.delete('impersonator_admin_email');
+        shouldRedirectUrl = '/login';
+      } else {
+        // Generate magic link untuk admin
+        const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+          type: 'magiclink',
+          email: adminEmail,
+        });
+
+        if (linkErr || !linkData?.properties?.hashed_token) {
+          cookieStore.delete('impersonator_admin_email');
+          shouldRedirectUrl = '/login';
+        } else {
+          const supabase = await createClient();
+          const { error: verifyErr } = await supabase.auth.verifyOtp({
+            token_hash: linkData.properties.hashed_token,
+            type: 'magiclink'
+          });
+
+          cookieStore.delete('impersonator_admin_email');
+
+          if (verifyErr) {
+            shouldRedirectUrl = '/login';
+          } else {
+            shouldRedirectUrl = '/admin';
+          }
+        }
+      }
+    }
+  } catch (err: any) {
+    console.error('Error in stopImpersonationAction:', err);
+    shouldRedirectUrl = '/login';
+  }
+
+  if (shouldRedirectUrl) {
+    redirect(shouldRedirectUrl);
   }
 }
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction, getSyncedBooksAction, getBookChunksAction, deleteSyncedBookAction, getErrorLogsAction, deleteErrorLogAction, getAiProviderAction, setAiProviderAction, updateUserCreditsAction } from './actions';
+import { getUsersAction, updateUserRoleAction, getTierLimitsAction, updateTierLimitAction, createAccountAction, deleteUserAction, toggleByokAction, overridePaidApiAction, getSyncedBooksAction, getBookChunksAction, deleteSyncedBookAction, getErrorLogsAction, deleteErrorLogAction, getAiProviderAction, setAiProviderAction, updateUserCreditsAction, impersonateUserAction } from './actions';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
@@ -16,6 +16,7 @@ export default function AdminDashboard() {
   const [limits, setLimits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
@@ -190,6 +191,27 @@ export default function AdminDashboard() {
       setUsers(users.map(u => u.id === userId ? { ...u, paid_api_override: overrideValue } : u));
     } else {
       setError(res.error || 'Gagal mengubah pengaturan Paid API.');
+    }
+  };
+
+  const handleImpersonateUser = async (userId: string, email: string) => {
+    if (!confirm(`Apakah Anda yakin ingin masuk ke akun ${email} sebagai pengguna? Anda akan diarahkan ke Dashboard akun tersebut.`)) return;
+    
+    setSuccess('');
+    setError('');
+    setImpersonatingId(userId);
+    
+    try {
+      const res = await impersonateUserAction(userId);
+      if (res?.success) {
+        window.location.href = '/dashboard';
+      } else {
+        setError(res?.error || `Gagal masuk ke akun ${email}.`);
+        setImpersonatingId(null);
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Terjadi kesalahan saat impersonasi.');
+      setImpersonatingId(null);
     }
   };
 
@@ -433,32 +455,57 @@ export default function AdminDashboard() {
                         </select>
                       </td>
                       <td>
-                        <select 
-                          className={styles.roleSelect}
-                          value={u.role}
-                          onChange={(e) => handleRoleChange(u.id, u.role, e.target.value)}
-                        >
-                          <option value="free">Jadikan FREE</option>
-                          <option value="pro">Jadikan PRO</option>
-                          <option value="admin">Jadikan ADMIN</option>
-                        </select>
-                        <button 
-                          onClick={() => handleDeleteUser(u.id, u.email)}
-                          style={{
-                            marginLeft: '8px',
-                            background: 'none',
-                            border: '1px solid #ef4444',
-                            color: '#ef4444',
-                            borderRadius: '6px',
-                            padding: '6px 10px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: 'bold'
-                          }}
-                          title={`Hapus Akun ${u.email}`}
-                        >
-                          🗑️
-                        </button>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <select 
+                            className={styles.roleSelect}
+                            value={u.role}
+                            onChange={(e) => handleRoleChange(u.id, u.role, e.target.value)}
+                          >
+                            <option value="free">Jadikan FREE</option>
+                            <option value="pro">Jadikan PRO</option>
+                            <option value="admin">Jadikan ADMIN</option>
+                          </select>
+                          {u.role !== 'admin' && (
+                            <button 
+                              onClick={() => handleImpersonateUser(u.id, u.email)}
+                              disabled={impersonatingId === u.id}
+                              style={{
+                                background: '#2563eb',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: '6px',
+                                padding: '6px 10px',
+                                cursor: impersonatingId === u.id ? 'not-allowed' : 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                opacity: impersonatingId === u.id ? 0.7 : 1,
+                                whiteSpace: 'nowrap'
+                              }}
+                              title={`Masuk ke akun ${u.email}`}
+                            >
+                              {impersonatingId === u.id ? '⏳ Masuk...' : '🔑 Masuk Akun'}
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => handleDeleteUser(u.id, u.email)}
+                            style={{
+                              background: 'none',
+                              border: '1px solid #ef4444',
+                              color: '#ef4444',
+                              borderRadius: '6px',
+                              padding: '6px 10px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}
+                            title={`Hapus Akun ${u.email}`}
+                          >
+                            🗑️
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

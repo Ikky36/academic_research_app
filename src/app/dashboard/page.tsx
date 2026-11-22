@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 import { createClient } from '@/utils/supabase/server'
+import { stopImpersonationAction } from '../admin/actions'
 import SearchInterface from './SearchInterface'
 import SotaInterface from './SotaInterface'
 import GapNoveltyInterface from './GapNoveltyInterface'
@@ -81,11 +83,57 @@ export default async function DashboardPage({
     isPaidApi = limits.can_use_paid_api === true;
   }
 
+  const cookieStore = await cookies();
+  const impersonatorAdminEmail = cookieStore.get('impersonator_admin_email')?.value;
+
   return (
     <div className={styles.appContainer}>
       <Sidebar projects={projects || []} currentProjectId={activeProject?.id || ''} activeTab={activeTab} limits={limits} role={role} />
       
       <div className={styles.mainContent}>
+        {impersonatorAdminEmail && (
+          <div style={{
+            backgroundColor: '#fef3c7',
+            borderBottom: '2px solid #f59e0b',
+            color: '#92400e',
+            padding: '10px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '14px',
+            fontWeight: '500',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+            zIndex: 100
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>⚠️</span>
+              <span>
+                <strong>Mode Impersonasi Aktif:</strong> Anda sedang masuk & mengelola akun <strong>{user.email}</strong> (oleh Admin: <em>{impersonatorAdminEmail}</em>).
+              </span>
+            </div>
+            <form action={stopImpersonationAction} style={{ margin: 0 }}>
+              <button 
+                type="submit" 
+                style={{
+                  background: '#d97706',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '6px 14px',
+                  fontWeight: '600',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'background 0.2s ease'
+                }}
+              >
+                Kembali ke Admin Dashboard ➔
+              </button>
+            </form>
+          </div>
+        )}
         <header className={styles.header}>
           <div className={styles.headerSpacer}></div>
           <div className={styles.headerRightControls}>
